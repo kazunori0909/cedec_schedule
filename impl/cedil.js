@@ -6,14 +6,14 @@ var CEDiL = (function($){
 	//==========================================================================
 	// 定義
 	//==========================================================================
-	var MASTER_URL	= "https://cedil.cesa.or.jp/";
-	var READ_URL	= MASTER_URL + "cedil_sessions/search_tag/";
+	var MASTER_URL = "https://cedil.cesa.or.jp/";
+	var READ_URL   = MASTER_URL + "cedil_sessions/search_tag/";
 
 	var m_list = {};
 	var m_dataCash = {};
 
 	return {
-		readData		: readData
+		readData : readData
 	};
 
 
@@ -21,7 +21,7 @@ var CEDiL = (function($){
 	//
 	//--------------------------------------------------------------------------
 	function readData( tag, success, page ){
-		if( tag === undefined )	return [];
+		if( tag === undefined )	return;
 		readPage(tag,success,page);
 	}
 

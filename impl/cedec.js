@@ -9,13 +9,13 @@ var CEDEC = (function($){
 	var MASTER_URL	= "http://cedec.cesa.or.jp/";
 
 	var SCHEDULE_SETTING = [
-		{	year:"2016",	first_date:"0824", 	format:'session/schedule_{date}.html',	cedil_tag_no:712	},
-		{	year:"2015",	first_date:"0826",	format:'session/schedule_{date}.html',	cedil_tag_no:709	},
-		{	year:"2014",	first_date:"0902",	format:'session/schedule_{date}.html',	cedil_tag_no:9		},
-		{	year:"2013",	first_date:"0821",	format:'schedule/day{day_no}.html',		cedil_tag_no:8		},
-		{	year:"2012",	first_date:"0820",	format:'schedule/day{day_no}.html',		cedil_tag_no:4		},
-		{	year:"2011",	first_date:"0906",	format:'schedule/day{day_no}.html',		cedil_tag_no:6		},
-		{	year:"2010",	first_date:"0831",	format:'schedule/day{day_no}.html',		cedil_tag_no:5		},
+		{ year:"2016", first_date:"0824", format:'session/schedule_{date}.html',	cedil_tag_no:712	},
+		{ year:"2015", first_date:"0826", format:'session/schedule_{date}.html',	cedil_tag_no:709	},
+		{ year:"2014", first_date:"0902", format:'session/schedule_{date}.html',	cedil_tag_no:9		},
+		{ year:"2013", first_date:"0821", format:'schedule/day{day_no}.html',		cedil_tag_no:8		},
+		{ year:"2012", first_date:"0820", format:'schedule/day{day_no}.html',		cedil_tag_no:4		},
+		{ year:"2011", first_date:"0906", format:'schedule/day{day_no}.html',		cedil_tag_no:6		},
+		{ year:"2010", first_date:"0831", format:'schedule/day{day_no}.html',		cedil_tag_no:5		},
 	];
 
 	var TIME_SPAN	= 3;
@@ -56,16 +56,14 @@ var CEDEC = (function($){
 	//--------------------------------------------------------------------------
 	function findSettingFromYear( year ){
 
-		var index = 0;
 		for( var i = 0 ; i < SCHEDULE_SETTING.length ; ++i ){
 			var rSetting = SCHEDULE_SETTING[i];
 			if( rSetting.year == year ){
-				index = i;
-				break;
+				return rSetting;
 			}
 		}
 
-		return SCHEDULE_SETTING[index];
+		return SCHEDULE_SETTING[0];
 	}
 
 	//--------------------------------------------------------------------------
@@ -73,18 +71,19 @@ var CEDEC = (function($){
 	//--------------------------------------------------------------------------
 	function convertFormatPath( setting, day_index ){
 
-		var rel_path 	= setting.format;
+		var rel_path = setting.format;
 
 		if( rel_path.indexOf('{day_no}') > 0 ){
 			rel_path = rel_path.replace('{day_no}',day_index + 1);
-		}
-
-		if( rel_path.indexOf('{date}') > 0 ){
+		}else if( rel_path.indexOf('{day_index}') > 0 ){
+			rel_path = rel_path.replace('{day_index}',day_index);
+		}else if( rel_path.indexOf('{date}') > 0 ){
+			// attention 開催日が月を跨ぐ事を考慮していない。
 			var month 		= parseInt(setting.first_date.slice(0,2),10);
 			var day 		= parseInt(setting.first_date.slice(2,4),10) + day_index;
-
 			var month_str	= month.toString().length < 2 ? "0" + month : month.toString();
 			var day_str		= day.toString().length < 2 ? "0" + day : day.toString();
+
 			rel_path = rel_path.replace('{date}',month_str + day_str);
 		}
 
@@ -96,12 +95,10 @@ var CEDEC = (function($){
 	//--------------------------------------------------------------------------
 	function readData( option ){
 
-
 		if( m_dataCash[option.index] !== undefined ){
 			option.success( option.index, m_dataCash[option.index] );
 			return;
 		}
-
 
 		$.ajax({
 			type: 'GET',

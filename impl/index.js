@@ -5,11 +5,20 @@
 	//==========================================================================
 	// 定義
 	//==========================================================================
-	var WEEK_DAY_SHORT_STRINGLIST = [ "日", "月", "火", "水", "木", "金", "土" ];
+	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土" ];
 	var MIN_MINUTES	= 5;
+	var DEFAULT_YEAR = 2016;
 
+	// DOM関連
+	var CONTENTS_BODY_SELECTOR = '#contents_body';
+	var CONTENTS_HEADER_SELECTOR = '#contents_header';
+	var CONTENTS_TABLE_ID = 'day_table';
+	var CONTENTS_TABLE_SELECTOR = '#'+CONTENTS_TABLE_ID;
+
+	//==========================================================================
+	//==========================================================================
 	var m_url_params = getURL_Params();
-	var m_year		 = 2016;
+	var m_year       = DEFAULT_YEAR;
 	if( m_url_params.year !== undefined )	m_year = m_url_params.year;
 
 	var highlightInfo = {
@@ -36,9 +45,9 @@
 			.removeClass('ui-overlay-a')
 			.css('overflow-x','visible')
 			.find('.ui-page')
-			.css('overflow-x','visible');
+				.css('overflow-x','visible');
 
-		appendHeader();
+		appendContentsHeader( CONTENTS_HEADER_SELECTOR );
 		CEDEC.appendNaviMenuTo( $('#old').next() );
 
 		var dayIndex = 0;
@@ -64,11 +73,11 @@
 	});
 
 	//--------------------------------------------------------------------------
-	// ヘッダーに追加
+	// コンテンツのヘッダーにDOMを追加
 	//--------------------------------------------------------------------------
-	function appendHeader(){
+	function appendContentsHeader( dom_selector ){
 
-		var $header = $('#contents_header').empty();
+		var $header = $(dom_selector).empty();
 
 		$header.append('<h1>CEDEC ' + m_year + 'スケジュール</h1>');
 
@@ -78,9 +87,9 @@
 
 		var $div = $('<div></div>');
 
-		for( var i = 0 ; i < 3 ; ++i ){
+		for( var i = 0 ; i < CEDEC.TIME_SPAN ; ++i ){
 			$('<input type="button" class="schedule_button"></input>')
-				.val( month + "/" + (first_day+i) + "(" + WEEK_DAY_SHORT_STRINGLIST[date.getDay()+i] +")" )
+				.val( month + "/" + (first_day+i) + "(" + WEEK_DAY_SHORT_STRING[date.getDay()+i] +")" )
 				.attr( 'data_index', i )
 				.click(function(){
 					setTimeout( dispSessionSchedule, 10, parseInt( $(this).attr('data_index') ) );
@@ -104,10 +113,10 @@
 		}
 
 		// loading icon
-		$('#contents_body').prepend(
+		$(CONTENTS_BODY_SELECTOR).prepend(
 			'<img id="contents_loading_icon" src="./image/rolling.gif" />'
 		)
-		$('#day_table').parent().remove();
+		$(CONTENTS_TABLE_SELECTOR).parent().remove();
 
 		var rel_path 	= CEDEC.convertFormatPath( m_setting, index );
 
@@ -131,7 +140,7 @@
 	//--------------------------------------------------------------------------
 	function appendTable(index, xml){
 		var $xml		  = $(xml);
-		var $contets_body = $('#contents_body');
+		var $contets_body = $(CONTENTS_BODY_SELECTOR);
 
 		var roomList = createRoomSessionList( $xml );	// 部屋毎のデータを取得
 
@@ -251,7 +260,7 @@
 					Cookies.set( m_year + '_hide_' + alt, '1', {expires:365} );
 				}
 
-				commitFilterInfoTo( $('#day_table') );
+				commitFilterInfoTo( $(CONTENTS_TABLE_SELECTOR) );
 
 				// crossDomain では動作せず
 				//this.src =  grayscale(this.src);
@@ -329,7 +338,7 @@
 				}
 			}
 
-			return $('<table id="day_table" _fixedhead="cols:1"></table>').append([
+			return $('<table id="' + CONTENTS_TABLE_ID + '" _fixedhead="cols:1"></table>').append([
 				$thead,
 				$tbody
 			]);
@@ -501,7 +510,7 @@
 		if( hours.toString().length == 1 ) hours = "0" + hours;
 		var minutes = date.getMinutes();
 
-		var $table = $('#day_table');
+		var $table = $(CONTENTS_TABLE_SELECTOR);
 		var $trList = $table.find('tbody tr[time*="' + hours +':"]');
 
 		var currentIndex = 0;
@@ -542,7 +551,7 @@
 //		}
 //		alert( debugList.length + "\n" + debugList.join("\r\n") );
 
-		$('#day_table').find('td.session').each(function(){
+		$(CONTENTS_TABLE_SELECTOR).find('td.session').each(function(){
 			var $this = $(this);
 			if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
 			var title = $this.find('.ss_title').text();
