@@ -9,6 +9,7 @@ var CEDEC = (function($){
 	var MASTER_URL	= "http://cedec.cesa.or.jp/";
 
 	var SCHEDULE_SETTING = [
+		{ year:"2017", first_date:"0830", format:'session/schedule_{date}.html'	},
 		{ year:"2016", first_date:"0824", format:'session/schedule_{date}.html',	cedil_tag_no:712	},
 		{ year:"2015", first_date:"0826", format:'session/schedule_{date}.html',	cedil_tag_no:709	},
 		{ year:"2014", first_date:"0902", format:'session/schedule_{date}.html',	cedil_tag_no:9		},
@@ -78,9 +79,13 @@ var CEDEC = (function($){
 		}else if( rel_path.indexOf('{day_index}') > 0 ){
 			rel_path = rel_path.replace('{day_index}',day_index);
 		}else if( rel_path.indexOf('{date}') > 0 ){
-			// attention 開催日が月を跨ぐ事を考慮していない。
-			var month 		= parseInt(setting.first_date.slice(0,2),10);
-			var day 		= parseInt(setting.first_date.slice(2,4),10) + day_index;
+			var month = parseInt(setting.first_date.slice(0,2),10);
+			var first_day = parseInt(setting.first_date.slice(2,4),10);
+			var date = new Date( setting.year, month-1, first_day);
+			date.setDate( date.getDate() + day_index );
+
+			var month 		= date.getMonth() + 1;
+			var day 		= date.getDate();
 			var month_str	= month.toString().length < 2 ? "0" + month : month.toString();
 			var day_str		= day.toString().length < 2 ? "0" + day : day.toString();
 

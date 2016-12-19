@@ -5,7 +5,7 @@
 	//==========================================================================
 	// 定義
 	//==========================================================================
-	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土" ];
+	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
 	var DEFAULT_YEAR = 2016;
 
@@ -28,7 +28,9 @@
 	}
 	var m_opendDay = new Date();
 	var m_debugHighlighDay = undefined;
-//	var m_opendDay	 = new Date(2016,7,24,11,20);
+
+	// for Debug
+//	var m_opendDay	 = new Date(2016,8-1,25,11,20);
 //	var m_debugHighlighDay = m_opendDay;
 
 	var hideInfo	= {};
@@ -52,21 +54,21 @@
 
 		var dayIndex = 0;
 
-		// 開催機関であれば、選択
+		// 開催期間であれば、選択
 		if( m_opendDay.getFullYear() == m_setting.year ){
 			var month = parseInt(m_setting.first_date.slice(0,2),10);
 			var first_day = parseInt(m_setting.first_date.slice(2,4),10);
-			if( m_opendDay.getMonth()+1 == month ){
-				for( var i = 0 ; i < CEDEC.TIME_SPAN ; ++i ){
-					if( (first_day + i) != m_opendDay.getDate() ) continue;
-					dayIndex = i;
+			var date = new Date( m_year, month-1, first_day);
 
-					highlightInfo.enabled  = true;
-					highlightInfo.dayIndex = dayIndex;
-					break;
-				}
+			for( var i = 0 ; i < CEDEC.TIME_SPAN ; ++i, date.setDate( date.getDate() + 1 ) ){
+				if( m_opendDay.getMonth() != date.getMonth() ) continue;
+				if( m_opendDay.getDate() != date.getDate() ) continue;
+				dayIndex = i;
+
+				highlightInfo.enabled  = true;
+				highlightInfo.dayIndex = dayIndex;
+				break;
 			}
-
 		}
 
 		setTimeout( dispSessionSchedule, 10, dayIndex );
@@ -89,12 +91,14 @@
 
 		for( var i = 0 ; i < CEDEC.TIME_SPAN ; ++i ){
 			$('<input type="button" class="schedule_button"></input>')
-				.val( month + "/" + (first_day+i) + "(" + WEEK_DAY_SHORT_STRING[date.getDay()+i] +")" )
+				.val( (date.getMonth() + 1) + "/" + date.getDate() + "(" + WEEK_DAY_SHORT_STRING[date.getDay()] +")" )
 				.attr( 'data_index', i )
 				.click(function(){
 					setTimeout( dispSessionSchedule, 10, parseInt( $(this).attr('data_index') ) );
 				})
 				.appendTo( $div );
+
+			date.setDate( date.getDate() + 1 );
 		}
 
 		$div.appendTo( $header );
