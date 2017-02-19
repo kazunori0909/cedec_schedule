@@ -15,6 +15,17 @@
 	var CONTENTS_TABLE_ID = 'day_table';
 	var CONTENTS_TABLE_SELECTOR = '#'+CONTENTS_TABLE_ID;
 
+	// 除外する文字列リスト
+	var REMOVE_SPECS_STRINGS = [
+		"基調講演"
+		,"レギュラーセッション"
+		,"ショートセッション"
+		,"［招待セッション］"
+		,"［協賛セッション］"
+		,"［セッション］"
+		,"［セッション（60分）］"
+	];
+
 	//==========================================================================
 	//==========================================================================
 	var m_url_params = getURL_Params();
@@ -402,14 +413,15 @@
 						var $this = $(this);
 						var $style = $this.find('.ss_style');
 						var text = $style.text();
-						if( text.indexOf("基調講演") >= 0 ||
-							text.indexOf("レギュラーセッション") >= 0 ||
-							text.indexOf("ショートセッション") >= 0
-						){
-							$style.remove();
-						}else{
-							$style.before('<br/>')
+
+						for( var i = 0 ; i < REMOVE_SPECS_STRINGS.length ; ++i){
+							if( text.indexOf( REMOVE_SPECS_STRINGS[i] ) >= 0 ){
+								$style.remove();
+								return;
+							}
 						}
+
+						$style.before('<br/>');
 					});
 
 					var $deteleTr = $tr;
