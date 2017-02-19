@@ -383,7 +383,10 @@
 					var $td = $tr.find('[room="'+room_name +'"]');
 					var rowSpan = getRowSpan(startTime,endTime);
 
-					$td.attr('rowSpan', rowSpan )
+					// 一度空にしておく
+					// セッションキャンセル時対応。後優先
+					$td.empty()
+						.attr('rowSpan', rowSpan )
 						.attr("spec", rData.getMainSpecObject().attr("alt") )
 						.addClass( "session")
 						.addClass( "session_color_style_normal" )
