@@ -15,8 +15,8 @@ jQuery.ajax = (function(_ajax){
     var protocol = location.protocol,
         hostname = location.hostname,
         exRegex = RegExp(protocol + '//' + hostname),
-        YQL = 'http' + (/^https/.test(protocol)?'s':'') + '://query.yahooapis.com/v1/public/yql?callback=?',
-        query = 'select * from html where url="{URL}" and xpath="*"';
+        YQL = 'https' + (/^https/.test(protocol)?'s':'') + '://query.yahooapis.com/v1/public/yql?callback=?',
+        query = 'select * from htmlstring where url="{URL}" and xpath="*"';
 
     function isExternal(url) {
         return !exRegex.test(url) && /:\/\//.test(url);
@@ -29,10 +29,9 @@ jQuery.ajax = (function(_ajax){
         if ( /get/i.test(o.type) && !/json/i.test(o.dataType) && isExternal(url) ) {
 
             // Manipulate options so that JSONP-x request is made to YQL
-
             o.url = YQL;
             o.dataType = 'json';
-            
+
             o.data = {
                 q: query.replace(
                     '{URL}',
@@ -40,7 +39,8 @@ jQuery.ajax = (function(_ajax){
                         (/\?/.test(url) ? '&' : '?') + jQuery.param(o.data)
                     : '')
                 ),
-                format: 'xml'
+                format: 'xml',
+				env: 'store://datatables.org/alltableswithkeys'
             };
 
             // Since it's a JSONP request
@@ -57,6 +57,12 @@ jQuery.ajax = (function(_ajax){
                         // Fake XHR callback.
                         _success.call(this, {
                             responseText: (data.results[0] || '')
+								.replace(/<result>/, "")
+								.replace(/<\/result>/, "")
+								.replace(/&amp;/g, '&')
+								.replace(/&lt;/g, '<')
+								.replace(/&gt;/g, '>')
+								.replace(/&quot;/g, '"')
                                 // YQL screws with <script>s
                                 // Get rid of them
                                 .replace(/<script[^>]+?\/>|<script(.|\s)*?\/script>/gi, '')
