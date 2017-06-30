@@ -103,7 +103,13 @@ var CEDiL = (function($){
 		$session_detail_list.find('h2').each(function(){
 			var $this = $(this);
 			var obj = {};
-			obj.title = $this.text();
+
+			// 加工はしたくないがHTMLによってスペース有り無しがあったため
+			// スペース削除
+			obj.title = $this.text()
+							.replace(/\n/g, "")
+							.replace(/ /g, "")
+							.replace(/　/g, "");
 
 			// ex) https://cedil.cesa.or.jp/cedil_sessions/view/1464
 			obj.url  = MASTER_URL + "/cedil_sessions" + $this.find("a")[0].href.split("/cedil_sessions")[1];

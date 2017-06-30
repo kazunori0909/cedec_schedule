@@ -573,7 +573,10 @@
 		$(CONTENTS_TABLE_SELECTOR).find('td.session').each(function(){
 			var $this = $(this);
 			if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
-			var title = $this.find('.ss_title').text();
+			var title = $this.find('.ss_title').text()
+							.replace(/\n/g, "")
+							.replace(/ /g, "")
+							.replace(/　/g, "");
 			for( var i = 0 ; i < list.length ; ++i ){
 				if( title.indexOf( list[i].title ) == -1 ) continue;
 				$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')

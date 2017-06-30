@@ -63,6 +63,7 @@ jQuery.ajax = (function(_ajax){
 								.replace(/&lt;/g, '<')
 								.replace(/&gt;/g, '>')
 								.replace(/&quot;/g, '"')
+								.replace(/&#13;/g, '\r')
                                 // YQL screws with <script>s
                                 // Get rid of them
                                 .replace(/<script[^>]+?\/>|<script(.|\s)*?\/script>/gi, '')
