@@ -7,7 +7,7 @@
 	//==========================================================================
 	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
-	var DEFAULT_YEAR = 2016;
+	var DEFAULT_YEAR = 2017;
 
 	// DOM関連
 	var CONTENTS_BODY_SELECTOR = '#contents_body';

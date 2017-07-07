@@ -9,7 +9,7 @@ var CEDEC = (function($){
 	var MASTER_URL	= "http://cedec.cesa.or.jp/";
 
 	var SCHEDULE_SETTING = [
-		{ year:"2017", first_date:"0830", format:'session/schedule_{date}.html'	},
+		{ year:"2017", first_date:"0830", format:'session/schedule_{date}/'	},
 		{ year:"2016", first_date:"0824", format:'session/schedule_{date}.html',	cedil_tag_no:712	},
 		{ year:"2015", first_date:"0826", format:'session/schedule_{date}.html',	cedil_tag_no:709	},
 		{ year:"2014", first_date:"0902", format:'session/schedule_{date}.html',	cedil_tag_no:9		},
