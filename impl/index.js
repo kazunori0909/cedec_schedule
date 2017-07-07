@@ -490,14 +490,22 @@
 			// イメージタグのパスをグローバルに編子
 			$table.find("img").each(function(){
 				var $this = $(this);
-				var path = $this.attr("src").replace("../",m_rootURL );
+				var path = $this.attr("src");
+				if( path.indexOf("http") == 0 ) return;
+				path = path.replace("../",m_rootURL );
 				$this.attr("src", path );
 			});
 
 			// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
 			$table.find("a").each(function(){
 				var $this = $(this);
-				var path = $this.attr("href").replace("../",m_rootURL )  + "#content";
+				var path = $this.attr("href");
+				if( path.indexOf("http") == 0 ) return;
+				if( path.indexOf("/") == 0 ){
+					path = CEDEC.MASTER_URL + path.substr(1)  + "#content";
+				}else{
+					path = path.replace("../",m_rootURL )  + "#content";
+				}
 				$this.attr("href", path );
 			});
 		}
