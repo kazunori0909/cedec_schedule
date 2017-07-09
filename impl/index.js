@@ -161,7 +161,7 @@
 
 		// テーブル作成
 		var $table = createBaseTable( roomList );
-		appendSessionListTo( $table, roomList );
+		appendSessionListTo( $table, roomList, index );
 		convertGlobalPath( $table );
 		hideTr( $table, roomList );
 		$contets_body.find("tr:hidden,td:hidden").remove();
@@ -363,7 +363,7 @@
 		//----------------------------------------------------------------------
 		// テーブルにイベントを追加
 		//----------------------------------------------------------------------
-		function appendSessionListTo( $table, roomList ){
+		function appendSessionListTo( $table, roomList, index ){
 
 			var $thead = $table.children("thead");
 			var $tbody = $table.children("tbody");
@@ -400,13 +400,17 @@
 								Cookies.set( m_year + '_' + $this.attr('id'), '1', {expires:365} );
 							}
 						})
-						.append( $infoMain );
+						.append($infoMain);
 
 					var link = $td.find('.ss_title a').attr('href');
 					if( link !== undefined ){
 						var id   = link.slice( link.lastIndexOf('/'), link.lastIndexOf('.html') ).replace('/','');
 						$td.attr('id',id);
 					}
+					if ($td.attr('id') == "") {
+					    $td.attr('id', index + "_" + room_name + i );
+					}
+
 
 					if( Cookies.get( m_year + '_' + $td.attr('id') ) !== undefined ){
 						$td.addClass('session_color_style_favorite');
