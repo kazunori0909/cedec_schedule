@@ -41,18 +41,16 @@
 	var m_debugHighlighDay = undefined;
 
 	// for Debug
-//	var m_opendDay	 = new Date(2016,8-1,25,11,20);
+//	var m_opendDay	 = new Date(2017,8-1,30,12,20);
 //	var m_debugHighlighDay = m_opendDay;
 
 	var hideInfo	= {};
 
 	var m_setting;
-	var m_rootURL;
 
 	$(document).ready(function(){
 
-		m_setting	= CEDEC.findSettingFromYear( m_year );
-		m_rootURL	= CEDEC.MASTER_URL + m_year + "/";
+		m_setting	= CEDEC.createSettingFromYear( m_year );
 
 		$('body')
 			.removeClass('ui-overlay-a')
@@ -67,11 +65,11 @@
 
 		// 開催期間であれば、選択
 		if( m_opendDay.getFullYear() == m_setting.year ){
-			var month = parseInt(m_setting.first_date.slice(0,2),10);
-			var first_day = parseInt(m_setting.first_date.slice(2,4),10);
-			var date = new Date( m_year, month-1, first_day);
 
-			for( var i = 0 ; i < CEDEC.TIME_SPAN ; ++i, date.setDate( date.getDate() + 1 ) ){
+			var dateList = m_setting.getDateList();
+			for( var i = 0 ; i < dateList.length ; ++i ){
+				var date = dateList[i];
+
 				if( m_opendDay.getMonth() != date.getMonth() ) continue;
 				if( m_opendDay.getDate() != date.getDate() ) continue;
 				dayIndex = i;
@@ -94,13 +92,12 @@
 
 		$header.append('<h1>CEDEC ' + m_year + 'スケジュール</h1>');
 
-		var month = parseInt(m_setting.first_date.slice(0,2),10);
-		var first_day = parseInt(m_setting.first_date.slice(2,4),10);
-		var date = new Date( m_year, month-1, first_day);
-
 		var $div = $('<div></div>');
 
-		for( var i = 0 ; i < CEDEC.TIME_SPAN ; ++i ){
+		var dateList = m_setting.getDateList();
+
+		for( var i = 0 ; i < dateList.length ; ++i ){
+			var date = dateList[i];
 			$('<input type="button" class="schedule_button"></input>')
 				.val( (date.getMonth() + 1) + "/" + date.getDate() + "(" + WEEK_DAY_SHORT_STRING[date.getDay()] +")" )
 				.attr( 'data_index', i )
@@ -108,18 +105,15 @@
 					setTimeout( dispSessionSchedule, 10, parseInt( $(this).attr('data_index') ) );
 				})
 				.appendTo( $div );
-
-			date.setDate( date.getDate() + 1 );
 		}
 
 		$div.appendTo( $header );
-
 	}
 
 	//--------------------------------------------------------------------------
 	//
 	//--------------------------------------------------------------------------
-	function dispSessionSchedule( index ){
+	function dispSessionSchedule( day_index ){
 
 		// ハイライト処理を停止
 		if( highlightInfo.intervalId >= 0 ){
@@ -133,11 +127,9 @@
 		)
 		$(CONTENTS_TABLE_SELECTOR).parent().remove();
 
-		var rel_path 	= CEDEC.convertFormatPath( m_setting, index );
-
-		CEDEC.readData({
-			index : index,
-			url	  : m_rootURL + rel_path,
+		// 
+		m_setting.readSchedule({
+			index : day_index,
 			success	: function(index,data){
 				$('#contents_loading_icon').remove();
 				appendTable( index,data );
@@ -147,13 +139,14 @@
 				$('#contents_loading_icon').remove();
 			   alert('読み込みに失敗');
 			}
-		});
+		})
+
 	}
 
 	//--------------------------------------------------------------------------
 	// XMLからテーブルを作成し追加する
 	//--------------------------------------------------------------------------
-	function appendTable(index, xml){
+	function appendTable( day_index, xml ){
 		var $xml		  = $(xml);
 		var $contets_body = $(CONTENTS_BODY_SELECTOR);
 
@@ -161,7 +154,7 @@
 
 		// テーブル作成
 		var $table = createBaseTable( roomList );
-		appendSessionListTo( $table, roomList, index );
+		appendSessionListTo( $table, roomList, day_index );
 		convertGlobalPath( $table );
 		hideTr( $table, roomList );
 		$contets_body.find("tr:hidden,td:hidden").remove();
@@ -182,11 +175,11 @@
 
 		$contets_body.find("h2 > img").each(function(){
 			var $this = $(this);
-			var image_path = m_rootURL + "images" + $this.attr("src").split("../images")[1];
+			var image_path = m_setting.rootURL + "images" + $this.attr("src").split("../images")[1];
 			$this.attr("src", image_path );
 		});
 
-		customizeTable(index);
+		customizeTable(day_index);
 		FixedMidashi.create();
 
 		return;
@@ -363,7 +356,7 @@
 		//----------------------------------------------------------------------
 		// テーブルにイベントを追加
 		//----------------------------------------------------------------------
-		function appendSessionListTo( $table, roomList, index ){
+		function appendSessionListTo( $table, roomList, day_index ){
 
 			var $thead = $table.children("thead");
 			var $tbody = $table.children("tbody");
@@ -469,7 +462,7 @@
 					}
 				}
 
-				return $td.attr('id', index + "_" + room_name + i );
+				return $td.attr('id', day_index + "_" + room_name + i );
 			}
 		}
 
@@ -515,7 +508,7 @@
 				var $this = $(this);
 				var path = $this.attr("src");
 				if( path.indexOf("http") == 0 ) return;
-				path = path.replace("../",m_rootURL );
+				path = path.replace("../",m_setting.rootURL );
 				$this.attr("src", path );
 			});
 
@@ -527,7 +520,7 @@
 				if( path.indexOf("/") == 0 ){
 					path = CEDEC.MASTER_URL + path.substr(1)  + "#content";
 				}else{
-					path = path.replace("../",m_rootURL )  + "#content";
+					path = path.replace("../",m_setting.rootURL )  + "#content";
 				}
 				$this.attr("href", path );
 			});

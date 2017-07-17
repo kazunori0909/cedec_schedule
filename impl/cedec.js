@@ -25,7 +25,6 @@ var CEDEC = (function($){
 	// Schedule DOM 解析用
 	//
 	// ※フォーマットが変わった際に変更が必要
-	// 　年ごとで切り分けるとかも可能か
 	//==========================================================================
 	var SCHEDULE_UNIT_SELECTOR = "div.schedule_timeframe_normal";
 	var SCHEDULE_PARAM_SELECTOR_MAP = {
@@ -37,51 +36,57 @@ var CEDEC = (function($){
 
 	var m_dataCash	= [];
 
+	//==========================================================================
+	// 年単位の情報オブジェクト
+	//==========================================================================
+	function Unit( year ){
+		var setting = findSetting( year );
+		$.extend( true, this, setting );
 
-	return {
-		MASTER_URL				:	MASTER_URL,
-		TIME_SPAN				:	TIME_SPAN,
-		SCHEDULE_UNIT_SELECTOR	:	SCHEDULE_UNIT_SELECTOR,
-		findSettingFromYear		: 	findSettingFromYear,
-		convertFormatPath		:	convertFormatPath,
-		readData				:	readData,
-		createSessionData		:	createSessionData,
+		this.rootURL = MASTER_URL + year + "/";
 
 
-		// DOM
-		appendNaviMenuTo		:	appendNaviMenuTo
-	};
-
-	//--------------------------------------------------------------------------
-	//
-	//--------------------------------------------------------------------------
-	function findSettingFromYear( year ){
-
-		for( var i = 0 ; i < SCHEDULE_SETTING.length ; ++i ){
-			var rSetting = SCHEDULE_SETTING[i];
-			if( rSetting.year == year ){
-				return rSetting;
+		function findSetting( year ){
+			for( var i = 0 ; i < SCHEDULE_SETTING.length ; ++i ){
+				var rSetting = SCHEDULE_SETTING[i];
+				if( rSetting.year == year ){
+					return rSetting;
+				}
 			}
+			return SCHEDULE_SETTING[0];
 		}
-
-		return SCHEDULE_SETTING[0];
 	}
 
 	//--------------------------------------------------------------------------
-	//
+	// 開催日のDateリストを取得する
 	//--------------------------------------------------------------------------
-	function convertFormatPath( setting, day_index ){
+	Unit.prototype.getDateList = function(){
+		var list = [];
+		var month = parseInt(this.first_date.slice(0,2),10);
+		var first_day = parseInt(this.first_date.slice(2,4),10);
 
-		var rel_path = setting.format;
+		for( var i = 0 ; i < TIME_SPAN ; ++i ){
+			var date = new Date( parseInt(this.year), month-1, first_day + i );
+			list.push( date );
+		}
+		return list;
+	}
+
+	//--------------------------------------------------------------------------
+	// 日付インデックスからスケジュールページへの相対パスを取得する
+	//--------------------------------------------------------------------------
+	Unit.prototype.getRelativePath = function( day_index ){
+
+		var rel_path = this.format;
 
 		if( rel_path.indexOf('{day_no}') > 0 ){
 			rel_path = rel_path.replace('{day_no}',day_index + 1);
 		}else if( rel_path.indexOf('{day_index}') > 0 ){
 			rel_path = rel_path.replace('{day_index}',day_index);
 		}else if( rel_path.indexOf('{date}') > 0 ){
-			var month = parseInt(setting.first_date.slice(0,2),10);
-			var first_day = parseInt(setting.first_date.slice(2,4),10);
-			var date = new Date( setting.year, month-1, first_day);
+			var month = parseInt(this.first_date.slice(0,2),10);
+			var first_day = parseInt(this.first_date.slice(2,4),10);
+			var date = new Date( this.year, month-1, first_day);
 			date.setDate( date.getDate() + day_index );
 
 			var month 		= date.getMonth() + 1;
@@ -96,18 +101,20 @@ var CEDEC = (function($){
 	}
 
 	//--------------------------------------------------------------------------
-	//
+	// スケジュールページを読み込む
 	//--------------------------------------------------------------------------
-	function readData( option ){
+	Unit.prototype.readSchedule = function( option ){
 
 		if( m_dataCash[option.index] !== undefined ){
 			option.success( option.index, m_dataCash[option.index] );
 			return;
 		}
 
+		var url =  this.rootURL + this.getRelativePath(option.index);
+
 		$.ajax({
 			type: 'GET',
-			url: option.url,
+			url: url,
 			dataType: 'html',
 			success: function(xml) {
 				if( option.success !== undefined ){
@@ -125,6 +132,30 @@ var CEDEC = (function($){
 				}
 			}
 		});
+	}
+
+	//==========================================================================
+	// 
+	//==========================================================================
+	return {
+		MASTER_URL				:	MASTER_URL,
+		//TIME_SPAN				:	TIME_SPAN,
+
+		SCHEDULE_UNIT_SELECTOR	:	SCHEDULE_UNIT_SELECTOR,
+		createSettingFromYear	:	createSettingFromYear,
+		createSessionData		:	createSessionData,
+
+		// DOM
+		appendNaviMenuTo		:	appendNaviMenuTo
+	};
+
+
+
+	//--------------------------------------------------------------------------
+	//
+	//--------------------------------------------------------------------------
+	function createSettingFromYear( year ){
+		return new Unit( year );
 	}
 
 	//==========================================================================
