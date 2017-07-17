@@ -251,8 +251,8 @@
 			var filterList = {};
 			for(var room_name in roomList){
 				for( var i = 0 ; i < roomList[room_name].length ; ++i ){
-					var rData = roomList[room_name][i];
-					var $spec = rData.getMainSpecObject();
+					var rSession = roomList[room_name][i];
+					var $spec = rSession.getMainSpecObject();
 					filterList[$spec.attr("alt")] = $spec;
 				}
 			}
@@ -369,15 +369,15 @@
 			var $tbody = $table.children("tbody");
 
 			for(var room_name in roomList){
-				var list = roomList[room_name];
+				var rRoom = roomList[room_name];
 
 				var $trList = $tbody.find('tr');
-				for( var i = 0 ; i < list.length ; ++i ){
-					var rData = list[i];
-					var $info = rData.info;
+				for( var i = 0 ; i < rRoom.length ; ++i ){
+					var rSession = rRoom[i];
+					var $info = rSession.info;
 					var $infoMain = $info.find("td").children();
-					var startTime = rData.getStartTimeString();
-					var endTime   = rData.getEndTimeString();
+					var startTime = rSession.getStartTimeString();
+					var endTime   = rSession.getEndTimeString();
 
 					var $tr = $trList.filter('[time="' + startTime +'"]');
 					var $td = $tr.find('[room="'+room_name +'"]');
@@ -387,7 +387,7 @@
 					// セッションキャンセル時対応。後優先
 					$td.empty()
 						.attr('rowSpan', rowSpan )
-						.attr("spec", rData.getMainSpecObject().attr("alt") )
+						.attr("spec", rSession.getMainSpecObject().attr("alt") )
 						.addClass( "session")
 						.addClass( "session_color_style_normal" )
 						.on("taphold dblclick",function(){
@@ -402,17 +402,10 @@
 						})
 						.append($infoMain);
 
-					var link = $td.find('.ss_title a').attr('href');
-					if( link !== undefined ){
-						var id   = link.slice( link.lastIndexOf('/'), link.lastIndexOf('.html') ).replace('/','');
-						$td.attr('id',id);
-					}
-					if ($td.attr('id') == "") {
-					    $td.attr('id', index + "_" + room_name + i );
-					}
+					var id = getIdFromTitleTag( $td.find('.ss_title') );
+					$td.attr( 'id', id )
 
-
-					if( Cookies.get( m_year + '_' + $td.attr('id') ) !== undefined ){
+					if( Cookies.get( m_year + '_' + id ) !== undefined ){
 						$td.addClass('session_color_style_favorite');
 					}
 
@@ -451,6 +444,32 @@
 				var e = endTimeStr.split(':');
 				e = parseInt(e[0]) * 60 + parseInt(e[1]);
 				return (e - s) / MIN_MINUTES;
+			}
+
+			//------------------------------------------------------------------
+			// タイトルタグからIDを取得する
+			// 
+			// Cookieに使用される
+			//------------------------------------------------------------------
+			function getIdFromTitleTag( $title ){
+				var link = undefined;					
+				if( $title.attr('href') != undefined )	link = $title.attr('href');
+				else									link = $title.find('a').attr('href');
+
+				if( link !== undefined ){
+					// HTMLファイル指定と、ディレクトリ指定で分岐
+					if( link.lastIndexOf('.html') != -1 ){
+						return link.slice( link.lastIndexOf('/'), link.lastIndexOf('.html') ).replace('/','');
+					}else{
+						var urlsplit = link.split('/');
+						for( var u = urlsplit.length - 1 ; u >= 0 ; --u ){
+							if( urlsplit[u] == "" ) continue;
+							return urlsplit[u];
+						}
+					}
+				}
+
+				return $td.attr('id', index + "_" + room_name + i );
 			}
 		}
 
@@ -617,7 +636,7 @@
 
 	//--------------------------------------------------------------------------
 	// test code
-	// failed: クロスドメインアクセスの画像ではエラーの為未使用。
+	// failed: クロスドメインアクセスの画像ではエラーの為未使用。未実装。
 	//         元のカラーに戻す処理を書いてないので使用する際は要追加。
 	//--------------------------------------------------------------------------
 	function grayscale(img){
