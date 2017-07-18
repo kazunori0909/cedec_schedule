@@ -314,7 +314,15 @@
 			var $th = $('<tr><th class="time"></th></tr>');
 			for(var room_name in roomList){
 				$tr_base.append( '<td room="' + room_name + '"></td>' );
-				$th.append( '<th room="' + room_name + '">'+room_name+'</th>' );
+
+				var floorMapURL = getFloorURL( room_name );
+
+				if( floorMapURL !== undefined ){
+					$th.append( '<th room="' + room_name + '"><a href="' + floorMapURL +'" target="blank">'+room_name+'</a></th>' );
+				}else{
+					$th.append( '<th room="' + room_name + '">'+room_name+'</th>' );
+				}
+
 			}
 			$thead.append( $th );
 
@@ -350,6 +358,27 @@
 				$thead,
 				$tbody
 			]);
+
+			// 部屋名から フロアマップのURLを取得する
+			function getFloorURL( room_name ){
+
+				var floorURL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx#floor";
+
+				if( room_name == "メインホール" ){
+					return floorURL + "1";
+				}
+
+				if( room_name.indexOf("R") == 0 ){
+					return floorURL + room_name.substr(1,1);
+				}
+
+				var floorNo = parseInt( room_name.substr(0,1), 10 );
+				if( 1 <= floorNo && floorNo <= 6 ){
+					return floorURL + floorNo;
+				}
+
+				return undefined;
+			}
 
 		}
 

@@ -45,7 +45,6 @@ var CEDEC = (function($){
 
 		this.rootURL = MASTER_URL + year + "/";
 
-
 		function findSetting( year ){
 			for( var i = 0 ; i < SCHEDULE_SETTING.length ; ++i ){
 				var rSetting = SCHEDULE_SETTING[i];
@@ -73,17 +72,15 @@ var CEDEC = (function($){
 	}
 
 	//--------------------------------------------------------------------------
-	// 日付インデックスからスケジュールページへの相対パスを取得する
+	// 日付インデックスからスケジュールページへのパスを取得する
 	//--------------------------------------------------------------------------
-	Unit.prototype.getRelativePath = function( day_index ){
+	Unit.prototype.getSchedulePagePath = function( day_index ){
 
-		var rel_path = this.format;
-
-		if( rel_path.indexOf('{day_no}') > 0 ){
-			rel_path = rel_path.replace('{day_no}',day_index + 1);
-		}else if( rel_path.indexOf('{day_index}') > 0 ){
-			rel_path = rel_path.replace('{day_index}',day_index);
-		}else if( rel_path.indexOf('{date}') > 0 ){
+		if( this.format.indexOf('{day_no}') > 0 ){
+			return this.rootURL + this.format.replace('{day_no}',day_index + 1);
+		}else if( this.format.indexOf('{day_index}') > 0 ){
+			return this.rootURL + this.format.replace('{day_index}',day_index);
+		}else if( this.format.indexOf('{date}') > 0 ){
 			var month = parseInt(this.first_date.slice(0,2),10);
 			var first_day = parseInt(this.first_date.slice(2,4),10);
 			var date = new Date( this.year, month-1, first_day);
@@ -94,10 +91,10 @@ var CEDEC = (function($){
 			var month_str	= month.toString().length < 2 ? "0" + month : month.toString();
 			var day_str		= day.toString().length < 2 ? "0" + day : day.toString();
 
-			rel_path = rel_path.replace('{date}',month_str + day_str);
+			return this.rootURL + this.format.replace('{date}',month_str + day_str);
 		}
 
-		return rel_path;
+		return this.rootURL + this.format;
 	}
 
 	//--------------------------------------------------------------------------
@@ -110,7 +107,7 @@ var CEDEC = (function($){
 			return;
 		}
 
-		var url =  this.rootURL + this.getRelativePath(option.index);
+		var url =  this.getSchedulePagePath(option.index);
 
 		$.ajax({
 			type: 'GET',
