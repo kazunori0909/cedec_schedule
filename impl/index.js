@@ -193,15 +193,15 @@
 
 			$xml.find( CEDEC.SCHEDULE_UNIT_SELECTOR ).each(function(){
 				$(this).find("table").each(function(){
-					var data  = CEDEC.createSessionData( $(this) );
-					findAppendToRoomList( data ).push( data );
+					var session  = CEDEC.createSessionData( $(this) );
+					findAppendToRoomList( session ).push( session );
 				});
 			});
 			return roomList;
 
 			// スケジュール情報から 追加先リストを返す
-			function findAppendToRoomList( data ){
-				var room_name = data.getRoomNo();
+			function findAppendToRoomList( session ){
+				var room_name = session.getRoomNo();
 
 				if( room_name != "" ){
 					if( roomList[room_name] === undefined ){
@@ -212,11 +212,12 @@
 
 				// ルーム表記がない場合は、空いてるリストに詰める
 				for(var name in roomList){
+					if( name.indexOf("不明_") != 0 ) continue;
 					var rList = roomList[name];
 					var isOverlaped = false;
 
 					for( var l = 0 ; l < rList.length ; ++l ){
-						if( rList[l].isOverlap( data ) ){
+						if( rList[l].isOverlap( session ) ){
 							isOverlaped = true;
 							break;
 						}
