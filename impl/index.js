@@ -25,6 +25,10 @@
 		,"［セッション］"
 		,"［セッション（60分）］"
 	];
+	
+	var REMOVE_SPECS_SELECTOR = [
+//		".timeshift-icon:has(img[alt*=あり])"
+	];
 
 	//==========================================================================
 	//==========================================================================
@@ -436,6 +440,10 @@
 						var $this = $(this);
 						var $style = $this.find('.ss_style');
 						var text = $style.text();
+
+						for( var i = 0 ; i < REMOVE_SPECS_SELECTOR.length ; ++i){
+							$this.find( REMOVE_SPECS_SELECTOR[i] ).remove();
+						}
 
 						for( var i = 0 ; i < REMOVE_SPECS_STRINGS.length ; ++i){
 							if( text.indexOf( REMOVE_SPECS_STRINGS[i] ) >= 0 ){
