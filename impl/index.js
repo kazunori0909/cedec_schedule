@@ -331,9 +331,9 @@
 			}
 			$thead.append( $th );
 
-			var hour 	= 9;
+			var hour 	= 9;		// 最少時間
 			var minutes = 0;
-			var endHour		= 19;
+			var endHour		= 19;	// 最大時間
 			var endMinutes	= 0;
 
 			for(;;){
@@ -500,6 +500,8 @@
 					}
 				}
 
+				// どうしても検出できなければ、データ順をIDとする
+				// 該当セッションに限らず、スケジュールの割り込みや、部屋番号変更で破綻する
 				return $td.attr('id', day_index + "_" + room_name + i );
 			}
 		}
