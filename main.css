@@ -65,7 +65,8 @@ div#contents
 
 .spec_filter > img{
 	margin:3px;
-    padding:3px;
+	padding:3px;
+	cursor : pointer;
 }
 
 .spec_filter > img.hide{
