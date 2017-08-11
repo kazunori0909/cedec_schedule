@@ -51,7 +51,7 @@
 
 	var hideInfo	= {};
 	var m_setting;
-//	var m_favoriteList = {};	
+	var m_favoriteList = {};	
 	
 	$(document).ready(function(){
 
