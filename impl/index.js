@@ -34,6 +34,7 @@
 	//==========================================================================
 	var m_url_params = getURL_Params();
 	var m_year       = DEFAULT_YEAR;
+
 	if( m_url_params.year !== undefined )	m_year = m_url_params.year;
 
 	var highlightInfo = {
@@ -49,9 +50,9 @@
 //	var m_debugHighlighDay = m_opendDay;
 
 	var hideInfo	= {};
-
 	var m_setting;
-
+//	var m_favoriteList = {};	
+	
 	$(document).ready(function(){
 
 		m_setting	= CEDEC.createSettingFromYear( m_year );
@@ -84,7 +85,7 @@
 			}
 		}
 
-		setTimeout( dispSessionSchedule, 10, dayIndex );
+		setTimeout( appendSessionSchedule, 10, dayIndex );
 	});
 
 	//--------------------------------------------------------------------------
@@ -106,7 +107,7 @@
 				.val( (date.getMonth() + 1) + "/" + date.getDate() + "(" + WEEK_DAY_SHORT_STRING[date.getDay()] +")" )
 				.attr( 'data_index', i )
 				.click(function(){
-					setTimeout( dispSessionSchedule, 10, parseInt( $(this).attr('data_index') ) );
+					setTimeout( appendSessionSchedule, 10, parseInt( $(this).attr('data_index') ) );
 				})
 				.appendTo( $div );
 		}
@@ -115,9 +116,9 @@
 	}
 
 	//--------------------------------------------------------------------------
-	//
+	// 
 	//--------------------------------------------------------------------------
-	function dispSessionSchedule( day_index ){
+	function appendSessionSchedule( day_index ){
 
 		// ハイライト処理を停止
 		if( highlightInfo.intervalId >= 0 ){
@@ -158,15 +159,22 @@
 
 		// テーブル作成
 		var $table = createBaseTable( roomList );
+		$table.attr({ "id": CONTENTS_TABLE_ID, "_fixedhead":"cols:1" });
+
 		appendSessionListTo( $table, roomList, day_index );
 		convertGlobalPath( $table );
-		hideTr( $table, roomList );
+		hideUnnecessaryTimeTr( $table, roomList );
+		
+		// 非表示のタグを削除。
+		// ※非表示設定時に消すと行列のインデックスがずれる為、最後に削除。
 		$contets_body.find("tr:hidden,td:hidden").remove();
 
 		// フィルター作成
 		var $filter = createFilter( roomList );
 		convertGlobalPath( $filter );
 		commitFilterInfoTo( $table );
+
+
 
 		// commit
 		$("<div></div>")
@@ -317,6 +325,7 @@
 
 			var $tr_base = $('<tr><td class="time"></td></tr>');
 			var $th = $('<tr><th class="time"></th></tr>');
+
 			for(var room_name in roomList){
 				$tr_base.append( '<td room="' + room_name + '"></td>' );
 
@@ -327,8 +336,8 @@
 				}else{
 					$th.append( '<th room="' + room_name + '">'+room_name+'</th>' );
 				}
-
 			}
+
 			$thead.append( $th );
 
 			var hour 	= 9;		// 最少時間
@@ -359,32 +368,34 @@
 				}
 			}
 
-			return $('<table id="' + CONTENTS_TABLE_ID + '" _fixedhead="cols:1"></table>').append([
+			return $('<table></table>').append([
 				$thead,
 				$tbody
 			]);
 
-			// 部屋名から フロアマップのURLを取得する
-			function getFloorURL( room_name ){
+		}
 
-				var floorURL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx#floor";
+		//----------------------------------------------------------------------
+		// 部屋名から フロアマップのURLを取得する
+		//----------------------------------------------------------------------
+		function getFloorURL( room_name ){
 
-				if( room_name == "メインホール" ){
-					return floorURL + "1";
-				}
+			var floorURL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx#floor";
 
-				if( room_name.indexOf("R") == 0 ){
-					return floorURL + room_name.substr(1,1);
-				}
-
-				var floorNo = parseInt( room_name.substr(0,1), 10 );
-				if( 1 <= floorNo && floorNo <= 6 ){
-					return floorURL + floorNo;
-				}
-
-				return undefined;
+			if( room_name == "メインホール" ){
+				return floorURL + "1";
 			}
 
+			if( room_name.indexOf("R") == 0 ){
+				return floorURL + room_name.substr(1,1);
+			}
+
+			var floorNo = parseInt( room_name.substr(0,1), 10 );
+			if( 1 <= floorNo && floorNo <= 6 ){
+				return floorURL + floorNo;
+			}
+
+			return undefined;
 		}
 
 		//----------------------------------------------------------------------
@@ -401,70 +412,90 @@
 				var $trList = $tbody.find('tr');
 				for( var i = 0 ; i < rRoom.length ; ++i ){
 					var rSession = rRoom[i];
-					var $info = rSession.info;
-					var $infoMain = $info.find("td").children();
-					var startTime = rSession.getStartTimeString();
-					var endTime   = rSession.getEndTimeString();
-
-					var $tr = $trList.filter('[time="' + startTime +'"]');
-					var $td = $tr.find('[room="'+room_name +'"]');
-					var rowSpan = getRowSpan(startTime,endTime);
-
-					// 一度空にしておく
-					// セッションキャンセル時対応。後優先
-					$td.empty()
-						.attr('rowSpan', rowSpan )
-						.attr("spec", rSession.getMainSpecObject().attr("alt") )
-						.addClass( "session")
-						.addClass( "session_color_style_normal" )
-						.on("taphold dblclick",function(){
-							var $this = $(this);
-							if( $this.hasClass('session_color_style_favorite') ){
-								$this.removeClass('session_color_style_favorite');
-								Cookies.remove( m_year + '_' + $this.attr('id') );
-							}else{
-								$this.addClass('session_color_style_favorite');
-								Cookies.set( m_year + '_' + $this.attr('id'), '1', {expires:365} );
-							}
-						})
-						.append($infoMain);
-
-					var id = getIdFromTitleTag( $td.find('.ss_title') );
-					$td.attr( 'id', id )
-
-					if( Cookies.get( m_year + '_' + id ) !== undefined ){
-						$td.addClass('session_color_style_favorite');
-					}
-
-					$td.find('.ss_spec').each(function(){
-						var $this = $(this);
-						var $style = $this.find('.ss_style');
-						var text = $style.text();
-
-						for( var i = 0 ; i < REMOVE_SPECS_SELECTOR.length ; ++i){
-							$this.find( REMOVE_SPECS_SELECTOR[i] ).remove();
-						}
-
-						for( var i = 0 ; i < REMOVE_SPECS_STRINGS.length ; ++i){
-							if( text.indexOf( REMOVE_SPECS_STRINGS[i] ) >= 0 ){
-								$style.remove();
-								return;
-							}
-						}
-
-						$style.before('<br/>');
-					});
-
-					var $deteleTr = $tr;
-					for( var d = 0 ; d < rowSpan-1 ; ++d ){
-						$deteleTr = $deteleTr.next();
-						$deteleTr.find('[room="'+room_name +'"]').hide();
-					}
+					appendSession( rSession );
 				}
 			}
 
 			return;
 
+			//------------------------------------------------------------------
+			//
+			//------------------------------------------------------------------
+			function appendSession( rSession ){
+				var $info = rSession.info;
+				var $infoMain = $info.find("td").children();
+				var startTime = rSession.getStartTimeString();
+				var endTime   = rSession.getEndTimeString();
+
+				var $tr = $trList.filter('[time="' + startTime +'"]');
+				var $td = $tr.find('[room="'+room_name +'"]');
+				var rowSpan = getRowSpan(startTime,endTime);
+
+				// 一度空にしておく
+				// セッションキャンセル時対応。後優先
+				$td.empty()
+					.attr('rowSpan', rowSpan )
+					.attr("spec", rSession.getMainSpecObject().attr("alt") )
+					.addClass( "session")
+					.addClass( "session_color_style_normal" )
+					.on("taphold dblclick",function(){
+						var $this = $(this);
+						var id = $this.attr('id');
+						if( $this.hasClass('session_color_style_favorite') ){
+							$this.removeClass('session_color_style_favorite');
+							Cookies.remove( m_year + '_' + id );
+							m_favoriteList[id] = undefined;
+							upateFavoriteTable();
+						}else{
+							$this.addClass('session_color_style_favorite');
+							Cookies.set( m_year + '_' + id, '1', {expires:365*10} );
+							m_favoriteList[id] = { session:rSession, dom:$this };
+							upateFavoriteTable();
+						}
+					})
+					.append($infoMain);
+
+				// IDを取得
+				var id = getIdFromTitleTag( $td.find('.ss_title') );
+				$td.attr( 'id', id );
+
+				// お気に入り登録の確認
+				if( Cookies.get( m_year + '_' + id ) !== undefined ){
+					$td.addClass('session_color_style_favorite');
+					m_favoriteList[id] = { session:rSession, dom:$td };
+				}
+
+				// 不要項目の削除
+				$td.find('.ss_spec').each(function(){
+					var $this = $(this);
+					var $style = $this.find('.ss_style');
+					var text = $style.text();
+
+					for( var i = 0 ; i < REMOVE_SPECS_SELECTOR.length ; ++i){
+						$this.find( REMOVE_SPECS_SELECTOR[i] ).remove();
+					}
+
+					for( var i = 0 ; i < REMOVE_SPECS_STRINGS.length ; ++i){
+						if( text.indexOf( REMOVE_SPECS_STRINGS[i] ) >= 0 ){
+							$style.remove();
+							return;
+						}
+					}
+
+					$style.before('<br/>');
+				});
+
+				// セル結合している部分のセルを非表示に
+				var $deteleTr = $tr;
+				for( var d = 0 ; d < rowSpan-1 ; ++d ){
+					$deteleTr = $deteleTr.next();
+					$deteleTr.find('[room="'+room_name +'"]').hide();
+				}
+
+				//upateFavoriteTable();
+
+			}
+			
 			//------------------------------------------------------------------
 			//
 			//------------------------------------------------------------------
@@ -490,8 +521,12 @@
 				if( link !== undefined ){
 					// HTMLファイル指定と、ディレクトリ指定で分岐
 					if( link.lastIndexOf('.html') != -1 ){
+						// "../session/KN/12048.html"
+						// return "12048"
 						return link.slice( link.lastIndexOf('/'), link.lastIndexOf('.html') ).replace('/','');
 					}else{
+						// "/2017/session/KN/s5966bc0d596d9/"
+						// return "s5966bc0d596d9"
 						var urlsplit = link.split('/');
 						for( var u = urlsplit.length - 1 ; u >= 0 ; --u ){
 							if( urlsplit[u] == "" ) continue;
@@ -502,14 +537,15 @@
 
 				// どうしても検出できなければ、データ順をIDとする
 				// 該当セッションに限らず、スケジュールの割り込みや、部屋番号変更で破綻する
-				return $td.attr('id', day_index + "_" + room_name + i );
+				// return "0_メインホール0"
+				return day_index + "_" + room_name + i;
 			}
 		}
 
 		//----------------------------------------------------------------------
-		//  不要なTrをhideしておく
+		//  開始前、終了後の不要な時間用trタグを非表示に
 		//----------------------------------------------------------------------
-		function hideTr( $table, roomList ){
+		function hideUnnecessaryTimeTr( $table, roomList ){
 
 			var min_time = 12*60;
 			var max_time = 12*60;
@@ -567,7 +603,7 @@
 		}
 
 		//----------------------------------------------------------------------
-		//
+		// 
 		//----------------------------------------------------------------------
 		function customizeTable(day_index){
 			if( highlightInfo.enabled && highlightInfo.dayIndex == day_index ){
@@ -624,6 +660,9 @@
 		$( $trList[currentIndex] ).children(highlightSecelctor).addClass('current_time');
 	}
 
+	//==========================================================================
+	// CEDiL
+	//==========================================================================
 	//--------------------------------------------------------------------------
 	//
 	//--------------------------------------------------------------------------
@@ -652,8 +691,11 @@
 	}
 
 	//==========================================================================
-	//
+	// 
 	//==========================================================================
+	//--------------------------------------------------------------------------
+	// 
+	//--------------------------------------------------------------------------
 	function getURL_Params(){
 		var params = {};
 		var tmp = location.href.split('?');
