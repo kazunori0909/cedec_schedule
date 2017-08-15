@@ -117,27 +117,8 @@
 
 		$div.appendTo( $header );
 
-		$('<img id="favorite_selector" src="./image/favorite_0.png"></img>')
-			.click(function(){
-				var $this = $(this);
-
-				if( $this.hasClass("favorite_mode") ){
-					Cookies.remove( m_year + '_favorite_mode' );
-					$this.removeClass("favorite_mode");
-					$this.attr("src","./image/favorite_0.png");
-					$(CONTENTS_TABLE_SELECTOR).show();
-					$(CONTENTS_FAVORITE_TABLE_SELECTOR).hide();
-				}else{
-					Cookies.set( m_year + '_favorite_mode', '1', {expires:365*10} );
-					$this.addClass("favorite_mode");
-					$this.attr("src","./image/favorite_1.png");
-					$(CONTENTS_TABLE_SELECTOR).hide();
-					$(CONTENTS_FAVORITE_TABLE_SELECTOR).show();
-				}
-			})
-			.appendTo( $header );
-
 	}
+
 
 	//--------------------------------------------------------------------------
 	// 
@@ -183,15 +164,13 @@
 		var roomList = createRoomSessionList( $xml );	// 部屋毎のデータを取得
 		var timeRange = getMinMaxTime( roomList );		// 開催時間の取得
 
+		m_favoriteList = {};
+
 		// テーブル作成
 		var $table = createBaseTable( timeRange, roomList );
 		$table.attr({ "id": CONTENTS_TABLE_ID, "_fixedhead":"cols:1" });
 		appendSessionListTo( $table, roomList, day_index );
 		convertGlobalPath( $table );
-
-		// お気に入りテーブル作成
-		var $favorite_table = createBaseTable( timeRange, {"お気に入り(未実装)":[]} );
-		$favorite_table.attr({ "id": CONTENTS_FAVORITE_TABLE_ID }).hide();
 
 		// 非表示のタグを削除。
 		// ※行列のインデックスがずれる為、最後にまとめて削除。
@@ -202,15 +181,15 @@
 		convertGlobalPath( $filter );
 		commitFilterInfoTo( $table );
 
-
+		var $favorite = $('<img id="favorite_selector" src="./image/favorite_0.png"></img>');
 
 		// commit
 		$("<div></div>")
 			.append([
+				$favorite,
 				$filter,
 				"<h2>" + $xml.find("h2").html() +"</h2>",
-				$table,
-				$favorite_table
+				$table
 			])
 			.appendTo( $contets_body );
 
@@ -222,6 +201,34 @@
 
 		customizeTable(day_index);
 		FixedMidashi.create();
+
+
+		var $favorite = $('#favorite_selector');
+		
+		$favorite.click(function(){
+			var $this = $(this);
+
+			if( Cookies.get( m_year + '_favorite_mode' ) !== undefined ){
+				Cookies.remove( m_year + '_favorite_mode' );
+				$this.attr("src","./image/favorite_0.png");
+				$(CONTENTS_TABLE_SELECTOR).show();
+				$(CONTENTS_FAVORITE_TABLE_SELECTOR).remove();
+			}else{
+				Cookies.set( m_year + '_favorite_mode', '1', {expires:365*10} );
+				$this.attr("src","./image/favorite_1.png");
+				appendFavoriteTable();
+			}
+		});
+		
+		if( Cookies.get( m_year + '_favorite_mode' ) !== undefined ){
+			$favorite
+				.addClass("favorite_mode")
+				.attr("src","./image/favorite_1.png");
+			appendFavoriteTable();
+			$(CONTENTS_TABLE_SELECTOR).hide();
+			$(CONTENTS_FAVORITE_TABLE_SELECTOR).show();
+		}
+
 
 		return;
 
@@ -404,17 +411,29 @@
 		}
 
 		//----------------------------------------------------------------------
+		//
+		//----------------------------------------------------------------------
+		function getRowSpan( startTimeStr, endTimeStr ){
+			var s = startTimeStr.split(':');
+			s = parseInt(s[0]) * 60 + parseInt(s[1]);
+
+			var e = endTimeStr.split(':');
+			e = parseInt(e[0]) * 60 + parseInt(e[1]);
+			return (e - s) / MIN_MINUTES;
+		}
+
+		//----------------------------------------------------------------------
 		// テーブルにイベントを追加
 		//----------------------------------------------------------------------
 		function appendSessionListTo( $table, room_list, day_index ){
 
 			var $thead = $table.children("thead");
 			var $tbody = $table.children("tbody");
+			var $trList = $tbody.find('tr');
 
 			for(var room_name in room_list){
 				var rRoom = room_list[room_name];
 
-				var $trList = $tbody.find('tr');
 				for( var i = 0 ; i < rRoom.length ; ++i ){
 					var rSession = rRoom[i];
 					appendSession( rSession );
@@ -450,12 +469,10 @@
 							$this.removeClass('session_color_style_favorite');
 							Cookies.remove( m_year + '_' + id );
 							m_favoriteList[id] = undefined;
-							upateFavoriteTable();
 						}else{
 							$this.addClass('session_color_style_favorite');
 							Cookies.set( m_year + '_' + id, '1', {expires:365*10} );
 							m_favoriteList[id] = { session:rSession, dom:$this };
-							upateFavoriteTable();
 						}
 					})
 					.append($infoMain);
@@ -496,23 +513,8 @@
 					$deteleTr = $deteleTr.next();
 					$deteleTr.find('[room="'+room_name +'"]').hide();
 				}
-
-				upateFavoriteTable();
-
 			}
 			
-			//------------------------------------------------------------------
-			//
-			//------------------------------------------------------------------
-			function getRowSpan( startTimeStr, endTimeStr ){
-				var s = startTimeStr.split(':');
-				s = parseInt(s[0]) * 60 + parseInt(s[1]);
-
-				var e = endTimeStr.split(':');
-				e = parseInt(e[0]) * 60 + parseInt(e[1]);
-				return (e - s) / MIN_MINUTES;
-			}
-
 			//------------------------------------------------------------------
 			// タイトルタグからIDを取得する
 			// 
@@ -546,16 +548,121 @@
 				return day_index + "_" + room_name + i;
 			}
 
-			//------------------------------------------------------------------
-			//
-			//------------------------------------------------------------------
-			function upateFavoriteTable(){
-				
-				for(var favorite_id in m_favoriteList){
-					var rInfo = m_favoriteList[favorite_id];
+		}
+
+		//----------------------------------------------------------------------
+		//
+		//----------------------------------------------------------------------
+		function appendFavoriteTable(){
+
+			$(CONTENTS_FAVORITE_TABLE_SELECTOR).remove();
+
+			var roomList = createFavoriteSessionList();	// 部屋毎のデータを取得				
+
+			// お気に入りテーブル作成
+			var $favorite_table = createBaseTable( timeRange, roomList );
+			$favorite_table.attr({ "id": CONTENTS_FAVORITE_TABLE_ID });
+			
+			var $tbody = $favorite_table.children("tbody");
+			var $trList = $tbody.find('tr');
+
+			for(var room_name in roomList){
+				var rRoom = roomList[room_name];
+
+				for( var i = 0 ; i < rRoom.length ; ++i ){
+					var rInfo = rRoom[i];
+					var rSession = rInfo.session;
+
+					var startTime = rSession.getStartTimeString();
+					var endTime   = rSession.getEndTimeString();
+
+					var rowSpan = getRowSpan(startTime,endTime);
+
+					var $tr = $trList.filter('[time="' + startTime +'"]');
+					var $td = $tr.find('[room="'+room_name +'"]');
+
+					var $temp = rInfo.dom.clone();
+
+					var floorMapURL = CEDEC.getFloorURL( rSession.getRoomNo() );
+
+					var $room;
+					if( floorMapURL !== undefined ){
+						$room = $('<p>Room:<a href="' + floorMapURL + '" target="blank">' + $temp.attr('room') + '</a></p>')
+					}else{
+						$room = $('<p>Room:' + $temp.attr('room') + '</p>')
+					}
+
+					$td.append([
+							$room,
+							$temp.html()
+						])
+						.attr('rowSpan', rowSpan )
+						.attr("spec", rSession.getMainSpecObject().attr("alt") )
+						.addClass( "session")
+						.addClass( "session_color_style_normal" );
+
+					// セル結合している部分のセルを非表示に
+					var $deteleTr = $tr;
+					for( var d = 0 ; d < rowSpan-1 ; ++d ){
+						$deteleTr = $deteleTr.next();
+						$deteleTr.children('[room="'+room_name +'"]').hide();
+					}
+
 				}
 			}
 
+
+			$(CONTENTS_TABLE_SELECTOR)
+				.hide()
+				.before( $favorite_table );
+
+			return;
+
+			//----------------------------------------------------------------------
+			// 
+			//----------------------------------------------------------------------
+			function createFavoriteSessionList(){
+				var roomList 	= {};	//
+				var unique 		= 0;
+
+				for(var favorite_id in m_favoriteList){
+					var rInfo = m_favoriteList[favorite_id];
+					if( rInfo == undefined ) continue;
+					var rSession = rInfo.session;
+					findAppendToList( rSession ).push( rInfo );
+				};
+				return roomList;
+
+				// スケジュール情報から 追加先リストを返す
+				function findAppendToList( session ){
+					var room_name = "";
+
+					for(var name in roomList){
+						if( name.indexOf("お気に入り_") != 0 ) continue;
+						var rList = roomList[name];
+						var isOverlaped = false;
+
+						for( var l = 0 ; l < rList.length ; ++l ){
+							if( rList[l].session.isOverlap( rSession ) ){
+								isOverlaped = true;
+								break;
+							}
+						}
+						if( isOverlaped == false ){
+							room_name = name;
+							break;
+						}
+					}
+
+					// 無名なので新しくリストを追加する
+					if( room_name == "" ){
+						room_name = "お気に入り_" + unique;
+						roomList[room_name] = [];
+						++unique;
+					}
+					return roomList[room_name];
+				}
+			}
 		}
 
 		//----------------------------------------------------------------------
