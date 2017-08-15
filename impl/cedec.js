@@ -7,6 +7,7 @@ var CEDEC = (function($){
 	// 定義
 	//==========================================================================
 	var MASTER_URL	= "http://cedec.cesa.or.jp/";
+	var FLOOR_GUIDE_URL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx";
 
 	var SCHEDULE_SETTING = [
 		{ year:"2017", first_date:"0830", format:'session/schedule_{date}/'	},
@@ -143,7 +144,9 @@ var CEDEC = (function($){
 		createSessionData		:	createSessionData,
 
 		// DOM
-		appendNaviMenuTo		:	appendNaviMenuTo
+		appendNaviMenuTo		:	appendNaviMenuTo,
+
+		getFloorURL				:	getFloorURL
 	};
 
 
@@ -220,5 +223,30 @@ var CEDEC = (function($){
 
 		return $dom.append( list );
 	}
+
+	//--------------------------------------------------------------------------
+	// 部屋名から フロアマップのURLを取得する
+	//--------------------------------------------------------------------------
+	function getFloorURL( room_name ){
+
+		var floorURL = FLOOR_GUIDE_URL + "#floor";
+
+		if( room_name == "メインホール" ){
+			return floorURL + "1";
+		}
+
+		if( room_name.indexOf("R") == 0 ){
+			return floorURL + room_name.substr(1,1);
+		}
+
+		var floorNo = parseInt( room_name.substr(0,1), 10 );
+		if( 1 <= floorNo && floorNo <= 6 ){
+			return floorURL + floorNo;
+		}
+
+		return undefined;
+	}
+
+
 
 })(jQuery);

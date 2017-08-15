@@ -42,21 +42,25 @@
 		dayIndex: 0,
 		intervalId:-1,
 	}
+
 	var m_opendDay = new Date();
-	var m_debugHighlighDay = undefined;
 
 	// for Debug
+	var m_debugHighlighDay = undefined;
 //	var m_opendDay	 = new Date(2017,8-1,30,12,20);
 //	var m_debugHighlighDay = m_opendDay;
 
-	var hideInfo	= {};
 	var m_setting;
+	var m_dateList = [];
+
+	var m_hideInfo	= {};
 	var m_favoriteList = {};	
 	
 	$(document).ready(function(){
 
-		m_setting	= CEDEC.createSettingFromYear( m_year );
-
+		m_setting  = CEDEC.createSettingFromYear( m_year );
+		m_dateList = m_setting.getDateList();
+		
 		$('body')
 			.removeClass('ui-overlay-a')
 			.css('overflow-x','visible')
@@ -70,10 +74,8 @@
 
 		// 開催期間であれば、選択
 		if( m_opendDay.getFullYear() == m_setting.year ){
-
-			var dateList = m_setting.getDateList();
-			for( var i = 0 ; i < dateList.length ; ++i ){
-				var date = dateList[i];
+			for( var i = 0 ; i < m_dateList.length ; ++i ){
+				var date = m_dateList[i];
 
 				if( m_opendDay.getMonth() != date.getMonth() ) continue;
 				if( m_opendDay.getDate() != date.getDate() ) continue;
@@ -99,10 +101,8 @@
 
 		var $div = $('<div></div>');
 
-		var dateList = m_setting.getDateList();
-
-		for( var i = 0 ; i < dateList.length ; ++i ){
-			var date = dateList[i];
+		for( var i = 0 ; i < m_dateList.length ; ++i ){
+			var date = m_dateList[i];
 			$('<input type="button" class="schedule_button"></input>')
 				.val( (date.getMonth() + 1) + "/" + date.getDate() + "(" + WEEK_DAY_SHORT_STRING[date.getDay()] +")" )
 				.attr( 'data_index', i )
@@ -253,11 +253,11 @@
 		//----------------------------------------------------------------------
 		// 分野等の表示フィルター部生成
 		//----------------------------------------------------------------------
-		function createFilter( roomList ){
+		function createFilter( room_list ){
 			var filterList = {};
-			for(var room_name in roomList){
-				for( var i = 0 ; i < roomList[room_name].length ; ++i ){
-					var rSession = roomList[room_name][i];
+			for(var room_name in room_list){
+				for( var i = 0 ; i < room_list[room_name].length ; ++i ){
+					var rSession = room_list[room_name][i];
 					var $spec = rSession.getMainSpecObject();
 					filterList[$spec.attr("alt")] = $spec;
 				}
@@ -273,11 +273,11 @@
 
 				if( $this.hasClass('hide') ){
 					$this.removeClass('hide');
-					hideInfo[alt]=undefined;
+					m_hideInfo[alt]=undefined;
 					Cookies.remove( m_year + '_hide_' + alt );
 				}else{
 					$this.addClass('hide');
-					hideInfo[alt]=true;
+					m_hideInfo[alt]=true;
 					Cookies.set( m_year + '_hide_' + alt, '1', {expires:365} );
 				}
 
@@ -291,7 +291,7 @@
 
 				if( Cookies.get( m_year + '_hide_' + alt ) !== undefined ){
 					$this.addClass('hide');
-					hideInfo[alt]=true;
+					m_hideInfo[alt]=true;
 				}
 			});
 
@@ -308,7 +308,7 @@
 				var $this = $(this);
 				var alt	  = $this.attr('spec');
 
-				if( hideInfo[alt] === undefined ){
+				if( m_hideInfo[alt] === undefined ){
 					$this.children().show();
 				}else{
 					$this.children().hide();
@@ -319,17 +319,17 @@
 		//----------------------------------------------------------------------
 		// 時間と部屋番号のテーブルを作成
 		//----------------------------------------------------------------------
-		function createBaseTable( roomList ){
+		function createBaseTable( room_list ){
 			var $tbody = $("<tbody></tbody>");
 			var $thead = $("<thead></thead>");
 
 			var $tr_base = $('<tr><td class="time"></td></tr>');
 			var $th = $('<tr><th class="time"></th></tr>');
 
-			for(var room_name in roomList){
+			for(var room_name in room_list){
 				$tr_base.append( '<td room="' + room_name + '"></td>' );
 
-				var floorMapURL = getFloorURL( room_name );
+				var floorMapURL = CEDEC.getFloorURL( room_name );
 
 				if( floorMapURL !== undefined ){
 					$th.append( '<th room="' + room_name + '"><a href="' + floorMapURL +'" target="blank">'+room_name+'</a></th>' );
@@ -376,38 +376,15 @@
 		}
 
 		//----------------------------------------------------------------------
-		// 部屋名から フロアマップのURLを取得する
-		//----------------------------------------------------------------------
-		function getFloorURL( room_name ){
-
-			var floorURL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx#floor";
-
-			if( room_name == "メインホール" ){
-				return floorURL + "1";
-			}
-
-			if( room_name.indexOf("R") == 0 ){
-				return floorURL + room_name.substr(1,1);
-			}
-
-			var floorNo = parseInt( room_name.substr(0,1), 10 );
-			if( 1 <= floorNo && floorNo <= 6 ){
-				return floorURL + floorNo;
-			}
-
-			return undefined;
-		}
-
-		//----------------------------------------------------------------------
 		// テーブルにイベントを追加
 		//----------------------------------------------------------------------
-		function appendSessionListTo( $table, roomList, day_index ){
+		function appendSessionListTo( $table, room_list, day_index ){
 
 			var $thead = $table.children("thead");
 			var $tbody = $table.children("tbody");
 
-			for(var room_name in roomList){
-				var rRoom = roomList[room_name];
+			for(var room_name in room_list){
+				var rRoom = room_list[room_name];
 
 				var $trList = $tbody.find('tr');
 				for( var i = 0 ; i < rRoom.length ; ++i ){
@@ -492,7 +469,7 @@
 					$deteleTr.find('[room="'+room_name +'"]').hide();
 				}
 
-				//upateFavoriteTable();
+				upateFavoriteTable();
 
 			}
 			
@@ -540,18 +517,26 @@
 				// return "0_メインホール0"
 				return day_index + "_" + room_name + i;
 			}
+
+			//------------------------------------------------------------------
+			//
+			//------------------------------------------------------------------
+			function upateFavoriteTable(){
+
+			}
+
 		}
 
 		//----------------------------------------------------------------------
 		//  開始前、終了後の不要な時間用trタグを非表示に
 		//----------------------------------------------------------------------
-		function hideUnnecessaryTimeTr( $table, roomList ){
+		function hideUnnecessaryTimeTr( $table, room_list ){
 
 			var min_time = 12*60;
 			var max_time = 12*60;
 
-			for(var room_name in roomList){
-				var rList = roomList[room_name];
+			for(var room_name in room_list){
+				var rList = room_list[room_name];
 
 				for( var s = 0 ; s < rList.length ; ++s ){
 					var time_s = rList[s].getStartTime();
