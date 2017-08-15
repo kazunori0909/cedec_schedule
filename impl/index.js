@@ -15,6 +15,9 @@
 	var CONTENTS_TABLE_ID = 'day_table';
 	var CONTENTS_TABLE_SELECTOR = '#'+CONTENTS_TABLE_ID;
 
+	var CONTENTS_FAVORITE_TABLE_ID = 'day_favorite_table';
+	var CONTENTS_FAVORITE_TABLE_SELECTOR = '#'+CONTENTS_FAVORITE_TABLE_ID;
+
 	// 除外する文字列リスト
 	var REMOVE_SPECS_STRINGS = [
 		"基調講演"
@@ -113,6 +116,27 @@
 		}
 
 		$div.appendTo( $header );
+
+		$('<img id="favorite_selector" src="./image/favorite_0.png"></img>')
+			.click(function(){
+				var $this = $(this);
+
+				if( $this.hasClass("favorite_mode") ){
+					Cookies.remove( m_year + '_favorite_mode' );
+					$this.removeClass("favorite_mode");
+					$this.attr("src","./image/favorite_0.png");
+					$(CONTENTS_TABLE_SELECTOR).show();
+					$(CONTENTS_FAVORITE_TABLE_SELECTOR).hide();
+				}else{
+					Cookies.set( m_year + '_favorite_mode', '1', {expires:365*10} );
+					$this.addClass("favorite_mode");
+					$this.attr("src","./image/favorite_1.png");
+					$(CONTENTS_TABLE_SELECTOR).hide();
+					$(CONTENTS_FAVORITE_TABLE_SELECTOR).show();
+				}
+			})
+			.appendTo( $header );
+
 	}
 
 	//--------------------------------------------------------------------------
@@ -155,18 +179,22 @@
 		var $xml		  = $(xml);
 		var $contets_body = $(CONTENTS_BODY_SELECTOR);
 
+		// 情報取得
 		var roomList = createRoomSessionList( $xml );	// 部屋毎のデータを取得
+		var timeRange = getMinMaxTime( roomList );		// 開催時間の取得
 
 		// テーブル作成
-		var $table = createBaseTable( roomList );
+		var $table = createBaseTable( timeRange, roomList );
 		$table.attr({ "id": CONTENTS_TABLE_ID, "_fixedhead":"cols:1" });
-
 		appendSessionListTo( $table, roomList, day_index );
 		convertGlobalPath( $table );
-		hideUnnecessaryTimeTr( $table, roomList );
-		
+
+		// お気に入りテーブル作成
+		var $favorite_table = createBaseTable( timeRange, {"お気に入り(未実装)":[]} );
+		$favorite_table.attr({ "id": CONTENTS_FAVORITE_TABLE_ID }).hide();
+
 		// 非表示のタグを削除。
-		// ※非表示設定時に消すと行列のインデックスがずれる為、最後に削除。
+		// ※行列のインデックスがずれる為、最後にまとめて削除。
 		$contets_body.find("tr:hidden,td:hidden").remove();
 
 		// フィルター作成
@@ -181,7 +209,8 @@
 			.append([
 				$filter,
 				"<h2>" + $xml.find("h2").html() +"</h2>",
-				$table
+				$table,
+				$favorite_table
 			])
 			.appendTo( $contets_body );
 
@@ -319,7 +348,7 @@
 		//----------------------------------------------------------------------
 		// 時間と部屋番号のテーブルを作成
 		//----------------------------------------------------------------------
-		function createBaseTable( room_list ){
+		function createBaseTable( time_range, room_list ){
 			var $tbody = $("<tbody></tbody>");
 			var $thead = $("<thead></thead>");
 
@@ -340,13 +369,12 @@
 
 			$thead.append( $th );
 
-			var hour 	= 9;		// 最少時間
-			var minutes = 0;
-			var endHour		= 19;	// 最大時間
-			var endMinutes	= 0;
+			var hour 	= Math.floor(time_range.min/60);		// 最少時間
+			var minutes = time_range.min%60;
 
 			for(;;){
-				if( (hour*60 + minutes) > (endHour*60 + endMinutes) ){
+				// 最後に一行残しているが消す場合は、「>=」にする
+				if( (hour*60 + minutes) > (time_range.max) ){
 					break;
 				}
 
@@ -522,18 +550,23 @@
 			//
 			//------------------------------------------------------------------
 			function upateFavoriteTable(){
-
+				
+				for(var favorite_id in m_favoriteList){
+					var rInfo = m_favoriteList[favorite_id];
+				}
 			}
 
 		}
 
 		//----------------------------------------------------------------------
-		//  開始前、終了後の不要な時間用trタグを非表示に
+		// 部屋別スケジュールリストから開催時間の最小と最大をを取得する
+		// 
+		// return { min:開始時間(分) max:終了時間(分) }
 		//----------------------------------------------------------------------
-		function hideUnnecessaryTimeTr( $table, room_list ){
+		function getMinMaxTime( room_list ){
 
-			var min_time = 12*60;
-			var max_time = 12*60;
+			var min_time = 24*60;
+			var max_time = 0*60;
 
 			for(var room_name in room_list){
 				var rList = room_list[room_name];
@@ -545,8 +578,16 @@
 					if( max_time < time_e ){ max_time = time_e; }
 				}
 			}
+			//return { min:6*60, max:21*60 };
+			return { min:min_time, max:max_time };
+		}
 
-			$table.find("tr").each(function(){
+		//----------------------------------------------------------------------
+		//  開催時間外の不要なtrタグを非表示に
+		//----------------------------------------------------------------------
+		function hideUnnecessaryTimeTr( $table, time_range ){
+
+			$table.find("tbody > tr").each(function(){
 				var $this = $(this);
 
 				var s = $this.attr("time");
@@ -554,27 +595,31 @@
 				s = s.split(':');
 				if( s === undefined )	return;
 				var time = parseInt(s[0]) * 60 + parseInt(s[1]);
-				if( time < min_time )	$this.hide();
-				if( time > max_time )	$this.hide();
+				if( time < time_range.min )	$this.hide();
+				if( time > time_range.max )	$this.hide();
 			});
 		}
 
 		//----------------------------------------------------------------------
 		// 埋め込まれている相対パスからの間違ったパスを変換する
 		//----------------------------------------------------------------------
-		function convertGlobalPath( $table ){
+		function convertGlobalPath( $dom ){
 
 			// イメージタグのパスをグローバルに編子
-			$table.find("img").each(function(){
+			$dom.find("img").each(function(){
 				var $this = $(this);
 				var path = $this.attr("src");
 				if( path.indexOf("http") == 0 ) return;
-				path = path.replace("../",m_setting.rootURL );
+				if( path.indexOf("/") == 0 ){
+					path = CEDEC.MASTER_URL + path.substr(1);
+				}else{
+					path = path.replace("../",m_setting.rootURL );
+				}
 				$this.attr("src", path );
 			});
 
 			// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
-			$table.find("a").each(function(){
+			$dom.find("a").each(function(){
 				var $this = $(this);
 				var path = $this.attr("href");
 				if( path.indexOf("http") == 0 ) return;

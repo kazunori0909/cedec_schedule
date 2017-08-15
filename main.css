@@ -20,42 +20,6 @@ div#contents
     height:auto;
 }
 
-#day_table{
-	width: 1800px;
-}
-
-#day_table > tbody > tr > td, #day_table > thead > tr > th{
-	width : 300px;
-	border: 1px solid #b9b9b9;
-}
-
-#day_table td.time, #day_table th.time{
-	width : 80px;
-	text-align: center;
-}
-
-#day_table th{
-	font-size: 150%;
-}
-
-#day_table td.session{
-    padding:7px;
-	border-radius: 10px; /* CSS3 */
-	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */
-}
-
-#day_table td.session_color_style_normal{
-	background-color: #f0f0f0;
-}
-
-#day_table td.current_time{
-	background-color: #82fff0;
-}
-
-#day_table td.session_color_style_favorite{
-	background-color: #ffe4f7;
-}
-
 .schedule_button{
 	font-size: 160%;
 	width : 200px;
@@ -72,4 +36,57 @@ div#contents
 .spec_filter > img.hide{
 	width:29px;
 	height:9px;
+}
+
+#favorite_selector {
+	float:left;
+	cursor : pointer;
+}
+
+/*---------------------------------------
+ テーブル・お気に入りテーブル
+---------------------------------------*/
+#day_table{
+	width: 1800px;
+}
+
+#day_table > tbody > tr > td, #day_table > thead > tr > th{
+	width : 300px;
+	border: 1px solid #b9b9b9;
+}
+
+#day_favorite_table > tbody > tr > td, #day_favorite_table > thead > tr > th{
+	border: 1px solid #b9b9b9;
+}
+
+#day_table td.time, #day_table th.time,
+#day_favorite_table td.time, #day_favorite_table th.time
+{
+	width:10px;	/* 最小化する為に無理やり小さい値 */
+	text-align: center;
+}
+
+#day_table > thead > tr > th,
+#day_favorite_table > thead > tr > th
+{
+	font-size: 150%;
+}
+
+#day_table td.session{
+    padding:7px;
+	border-radius: 10px; /* CSS3 */
+	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */
+}
+
+#day_table td.session_color_style_normal{
+	background-color: #f0f0f0;
+}
+
+#day_table td.current_time,
+#day_favorite_table td.current_time{
+	background-color: #82fff0;
+}
+
+#day_table td.session_color_style_favorite{
+	background-color: #ffe4f7;
 }
