@@ -27,6 +27,10 @@ div#contents
 	margin : 10px;
 }
 
+.spec_filter{
+	float:left;
+}
+
 .spec_filter > img{
 	margin:3px;
 	padding:3px;
@@ -39,7 +43,6 @@ div#contents
 }
 
 #favorite_selector {
-	float:left;
 	cursor : pointer;
 }
 

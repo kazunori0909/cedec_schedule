@@ -186,8 +186,8 @@
 		// commit
 		$("<div></div>")
 			.append([
-				$favorite,
 				$filter,
+				$favorite,
 				"<h2>" + $xml.find("h2").html() +"</h2>",
 				$table
 			])
@@ -203,8 +203,6 @@
 		FixedMidashi.create();
 
 
-		var $favorite = $('#favorite_selector');
-		
 		$favorite.click(function(){
 			var $this = $(this);
 
@@ -625,12 +623,20 @@
 				var roomList 	= {};	//
 				var unique 		= 0;
 
+				var finded = false;
+
 				for(var favorite_id in m_favoriteList){
 					var rInfo = m_favoriteList[favorite_id];
 					if( rInfo == undefined ) continue;
 					var rSession = rInfo.session;
 					findAppendToList( rSession ).push( rInfo );
+					finded = true;
 				};
+
+				if( finded == false ){
+					return { "お気に入り登録がありません。" : [] };
+				}
+				
 				return roomList;
 
 				// スケジュール情報から 追加先リストを返す
