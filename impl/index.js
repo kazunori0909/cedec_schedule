@@ -573,6 +573,7 @@
 					var $td = $tr.find('[room="'+room_name +'"]');
 
 					var $temp = rInfo.dom.clone();
+					$temp.children().show();
 
 					var floorMapURL = CEDEC.getFloorURL( rSession.getRoomNo() );
 
