@@ -597,7 +597,7 @@
 						.attr('rowSpan', rowSpan )
 						.attr("spec", rSession.getMainSpecObject().attr("alt") )
 						.addClass( "session")
-						.addClass( "session_color_style_normal" );
+						.addClass( "session_color_style_favorite" );
 
 					// セル結合している部分のセルを非表示に
 					var $deteleTr = $tr;

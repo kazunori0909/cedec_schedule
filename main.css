@@ -29,6 +29,20 @@ div#contents
 
 .spec_filter{
 	float:left;
+	background-color: #f0f0f0;
+	border-radius: 10px; /* CSS3 */
+	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */
+
+	display: -webkit-flex;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-align-items: center;
+	-webkit-justify-content: center;
+	padding:3px;
+	
+	margin-left: 6px;
+	margin-right: 6px;
 }
 
 .spec_filter > img{
@@ -91,7 +105,7 @@ div#contents
 	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */
 }
 
-#day_favorite_table td.session_color_style_normal{
+#day_favorite_table td.session_color_style_favorite{
 	background-color: #ffe4f7;
 }
 
