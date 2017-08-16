@@ -742,7 +742,10 @@
 				}else{
 					path = path.replace("../",m_setting.rootURL )  + "#content";
 				}
-				$this.attr("href", path );
+				$this.attr({
+					"href"   : path,
+					"target" : "blank"
+				});
 			});
 		}
 
