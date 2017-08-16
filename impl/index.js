@@ -578,13 +578,14 @@
 
 					var $room;
 					if( floorMapURL !== undefined ){
-						$room = $('<p>Room:<a href="' + floorMapURL + '" target="blank">' + $temp.attr('room') + '</a></p>')
+						$room = $('<p class="room">Room:<a href="' + floorMapURL + '" target="blank">' + $temp.attr('room') + '</a></p>')
 					}else{
-						$room = $('<p>Room:' + $temp.attr('room') + '</p>')
+						$room = $('<p class="room">Room:' + $temp.attr('room') + '</p>')
 					}
 
 					$td.append([
 							$room,
+							"<hr/>",
 							$temp.html()
 						])
 						.attr('rowSpan', rowSpan )
