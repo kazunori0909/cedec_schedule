@@ -40,7 +40,7 @@
 
 	if( m_url_params.year !== undefined )	m_year = m_url_params.year;
 
-	var highlightInfo = {
+	var m_highlightInfo = {
 		enabled	: false,
 		dayIndex: 0,
 		intervalId:-1,
@@ -50,7 +50,7 @@
 
 	// for Debug
 	var m_debugHighlighDay = undefined;
-//	var m_opendDay	 = new Date(2017,8-1,30,12,20);
+//	var m_opendDay	 = new Date(2017,8-1,31,11,24);
 //	var m_debugHighlighDay = m_opendDay;
 
 	var m_setting;
@@ -73,21 +73,12 @@
 		appendContentsHeader( CONTENTS_HEADER_SELECTOR );
 		CEDEC.appendNaviMenuTo( $('#old').next() );
 
-		var dayIndex = 0;
+		startupHighlightInfo();
 
-		// 開催期間であれば、選択
-		if( m_opendDay.getFullYear() == m_setting.year ){
-			for( var i = 0 ; i < m_dateList.length ; ++i ){
-				var date = m_dateList[i];
-
-				if( m_opendDay.getMonth() != date.getMonth() ) continue;
-				if( m_opendDay.getDate() != date.getDate() ) continue;
-				dayIndex = i;
-
-				highlightInfo.enabled  = true;
-				highlightInfo.dayIndex = dayIndex;
-				break;
-			}
+		var dayIndex = parseInt(Cookies.get( m_year + '_dayIndex' )) || 0;
+		if( m_highlightInfo.enabled ){
+			// 開催期間中は日付優先
+			dayIndex = m_highlightInfo.dayIndex;
 		}
 
 		setTimeout( appendSessionSchedule, 10, dayIndex );
@@ -110,7 +101,9 @@
 				.val( (date.getMonth() + 1) + "/" + date.getDate() + "(" + WEEK_DAY_SHORT_STRING[date.getDay()] +")" )
 				.attr( 'data_index', i )
 				.click(function(){
-					setTimeout( appendSessionSchedule, 10, parseInt( $(this).attr('data_index') ) );
+					var index = $(this).attr('data_index');
+					Cookies.set( m_year + '_dayIndex', index, {expires:365*10} )
+					setTimeout( appendSessionSchedule, 10, parseInt( index ) );
 				})
 				.appendTo( $div );
 		}
@@ -126,9 +119,9 @@
 	function appendSessionSchedule( day_index ){
 
 		// ハイライト処理を停止
-		if( highlightInfo.intervalId >= 0 ){
-			clearInterval( highlightInfo.intervalId );
-			highlightInfo.intervalId = -1;
+		if( m_highlightInfo.intervalId >= 0 ){
+			clearInterval( m_highlightInfo.intervalId );
+			m_highlightInfo.intervalId = -1;
 		}
 
 		// loading icon
@@ -188,7 +181,7 @@
 			.append([
 				$filter,
 				$favorite,
-				"<h2>" + $xml.find("h2").html() +"</h2>",
+				"<br/><br/><h2>" + $xml.find("h2").html() +"</h2>",
 				$table
 			])
 			.appendTo( $contets_body );
@@ -198,10 +191,6 @@
 			var image_path = m_setting.rootURL + "images" + $this.attr("src").split("../images")[1];
 			$this.attr("src", image_path );
 		});
-
-		customizeTable(day_index);
-		FixedMidashi.create();
-
 
 		$favorite.click(function(){
 			var $this = $(this);
@@ -226,6 +215,10 @@
 			$(CONTENTS_TABLE_SELECTOR).hide();
 			$(CONTENTS_FAVORITE_TABLE_SELECTOR).show();
 		}
+
+		customizeTable(day_index);
+		FixedMidashi.create();
+
 
 
 		return;
@@ -614,6 +607,12 @@
 				.hide()
 				.before( $favorite_table );
 
+
+			if( m_highlightInfo.enabled && m_highlightInfo.dayIndex == day_index ){
+				// 強制的にハイライト関数をコール
+				highlightedNowTime();
+			}
+
 			return;
 
 			//----------------------------------------------------------------------
@@ -749,13 +748,31 @@
 		// 
 		//----------------------------------------------------------------------
 		function customizeTable(day_index){
-			if( highlightInfo.enabled && highlightInfo.dayIndex == day_index ){
+			if( m_highlightInfo.enabled && m_highlightInfo.dayIndex == day_index ){
 				highlightedNowTime( m_debugHighlighDay );
 
-				highlightInfo.intervalId = setInterval(function(){
+				m_highlightInfo.intervalId = setInterval(function(){
 					highlightedNowTime();
 				}, 1000 * 60 );
 			}
+		}
+	}
+
+	//--------------------------------------------------------------------------
+	//
+	//--------------------------------------------------------------------------
+	function startupHighlightInfo(){
+		if( m_opendDay.getFullYear() != m_setting.year ) return;
+
+		for( var i = 0 ; i < m_dateList.length ; ++i ){
+			var date = m_dateList[i];
+
+			if( m_opendDay.getMonth() != date.getMonth() ) continue;
+			if( m_opendDay.getDate() != date.getDate() ) continue;
+
+			m_highlightInfo.enabled  = true;
+			m_highlightInfo.dayIndex = i;
+			break;
 		}
 	}
 
@@ -772,35 +789,43 @@
 		if( hours.toString().length == 1 ) hours = "0" + hours;
 		var minutes = date.getMinutes();
 
-		var $table = $(CONTENTS_TABLE_SELECTOR);
-		var $trList = $table.find('tbody tr[time*="' + hours +':"]');
+		highlight( $(CONTENTS_TABLE_SELECTOR) );
+		highlight( $(CONTENTS_FAVORITE_TABLE_SELECTOR) );
 
-		var currentIndex = 0;
-		for(; currentIndex < $trList.length ; ++currentIndex ){
-			var $tr	= $( $trList[currentIndex] );
-			var temp = $tr.attr("time").split(":");
-			var tr_hour    = parseInt( temp[0], 10 );
-			var tr_minutes = parseInt( temp[1], 10 );
-			var tr_date    = new Date(date.getFullYear(),date.getMonth(),date.getDate(),tr_hour,tr_minutes);
+		return;
 
-			if( tr_date.getTime() > date.getTime() ){
-				currentIndex -= 1;
-				if( currentIndex < 0 ) currentIndex = 0;
-				break;
-			}else if( tr_date.getTime() == date.getTime() ){
-				break;
+		function highlight( $table ){
+			var $trList = $table.find('tbody tr[time*="' + hours +':"]');
+	
+			var currentIndex = 0;
+			for(; currentIndex < $trList.length ; ++currentIndex ){
+				var $tr	= $( $trList[currentIndex] );
+				var temp = $tr.attr("time").split(":");
+				var tr_hour    = parseInt( temp[0], 10 );
+				var tr_minutes = parseInt( temp[1], 10 );
+				var tr_date    = new Date(date.getFullYear(),date.getMonth(),date.getDate(),tr_hour,tr_minutes);
+	
+				if( tr_date.getTime() > date.getTime() ){
+					currentIndex -= 1;
+					if( currentIndex < 0 ) currentIndex = 0;
+					break;
+				}else if( tr_date.getTime() == date.getTime() ){
+					break;
+				}
 			}
+	
+			if( currentIndex == $trList.length ){
+				currentIndex -= 1;
+			}
+	
+			// ハイライトクラスを設定
+			var highlightSecelctor = ':eq(0),:empty';
+	
+			$table.find('tbody td.current_time').removeClass('current_time');
+			$( $trList[currentIndex] ).children(highlightSecelctor).addClass('current_time');
+					
 		}
 
-		if( currentIndex == $trList.length ){
-			currentIndex -= 1;
-		}
-
-		// ハイライトクラスを設定
-		var highlightSecelctor = ':eq(0),:empty';
-
-		$table.find('tbody td.current_time').removeClass('current_time');
-		$( $trList[currentIndex] ).children(highlightSecelctor).addClass('current_time');
 	}
 
 	//==========================================================================
@@ -816,19 +841,20 @@
 //		}
 //		alert( debugList.length + "\n" + debugList.join("\r\n") );
 
-		$(CONTENTS_TABLE_SELECTOR).find('td.session').each(function(){
-			var $this = $(this);
-			if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
-			var title = $this.find('.ss_title').text()
-							.replace(/\n/g, "")
-							.replace(/ /g, "")
-							.replace(/　/g, "");
-			for( var i = 0 ; i < list.length ; ++i ){
-				if( title.indexOf( list[i].title ) == -1 ) continue;
-				$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
-				break;
-			}
-		});
+		$(CONTENTS_TABLE_SELECTOR + "," + CONTENTS_FAVORITE_TABLE_SELECTOR)
+			.find('td.session').each(function(){
+				var $this = $(this);
+				if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
+				var title = $this.find('.ss_title').text()
+								.replace(/\n/g, "")
+								.replace(/ /g, "")
+								.replace(/　/g, "");
+				for( var i = 0 ; i < list.length ; ++i ){
+					if( title.indexOf( list[i].title ) == -1 ) continue;
+					$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
+					break;
+				}
+			});
 
 
 	}
