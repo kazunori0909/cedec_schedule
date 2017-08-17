@@ -578,10 +578,15 @@
 					var floorMapURL = CEDEC.getFloorURL( rSession.getRoomNo() );
 
 					var $room;
+					var dispRoomName = $temp.attr('room');
+					if( dispRoomName.indexOf("不明_") != -1 ){
+						dispRoomName = "不明";
+					}
+
 					if( floorMapURL !== undefined ){
-						$room = $('<p class="room">Room:<a href="' + floorMapURL + '" target="blank">' + $temp.attr('room') + '</a></p>')
+						$room = $('<p class="room">Room:<a href="' + floorMapURL + '" target="blank">' + dispRoomName + '</a></p>')
 					}else{
-						$room = $('<p class="room">Room:' + $temp.attr('room') + '</p>')
+						$room = $('<p class="room">Room:' + dispRoomName + '</p>')
 					}
 
 					$td.append([
