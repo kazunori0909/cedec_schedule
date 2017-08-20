@@ -21,14 +21,16 @@ HTML stringは対応しているので、プラグインを書き換え使用。
 
 # 年度別対応方法
 * ページ情報の更新( impl/cedil.js )
-```
-var SCHEDULE_SETTING = [  
-    { year:"2017", first_date:"0830", format:'session/schedule_{date}/' },  
-    { year:"2016", first_date:"0824", format:'session/schedule_{date}.html', cedil_tag_no:712	},
+```javascript
+var SCHEDULE_SETTING = [
+    { year:"2017", first_date:"0830", format:'session/schedule_{date}/' },
+    { year:"2016", first_date:"0824", format:'session/schedule_{date}.html', cedil_tag_no:712 },
     ...
     { year:"2013", first_date:"0821", format:'schedule/day{day_no}.html',    cedil_tag_no:8 },
     ...
 ];
 ```
 * デフォルトページ設定( impl/index.js )  
-`var DEFAULT_YEAR = 2017;`
+```javascript
+var DEFAULT_YEAR = 2017;`
+```
