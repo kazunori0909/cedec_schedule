@@ -70,11 +70,13 @@ div#contents
 #day_table > tbody > tr > td, #day_table > thead > tr > th{
 	width : 300px;
 	border: 1px solid #b9b9b9;
+	text-shadow: none;
 }
 
 #day_favorite_table > tbody > tr > td, #day_favorite_table > thead > tr > th{
 	width : 240px;
 	border: 1px solid #b9b9b9;
+	text-shadow: none;
 }
 
 #day_table td.time, #day_table th.time,
@@ -119,7 +121,18 @@ div#contents
 	background-color: #f0f0f0;
 }
 
+#day_table td.session_cancel,
+#day_favorite_table td.session_cancel{
+	background-color: #a0a0a0;
+	color: #606060;
+}
+
+td.session_cancel a:link { color: #595959; }
+td.session_cancel a:visited { color: #595959; }
+td.session_cancel a:hover { color: #3D3D3D; }
+td.session_cancel a:active { color: #3D3D3D; }
+
+
 p.room{
 	font-size: 120%;
-	background-color: #f0f0f0;
 }

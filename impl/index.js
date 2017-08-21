@@ -33,6 +33,11 @@
 //		".timeshift-icon:has(img[alt*=あり])"
 	];
 
+	// タイトル名に keywordが含まれていると class名を追加する設定
+	var ADD_CLASS_NAME_FROM_TITLE = [
+		{ keyword:"【講演キャンセル】", class_name:"session_cancel" }
+	];
+
 	//==========================================================================
 	//==========================================================================
 	var m_url_params = getURL_Params();
@@ -469,7 +474,8 @@
 					.append($infoMain);
 
 				// IDを取得
-				var id = getIdFromTitleTag( $td.find('.ss_title') );
+				var $title = $td.find('.ss_title');
+				var id = getIdFromTitleTag( $title );
 				$td.attr( 'id', id );
 
 				// お気に入り登録の確認
@@ -497,6 +503,14 @@
 
 					$style.before('<br/>');
 				});
+
+				// クラス名の追加
+				var titleName = $title.text();
+				for( var i = 0 ; i < ADD_CLASS_NAME_FROM_TITLE.length ; ++i ){
+					var rAddClassName = ADD_CLASS_NAME_FROM_TITLE[i];
+					if( titleName.indexOf(rAddClassName.keyword) == -1 ) continue;
+					$td.addClass( rAddClassName.class_name );
+				};
 
 				// セル結合している部分のセルを非表示に
 				var $deteleTr = $tr;
@@ -594,10 +608,12 @@
 							"<hr/>",
 							$temp.html()
 						])
-						.attr('rowSpan', rowSpan )
-						.attr("spec", rSession.getMainSpecObject().attr("alt") )
-						.addClass( "session")
-						.addClass( "session_color_style_favorite" );
+						.attr({
+							'rowSpan': rowSpan,
+							"spec"	 : rSession.getMainSpecObject().attr("alt"),
+							"class"  : $temp.attr("class")
+						});
+
 
 					// セル結合している部分のセルを非表示に
 					var $deteleTr = $tr;
