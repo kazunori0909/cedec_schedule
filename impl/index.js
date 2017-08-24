@@ -143,9 +143,9 @@
 				appendTable( index,data );
 				CEDiL.readData( m_setting.cedil_tag_no, appendLinkToCEDiL );
 			},
-			error: function(index,data){
+			error: function(request, textStatus, errorThrown){
 				$('#contents_loading_icon').remove();
-			   alert('読み込みに失敗');
+				alert('スケジュールデータの読み込みに失敗しました。');
 			}
 		})
 

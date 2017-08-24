@@ -124,9 +124,9 @@ var CEDEC = (function($){
 					option.success( option.index, m_dataCash[option.index] );
 				}
 			},
-			error:function() {
+			error:function( request, textStatus, errorThrown ) {
 				if( option.error !== undefined ){
-					option.error();
+					option.error( request, textStatus, errorThrown);
 				}
 			}
 		});
