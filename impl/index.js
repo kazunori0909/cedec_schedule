@@ -454,6 +454,7 @@
 				// 一度空にしておく
 				// セッションキャンセル時対応。後優先
 				$td.empty()
+					.addClass( "session")
 					.attr('rowSpan', rowSpan )
 					.attr("spec", rSession.getMainSpecObject().attr("alt") )
 					.addClass( "session")
@@ -508,6 +509,7 @@
 				var titleName = $title.text();
 				for( var i = 0 ; i < ADD_CLASS_NAME_FROM_TITLE.length ; ++i ){
 					var rAddClassName = ADD_CLASS_NAME_FROM_TITLE[i];
+					$td.removeClass( rAddClassName.class_name );	// 重複がある為、一度消す
 					if( titleName.indexOf(rAddClassName.keyword) == -1 ) continue;
 					$td.addClass( rAddClassName.class_name );
 				};
