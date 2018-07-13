@@ -2,8 +2,10 @@
  * jQuery.ajax mid - CROSS DOMAIN AJAX
  * ---
  * @author James Padolsey (http://james.padolsey.com)
- * @version 0.11
+ * @version 0.20
  * @updated 12-JAN-10
+ * @updated 1-AUG-17  Kazunori Morita.
+ *          Changed to HTML String because HTML can not be acquired due to YQL specification change.
  * ---
  * Note: Read the README!
  * ---
