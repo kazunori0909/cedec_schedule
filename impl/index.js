@@ -7,7 +7,7 @@
 	//==========================================================================
 	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
-	var DEFAULT_YEAR = 2017;
+	var DEFAULT_YEAR = 2018;
 
 	// DOM関連
 	var CONTENTS_BODY_SELECTOR = '#contents_body';
@@ -19,7 +19,7 @@
 	var CONTENTS_FAVORITE_TABLE_SELECTOR = '#'+CONTENTS_FAVORITE_TABLE_ID;
 
 	// 除外する文字列リスト
-	var REMOVE_SPECS_STRINGS = [
+	var REMOVE_SPECS_STRINGS_BEFORE_2017 = [
 		"基調講演"
 		,"レギュラーセッション"
 		,"ショートセッション"
@@ -28,9 +28,11 @@
 		,"［セッション］"
 		,"［セッション（60分）］"
 	];
-	
-	var REMOVE_SPECS_SELECTOR = [
-//		".timeshift-icon:has(img[alt*=あり])"
+
+	// 除外する文字列リスト
+	var REMOVE_HTML_STRINGS_2018 = [
+		 new RegExp('(□ 講演時間:)(.*\n*.*)(<br>)','g')
+		,new RegExp('(□ 講演形式: [基調講演|レギュラーセッション|ショートセッション])(.*\n*.*)(<br>)','g')
 	];
 
 	// タイトル名に keywordが含まれていると class名を追加する設定
@@ -97,7 +99,7 @@
 		var $header = $(dom_selector).empty();
 
 		$header.append('<h1>CEDEC ' + m_year + 'スケジュール</h1>');
-
+		
 		var $div = $('<div></div>');
 
 		for( var i = 0 ; i < m_dateList.length ; ++i ){
@@ -140,7 +142,7 @@
 			index : day_index,
 			success	: function(index,data){
 				$('#contents_loading_icon').remove();
-				appendTable( index,data );
+				appendTable( data, index );
 				CEDiL.readData( m_setting.cedil_tag_no, appendLinkToCEDiL );
 			},
 			error: function(request, textStatus, errorThrown){
@@ -154,12 +156,12 @@
 	//--------------------------------------------------------------------------
 	// XMLからテーブルを作成し追加する
 	//--------------------------------------------------------------------------
-	function appendTable( day_index, xml ){
+	function appendTable( xml, day_index ){
 		var $xml		  = $(xml);
 		var $contets_body = $(CONTENTS_BODY_SELECTOR);
 
 		// 情報取得
-		var roomList = createRoomSessionList( $xml );	// 部屋毎のデータを取得
+		var roomList = createRoomSessionList( $xml, day_index );	// 部屋毎のデータを取得
 		var timeRange = getMinMaxTime( roomList );		// 開催時間の取得
 
 		m_favoriteList = {};
@@ -168,7 +170,7 @@
 		var $table = createBaseTable( timeRange, roomList );
 		$table.attr({ "id": CONTENTS_TABLE_ID, "_fixedhead":"cols:1" });
 		appendSessionListTo( $table, roomList, day_index );
-		convertGlobalPath( $table );
+		if( m_setting.convert_path ) m_setting.convert_path( $table );
 
 		// 非表示のタグを削除。
 		// ※行列のインデックスがずれる為、最後にまとめて削除。
@@ -176,18 +178,23 @@
 
 		// フィルター作成
 		var $filter = createFilter( roomList );
-		convertGlobalPath( $filter );
+		if( m_setting.convert_path ) m_setting.convert_path( $filter );
 		commitFilterInfoTo( $table );
 
 		var $favorite = $('<img id="favorite_selector" src="./image/favorite_0.png"></img>');
 
+		var h2 = "<br/><br/><h2>" + $xml.find("h2").html() +"</h2>";
+		if( m_setting.year == "2018" ){
+			h2 = '<br/><br/><h2>Day ' + (day_index+1) + '</h2>';
+		}
+
 		// commit
 		$("<div></div>")
 			.append([
-				$filter,
-				$favorite,
-				"<br/><br/><h2>" + $xml.find("h2").html() +"</h2>",
-				$table
+				$filter
+				,$favorite
+				,h2
+				,$table
 			])
 			.appendTo( $contets_body );
 
@@ -224,22 +231,28 @@
 		customizeTable(day_index);
 		FixedMidashi.create();
 
-
-
 		return;
 
 		//----------------------------------------------------------------------
 		// 部屋毎のセッションのデータ連想配列データ
 		//----------------------------------------------------------------------
-		function createRoomSessionList( $xml ){
+		function createRoomSessionList( $xml, day_index ){
 			var roomList 	= {};	//
 			var unique 		= 0;	// 無名ルームがあった場合の簡易カウンター
 
-			$xml.find( CEDEC.SCHEDULE_UNIT_SELECTOR ).each(function(){
-				$(this).find("table").each(function(){
-					var session  = CEDEC.createSessionData( $(this) );
+			m_setting.unit_setting.selector( $xml, day_index ).each(function(){
+				if( $(this).css('display') == "none" ) return; 
+				var $table = $(this).find("table");
+
+				if( $table.length ){
+					$table.each(function(){
+						var session  = CEDEC.createSessionData( $(this), m_setting.unit_setting );
+						findAppendToRoomList( session ).push( session );
+					});
+				}else{
+					var session  = CEDEC.createSessionData( $(this), m_setting.unit_setting );
 					findAppendToRoomList( session ).push( session );
-				});
+				}
 			});
 			return roomList;
 
@@ -442,8 +455,7 @@
 			//
 			//------------------------------------------------------------------
 			function appendSession( rSession ){
-				var $info = rSession.info;
-				var $infoMain = $info.find("td").children();
+
 				var startTime = rSession.getStartTimeString();
 				var endTime   = rSession.getEndTimeString();
 
@@ -455,9 +467,10 @@
 				// セッションキャンセル時対応。後優先
 				$td.empty()
 					.addClass( "session")
-					.attr('rowSpan', rowSpan )
-					.attr("spec", rSession.getMainSpecObject().attr("alt") )
-					.addClass( "session")
+					.attr({
+						'rowSpan':rowSpan,
+						'spec' : rSession.getMainSpecObject().attr("alt")
+					})
 					.addClass( "session_color_style_normal" )
 					.on("taphold dblclick",function(){
 						var $this = $(this);
@@ -472,10 +485,10 @@
 							m_favoriteList[id] = { session:rSession, dom:$this };
 						}
 					})
-					.append($infoMain);
+					.append( rSession.main );
 
 				// IDを取得
-				var $title = $td.find('.ss_title');
+				var $title = $td.find('.ss_title,.btn-elinvar-detail');
 				var id = getIdFromTitleTag( $title );
 				$td.attr( 'id', id );
 
@@ -485,25 +498,12 @@
 					m_favoriteList[id] = { session:rSession, dom:$td };
 				}
 
-				// 不要項目の削除
-				$td.find('.ss_spec').each(function(){
-					var $this = $(this);
-					var $style = $this.find('.ss_style');
-					var text = $style.text();
 
-					for( var i = 0 ; i < REMOVE_SPECS_SELECTOR.length ; ++i){
-						$this.find( REMOVE_SPECS_SELECTOR[i] ).remove();
-					}
-
-					for( var i = 0 ; i < REMOVE_SPECS_STRINGS.length ; ++i){
-						if( text.indexOf( REMOVE_SPECS_STRINGS[i] ) >= 0 ){
-							$style.remove();
-							return;
-						}
-					}
-
-					$style.before('<br/>');
-				});
+				if( parseInt(m_setting.year) <= 2017 ){
+					customizedBefore2017($td);
+				}else{
+					customized2018($td);
+				}
 
 				// クラス名の追加
 				var titleName = $title.text();
@@ -520,6 +520,82 @@
 					$deteleTr = $deteleTr.next();
 					$deteleTr.find('[room="'+room_name +'"]').hide();
 				}
+			}
+
+			//------------------------------------------------------------------
+			// 
+			//------------------------------------------------------------------
+			function customized2018( $td ){
+
+				var $td_detail = $td.find(".detail-session-meta-top");
+
+				$td.find(".col-5.col-sm-3.col-md-2").remove();
+
+				// 文字列削除
+				var html = $td_detail.html();
+				for( var i = 0 ; i < REMOVE_HTML_STRINGS_2018.length ; ++i ){
+					html = html.replace( REMOVE_HTML_STRINGS_2018[i], "" );
+				}
+				$td_detail.html( html );
+
+				// 公募マークは不要
+				$td.find('.ses-type:contains(公募)').remove();
+
+				// プロフィールの「部署名」を削除
+				$td.find('p.prof:nth-child(2)').remove();	
+
+				// 
+//				$td.find('img.note_icon[src*=timeshift_ok]')
+//					.next()
+//						.remove()
+//						.end()
+//					.remove();
+
+				// 登壇者が複数いたら
+				var $speaker_info = $td.find('.speaker_info');
+				if( $speaker_info.length > 1){
+					// ２名以上はグループ化し非表示にしておく
+					$('<div/>')
+						.append( $speaker_info.filter(':not(:first)') )
+						.hide()
+						.click(function(){ $(this).toggle("slow"); })
+						.insertAfter( $speaker_info[0] );
+
+					// 非表示の講演者を表示させるボタン
+					$('<div class="disp_all_speaker"/>')
+						.text('ほか'+ ($speaker_info.length - 1) +"名" )
+						.click(function(){ $(this).next().toggle("slow"); })
+						.insertAfter( $speaker_info[0] );
+				}
+
+				// 画像が大きい為リサイズ
+				$td.find('img')
+					.filter('[height=48px]')
+						.attr('height','36px')
+						.end()
+					.filter('[height=96px]')
+						.attr('height','64px')
+				}
+
+			//------------------------------------------------------------------
+			// 
+			//------------------------------------------------------------------
+			function customizedBefore2017( $td ){
+				// 不要項目の削除
+				$td.find('.ss_spec').each(function(){
+					var $this = $(this);
+					var $style = $this.find('.ss_style');
+					var text = $style.text();
+
+					for( var i = 0 ; i < REMOVE_SPECS_STRINGS_BEFORE_2017.length ; ++i){
+						if( text.indexOf( REMOVE_SPECS_STRINGS_BEFORE_2017[i] ) >= 0 ){
+							$style.remove();
+							return;
+						}
+					}
+
+					$style.before('<br/>');
+				});
 			}
 			
 			//------------------------------------------------------------------
@@ -734,41 +810,6 @@
 				var time = parseInt(s[0]) * 60 + parseInt(s[1]);
 				if( time < time_range.min )	$this.hide();
 				if( time > time_range.max )	$this.hide();
-			});
-		}
-
-		//----------------------------------------------------------------------
-		// 埋め込まれている相対パスからの間違ったパスを変換する
-		//----------------------------------------------------------------------
-		function convertGlobalPath( $dom ){
-
-			// イメージタグのパスをグローバルに編子
-			$dom.find("img").each(function(){
-				var $this = $(this);
-				var path = $this.attr("src");
-				if( path.indexOf("http") == 0 ) return;
-				if( path.indexOf("/") == 0 ){
-					path = CEDEC.MASTER_URL + path.substr(1);
-				}else{
-					path = path.replace("../",m_setting.rootURL );
-				}
-				$this.attr("src", path );
-			});
-
-			// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
-			$dom.find("a").each(function(){
-				var $this = $(this);
-				var path = $this.attr("href");
-				if( path.indexOf("http") == 0 ) return;
-				if( path.indexOf("/") == 0 ){
-					path = CEDEC.MASTER_URL + path.substr(1)  + "#content";
-				}else{
-					path = path.replace("../",m_setting.rootURL )  + "#content";
-				}
-				$this.attr({
-					"href"   : path,
-					"target" : "blank"
-				});
 			});
 		}
 

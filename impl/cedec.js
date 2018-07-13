@@ -6,34 +6,148 @@ var CEDEC = (function($){
 	//==========================================================================
 	// 定義
 	//==========================================================================
-	var MASTER_URL	= "http://cedec.cesa.or.jp/";
-	var FLOOR_GUIDE_URL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx";
-
-	var SCHEDULE_SETTING = [
-		{ year:"2017", first_date:"0830", format:'session/schedule_{date}/'	},
-		{ year:"2016", first_date:"0824", format:'session/schedule_{date}.html',	cedil_tag_no:712	},
-		{ year:"2015", first_date:"0826", format:'session/schedule_{date}.html',	cedil_tag_no:709	},
-		{ year:"2014", first_date:"0902", format:'session/schedule_{date}.html',	cedil_tag_no:9		},
-		{ year:"2013", first_date:"0821", format:'schedule/day{day_no}.html',		cedil_tag_no:8		},
-		{ year:"2012", first_date:"0820", format:'schedule/day{day_no}.html',		cedil_tag_no:4		},
-		{ year:"2011", first_date:"0906", format:'schedule/day{day_no}.html',		cedil_tag_no:6		},
-		{ year:"2010", first_date:"0831", format:'schedule/day{day_no}.html',		cedil_tag_no:5		},
-	];
-
-	var TIME_SPAN	= 3;
-
 	//==========================================================================
 	// Schedule DOM 解析用
 	//
 	// ※フォーマットが変わった際に変更が必要
 	//==========================================================================
-	var SCHEDULE_UNIT_SELECTOR = "div.schedule_timeframe_normal";
-	var SCHEDULE_PARAM_SELECTOR_MAP = {
-		"room_no"		:	".room_number",
-		"start_time"	:	".ss_time_start",
-		"end_time"		:	".ss_time_end",
-		"main_spec"		:	".ss_ippr_icon + img"
+	//--------------------------------------------------------------------------
+	// 2018年のフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING = {
+		selector	:	function( $xml, day_index ){
+			return $xml.find( "div[id*=taballday"+ (day_index+1) +"] > div.session-post" );
+		},
+		info_selector: "div.session-right",
+		param		:{
+			"room_no"		:	function($xml){ return "";},
+			"start_time"	:	function($xml){
+				var text = $xml.find('.detail-session-meta-top').text();
+				var indexOfKara = text.indexOf(' 〜 ');
+				return text.slice( indexOfKara - 5, indexOfKara);
+			},
+			"end_time"		:	function($xml){
+				var text = $xml.find('.detail-session-meta-top').text();
+				var indexOfKara = text.indexOf(' 〜 ');
+				return text.slice( indexOfKara + 3, indexOfKara + 3 + 5 );
+			},
+
+			"main_spec"		:	function($xml){ return $xml.find("div.ss_ippr_icon + img"); }
+		}
 	};
+
+	var PATH_CONVERT_2018 = function( $dom ){
+		var domain = this.domain;
+		var rootURL = this.rootURL;
+		var year = this.year;
+
+		// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
+		$dom.find("a").each(function(){
+			var $this = $(this);
+			var path = $this.attr("href");
+			if( path.indexOf("http") == 0 ) return;
+
+			path = domain + path.substr(0);
+			$this.attr({
+				"href"   : path,
+				"target" : "blank"
+			});
+		});
+		// イメージタグのパスをグローバルに編子
+		$dom.find("img").each(function(){
+			var $this = $(this);
+			var path = $this.attr("src");
+			if( path.indexOf("http") == 0 ) return;
+			if( path.indexOf("/") == 0 ){
+				path = domain + path;
+				$this.attr("src", path );
+			}
+		});
+	}
+
+
+	//--------------------------------------------------------------------------
+	// 2017年までのフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING_BEFORE_2017 = {
+		selector	:	function( $xml, day_index ){
+			return $xml.find( "div.schedule_timeframe_normal" );
+		},
+		info_selector: "td",
+		param		:{
+			"room_no"		:	function($xml){ return $xml.find(".room_number").text();},
+			"start_time"	:	function($xml){ return $xml.find(".ss_time_start").text();},
+			"end_time"		:	function($xml){ return $xml.find(".ss_time_end").text();},
+			"main_spec"		:	function($xml){ return $xml.find(".ss_ippr_icon + img"); }
+		}
+	};
+	var PATH_CONVERT_2017 = function( $dom ){
+
+		var domain = this.domain;
+		$dom.find("a").each(function(){
+			var $this = $(this);
+			var path = $this.attr("href");
+			if( path.indexOf("http") == 0 ) return;
+			if( path.indexOf("/") == 0 ){
+				path = domain + path.substr(1)  + "#content";
+				$this.attr({
+					"href"   : path,
+					"target" : "blank"
+				});
+			}
+		});	
+	}
+
+	var PATH_CONVERT_BEFORE_2016 = function( $dom ){
+		var domain = this.domain;
+		var rootURL = this.rootURL;
+		var year = this.year;
+
+		// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
+		$dom.find("a").each(function(){
+			var $this = $(this);
+			var path = $this.attr("href");
+			if( path.indexOf("http") == 0 ) return;
+			if( path.indexOf("../") == 0 ){
+				path = path = rootURL + path.replace("../", year + "/" )  + "#content";
+			}else{
+				path = domain + path.substr(1)  + "#content";
+			}
+			$this.attr({
+				"href"   : path,
+				"target" : "blank"
+			});
+		});
+		// イメージタグのパスをグローバルに編子
+		$dom.find("img").each(function(){
+			var $this = $(this);
+			var path = $this.attr("src");
+			if( path.indexOf("http") == 0 ) return;
+			if( path.indexOf("../") == 0 ){
+				path = rootURL + path.replace("../", year + "/" );
+				$this.attr("src", path );
+			}
+		});
+	}
+
+
+
+	//==========================================================================
+	var SCHEDULE_SETTING = [
+		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, unit_setting: UNIT_SETTING, 			convert_path:PATH_CONVERT_2018	},
+		{ year:"2017", first_date:"0830", domain:"http://cedec.cesa.or.jp/", format:'2017/session/schedule_{date}/',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_2017,		cedil_tag_no:713	},
+		{ year:"2016", first_date:"0824", domain:"http://cedec.cesa.or.jp/", format:'2016/session/schedule_{date}.html',	unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:712	},
+		{ year:"2015", first_date:"0826", domain:"http://cedec.cesa.or.jp/", format:'2015/session/schedule_{date}.html',	unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:709	},
+		{ year:"2014", first_date:"0902", domain:"http://cedec.cesa.or.jp/", format:'2014/session/schedule_{date}.html',	unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:9	},
+		{ year:"2013", first_date:"0821", domain:"http://cedec.cesa.or.jp/", format:'2013/schedule/day{day_no}.html',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:8	},
+		{ year:"2012", first_date:"0820", domain:"http://cedec.cesa.or.jp/", format:'2012/schedule/day{day_no}.html',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:4	},
+		{ year:"2011", first_date:"0906", domain:"http://cedec.cesa.or.jp/", format:'2011/schedule/day{day_no}.html',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:6	},
+	];
+
+	var TIME_SPAN	= 3;
+
+	var FLOOR_GUIDE_URL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx";
+
 
 	var m_dataCash	= [];
 
@@ -44,7 +158,7 @@ var CEDEC = (function($){
 		var setting = findSetting( year );
 		$.extend( true, this, setting );
 
-		this.rootURL = MASTER_URL + year + "/";
+		this.rootURL = setting.domain ;
 
 		function findSetting( year ){
 			for( var i = 0 ; i < SCHEDULE_SETTING.length ; ++i ){
@@ -102,7 +216,7 @@ var CEDEC = (function($){
 	// スケジュールページを読み込む
 	//--------------------------------------------------------------------------
 	Unit.prototype.readSchedule = function( option ){
-
+	
 		if( m_dataCash[option.index] !== undefined ){
 			option.success( option.index, m_dataCash[option.index] );
 			return;
@@ -114,16 +228,26 @@ var CEDEC = (function($){
 			type: 'GET',
 			url: url,
 			dataType: 'html',
-			success: function(xml) {
-				if( option.success !== undefined ){
-					if( xml.responseText !== undefined ){
-						m_dataCash[option.index] = xml.responseText;
-					}else{
-						m_dataCash[option.index] = xml;
+			success: function(option,rUnit) {
+				return function(xml){
+					if( option.success !== undefined ){
+						if( xml.responseText !== undefined ){
+							m_dataCash[option.index] = xml.responseText;
+						}else{
+							m_dataCash[option.index] = xml;
+						}
+
+						// シングルページ指定があれば全日程のキャッシュを作成
+						if( rUnit.single_page ){
+							for( var i = 0 ; i < TIME_SPAN ; ++i ){
+								m_dataCash[i] = m_dataCash[option.index];
+							}
+						}
+
+						option.success( option.index, m_dataCash[option.index] );
 					}
-					option.success( option.index, m_dataCash[option.index] );
 				}
-			},
+			}(option,this),
 			error:function( request, textStatus, errorThrown ) {
 				if( option.error !== undefined ){
 					option.error( request, textStatus, errorThrown);
@@ -136,10 +260,6 @@ var CEDEC = (function($){
 	// 
 	//==========================================================================
 	return {
-		MASTER_URL				:	MASTER_URL,
-		//TIME_SPAN				:	TIME_SPAN,
-
-		SCHEDULE_UNIT_SELECTOR	:	SCHEDULE_UNIT_SELECTOR,
 		createSettingFromYear	:	createSettingFromYear,
 		createSessionData		:	createSessionData,
 
@@ -161,13 +281,15 @@ var CEDEC = (function($){
 	//==========================================================================
 	//  Session Data
 	//==========================================================================
-	function createSessionData( $xml ){
+	function createSessionData( $xml, unit_setting ){
+		var m_unit_setting = unit_setting;
 		var m_$info = $xml;
+		var m_$infoMain = $xml.find( m_unit_setting.info_selector );
 		var m_cash = {};
 
 		// Session Data Object
 		return {
-			info 				: m_$info,
+			main 				: m_$infoMain,
 			getRoomNo			: function(){return getParamText("room_no");},
 			getStartTimeString 	: function(){return getParamText("start_time");},
 			getEndTimeString 	: function(){return getParamText("end_time");},
@@ -193,12 +315,12 @@ var CEDEC = (function($){
 
 		function getParamText( cash_name ){
 			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
-			m_cash[cash_name] = m_$info.find( SCHEDULE_PARAM_SELECTOR_MAP[cash_name] ).text();
+			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
 			return m_cash[cash_name];
 		}
 		function getParamObject( cash_name ){
 			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
-			m_cash[cash_name] = m_$info.find( SCHEDULE_PARAM_SELECTOR_MAP[cash_name] );
+			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
 			return m_cash[cash_name];
 		}
 	};

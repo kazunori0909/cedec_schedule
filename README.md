@@ -23,14 +23,44 @@ HTML stringは対応しているので、プラグインを書き換え使用。
 * ページ情報の更新( impl/cedil.js )
 ```javascript
 var SCHEDULE_SETTING = [
-    { year:"2017", first_date:"0830", format:'session/schedule_{date}/' },
-    { year:"2016", first_date:"0824", format:'session/schedule_{date}.html', cedil_tag_no:712 },
-    ...
-    { year:"2013", first_date:"0821", format:'schedule/day{day_no}.html',    cedil_tag_no:8 },
+	{ 
+        year:"2018",
+        first_date:"0822",
+        domain:"https://2018.cedec.cesa.or.jp/",
+        format:'session#tab{day_no}',
+        single_page:true,
+        unit_setting: UNIT_SETTING,
+        convert_path:PATH_CONVERT_2018
+    },
+	{
+        year:"2017",
+        first_date:"0830",
+        domain:"http://cedec.cesa.or.jp/",
+        format:'2017/session/schedule_{date}/',	
+        unit_setting: {
+            selector	:	function( $xml, day_index ){
+                return $xml.find( "div.schedule_timeframe_normal" );
+            },
+            info_selector: "td",
+            param		:{
+                "room_no"		:	function($xml){ return $xml.find(".room_number").text();},
+                "start_time"	:	function($xml){ return $xml.find(".ss_time_start").text();},
+                "end_time"		:	function($xml){ return $xml.find(".ss_time_end").text();},
+                "main_spec"		:	function($xml){ return $xml.find(".ss_ippr_icon + img"); }
+            }
+        },
+        convert_path:function( $dom ){
+            var domain = this.domain;
+            $dom.find("a").each(function(){
+                // 相対パスを httpからのパスに変更
+            });	
+        },
+        cedil_tag_no:713
+    },
     ...
 ];
 ```
 * デフォルトページ設定( impl/index.js )  
 ```javascript
-var DEFAULT_YEAR = 2017;`
+var DEFAULT_YEAR = 2018;
 ```

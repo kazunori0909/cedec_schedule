@@ -136,3 +136,159 @@ td.session_cancel a:active { color: #3D3D3D; }
 p.room{
 	font-size: 120%;
 }
+
+
+/* ================================== */
+/* 2018 */
+/* ================================== */
+.session-title{
+	font-weight:bold;
+	border-bottom:dashed 1px;
+	margin-top:10px;
+	margin-bottom:10px;
+}
+
+.disp_all_speaker{
+	color:#38c;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+
+div.nav-link.list.btn-top-session {
+	font-size:100%;
+    text-align: center;
+    margin-top: 5px; /* 20 */
+    padding: 0.1em 0.3em;
+    color: #FFFFFF !important;
+    border-radius: 18px;
+    text-transform: uppercase;
+    min-width: 40px;
+    height: 20px;
+    display: inline-block;
+}
+
+.btn-top-session.en,
+.btn-top-session.en.active {
+    background-color: #f29600;
+}
+
+.btn-top-session.pd,
+.btn-top-session.pd.active {
+    background-color: #1d2087;
+}
+
+.btn-top-session.va,
+.btn-top-session.va.active {
+    background-color: #dadf00;
+}
+
+.btn-top-session.bp,
+.btn-top-session.bp.active {
+    background-color: #2ca6e0;
+}
+
+.btn-top-session.sd,
+.btn-top-session.sd.active {
+    background-color: #1eaa39;
+}
+
+.btn-top-session.gd,
+.btn-top-session.gd.active {
+    background-color: #00a199;
+}
+
+.btn-top-session.ab,
+.btn-top-session.ab.active {
+    background-color: #910782;
+}
+
+.btn-top-session.key,
+.btn-top-session.key.active {
+    background-color: #c30d23;
+}
+
+.btn-top-session.ses-type,
+.btn-top-session.ses-type.active {
+    background-color: #395ca9;
+}
+
+.btn-top-session.ses-format,
+.btn-top-session.ses-format.active {
+    background-color: #ff00a7;
+}
+
+.btn-top-session.ses-subcategories,
+.btn-top-session.ses-subcategories.active {
+    background-color: #52ff1f;
+}
+
+div.nav-link.list.btn-top-session.ses-difficulty,
+div.nav-link.list.btn-top-session.ses-difficulty.active {
+    width: auto;
+    min-width: 24px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.list.btn-top-session.ses-difficulty.lv0 {
+    background-color: hsl(45, 60%, 50% );
+}
+.list.btn-top-session.ses-difficulty.lv1 {
+    background-color: hsl(30, 60%, 50% );
+}
+.list.btn-top-session.ses-difficulty.lv2 {
+    background-color: hsl(15, 60%, 50% );
+}
+.list.btn-top-session.ses-difficulty.lv3 {
+    background-color: hsl(0, 60%, 50% );
+}
+
+
+.list.btn-top-session.ses-type,
+.list.btn-top-session.ses-type.active {
+    border-radius: 8px;
+    min-width: 100px;
+    width: auto;
+    font-size: 14px;
+    display: inline-block;
+
+    background-color: #395ca9;
+}
+
+.btn-top-session.ses-format,
+.btn-top-session.ses-format.active {
+    background-color: #ff00a7;
+}
+
+div.nav-link.list.btn-top-session.ses-subcategory,
+div.nav-link.list.btn-top-session.ses-subcategory.active {
+    width: 36px;
+    min-width: 36px;
+    text-align: center;
+    margin-top: 10px;
+    transform-origin: left bottom;
+    transform: scale(0.75,0.75);
+    margin-right: -16px;
+}
+
+div.nav-link.list.btn-top-session.ses-sessiontags,
+div.nav-link.list.btn-top-session.ses-sessiontags.active {
+    background-color: #B0F0F0;       /* */
+    width: auto;
+    min-width: 48px;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 21px;
+    padding-top: 0px;
+}
+
+td p{
+	margin-top:0px;
+	margin-bottom:0px;
+}
+
+div.speaker_info{
+	margin-top:0.5em;
+	margin-bottom:0.5em;
+}
