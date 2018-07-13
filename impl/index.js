@@ -117,6 +117,9 @@
 
 		$div.appendTo( $header );
 
+		if( m_setting.cash != undefined ){
+			$header.append("※" + m_setting.cash.time + "の情報です。");
+		}
 	}
 
 
@@ -304,7 +307,17 @@
 				for( var i = 0 ; i < room_list[room_name].length ; ++i ){
 					var rSession = room_list[room_name][i];
 					var $spec = rSession.getMainSpecObject();
-					filterList[$spec.attr("alt")] = $spec;
+					if( $spec.length == 0 ) continue;
+
+					var spec;
+					if( $spec[0].nodeName == "IMG"){
+						spec = $spec.attr("alt");
+					}else{
+						spec = $spec.text();
+					}
+
+					filterList[spec] = $spec;
+					$spec.attr("spec", spec );
 				}
 			}
 
@@ -314,16 +327,16 @@
 			}
 			$filter.children().click(function(){
 				var $this = $(this);
-				var alt   = $this.attr('alt');
+				var spec   = $this.attr('spec');
 
 				if( $this.hasClass('hide') ){
 					$this.removeClass('hide');
-					m_hideInfo[alt]=undefined;
-					Cookies.remove( m_year + '_hide_' + alt );
+					m_hideInfo[spec]=undefined;
+					Cookies.remove( m_year + '_hide_' + spec );
 				}else{
 					$this.addClass('hide');
-					m_hideInfo[alt]=true;
-					Cookies.set( m_year + '_hide_' + alt, '1', {expires:365} );
+					m_hideInfo[spec]=true;
+					Cookies.set( m_year + '_hide_' + spec, '1', {expires:365} );
 				}
 
 				commitFilterInfoTo( $(CONTENTS_TABLE_SELECTOR) );
@@ -332,11 +345,11 @@
 				//this.src =  grayscale(this.src);
 			}).each(function(){
 				var $this = $(this);
-				var alt   = $this.attr('alt');
+				var spec   = $this.attr('spec');
 
-				if( Cookies.get( m_year + '_hide_' + alt ) !== undefined ){
+				if( Cookies.get( m_year + '_hide_' + spec ) !== undefined ){
 					$this.addClass('hide');
-					m_hideInfo[alt]=true;
+					m_hideInfo[spec]=true;
 				}
 			});
 
@@ -351,9 +364,9 @@
 
 			$table.find('td[spec]').each(function(){
 				var $this = $(this);
-				var alt	  = $this.attr('spec');
+				var spec  = $this.attr('spec');
 
-				if( m_hideInfo[alt] === undefined ){
+				if( m_hideInfo[spec] === undefined ){
 					$this.children().show();
 				}else{
 					$this.children().hide();
@@ -463,13 +476,23 @@
 				var $td = $tr.find('[room="'+room_name +'"]');
 				var rowSpan = getRowSpan(startTime,endTime);
 
+				var mainSpec = function(){
+					var $spec = rSession.getMainSpecObject();
+					if( $spec.length == 0 ) return;
+					if( $spec[0].nodeName == "IMG" ){
+						return $spec.attr("alt");
+					}else{
+						return $spec.text();
+					}
+				}
+
 				// 一度空にしておく
 				// セッションキャンセル時対応。後優先
 				$td.empty()
 					.addClass( "session")
 					.attr({
 						'rowSpan':rowSpan,
-						'spec' : rSession.getMainSpecObject().attr("alt")
+						'spec' : mainSpec
 					})
 					.addClass( "session_color_style_normal" )
 					.on("taphold dblclick",function(){

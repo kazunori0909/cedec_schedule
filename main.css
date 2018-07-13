@@ -56,6 +56,17 @@ div#contents
 	height:9px;
 }
 
+
+.spec_filter > div.nav-link{
+	margin:3px;
+	padding:3px;
+	cursor : pointer;
+	text-shadow: none;
+}
+.spec_filter > div.nav-link.hide{
+	background-color: #c0c0c0;
+}
+
 #favorite_selector {
 	cursor : pointer;
 }

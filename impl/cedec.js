@@ -32,7 +32,7 @@ var CEDEC = (function($){
 				return text.slice( indexOfKara + 3, indexOfKara + 3 + 5 );
 			},
 
-			"main_spec"		:	function($xml){ return $xml.find("div.ss_ippr_icon + img"); }
+			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); }
 		}
 	};
 
@@ -144,6 +144,10 @@ var CEDEC = (function($){
 		{ year:"2011", first_date:"0906", domain:"http://cedec.cesa.or.jp/", format:'2011/schedule/day{day_no}.html',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:6	},
 	];
 
+	// GitHubにはアップしないが、キャッシュ用の設定
+	var CASH＿SETTING = {
+	}
+
 	var TIME_SPAN	= 3;
 
 	var FLOOR_GUIDE_URL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx";
@@ -159,6 +163,7 @@ var CEDEC = (function($){
 		$.extend( true, this, setting );
 
 		this.rootURL = setting.domain ;
+		this.cash    = CASH＿SETTING[year];
 
 		function findSetting( year ){
 			for( var i = 0 ; i < SCHEDULE_SETTING.length ; ++i ){
@@ -190,6 +195,12 @@ var CEDEC = (function($){
 	// 日付インデックスからスケジュールページへのパスを取得する
 	//--------------------------------------------------------------------------
 	Unit.prototype.getSchedulePagePath = function( day_index ){
+
+		if( CASH＿SETTING[ this.year ] != undefined ){
+			var temp = location.href.split("/");
+			temp.pop();
+			return temp.join("/") + "/web_data/" + this.year + "/" + day_index + ".html";
+		}		
 
 		if( this.format.indexOf('{day_no}') > 0 ){
 			return this.rootURL + this.format.replace('{day_no}',day_index + 1);
