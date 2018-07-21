@@ -287,7 +287,7 @@ div.nav-link.list.btn-top-session.ses-sessiontags,
 div.nav-link.list.btn-top-session.ses-sessiontags.active {
     background-color: #B0F0F0;       /* */
     width: auto;
-    min-width: 48px;
+    min-width: 24px;
     text-align: center;
     margin-top: 10px;
     font-size: 21px;
