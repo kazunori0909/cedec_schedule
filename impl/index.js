@@ -257,6 +257,27 @@
 					findAppendToRoomList( session ).push( session );
 				}
 			});
+
+			// イベントの追加部屋は、強制的にリストの最初に追加する
+			var rEventRoom
+			for( r in roomList ){
+				rEventRoom = roomList[r];
+				break;
+			}
+
+			var rEvents = m_setting.unit_setting.events;
+			if( rEvents && rEvents.length ){
+				for( var i = 0 ; i < rEvents.length ; ++i ){
+					var rEvent = rEvents[i];
+					if( rEvent.day_index != day_index ) continue;
+
+					var session = CEDEC.createEventSessionData( $("<div>"), m_setting.unit_setting, rEvent );
+					rEventRoom.push( session );
+				}
+			}
+
+
+
 			return roomList;
 
 			// スケジュール情報から 追加先リストを返す
@@ -491,7 +512,7 @@
 				$td.empty()
 					.addClass( "session")
 					.attr({
-						'rowSpan':rowSpan,
+						'rowspan':rowSpan,
 						'spec' : mainSpec
 					})
 					.addClass( "session_color_style_normal" )
@@ -538,11 +559,30 @@
 				};
 
 				// セル結合している部分のセルを非表示に
-				var $deteleTr = $tr;
+				var $hideTr = $tr;
 				for( var d = 0 ; d < rowSpan-1 ; ++d ){
-					$deteleTr = $deteleTr.next();
-					$deteleTr.find('[room="'+room_name +'"]').hide();
+					$hideTr = $hideTr.next();
+					$hideTr.find('[room="'+room_name +'"]').hide();
 				}
+
+				if( rSession.event == undefined )	 return;
+
+				// CEDEC AWARDS 等のイベント 
+				colspan = $tr.children("td").length;
+				$td.attr('colspan',colspan)
+					.addClass( "event")
+					.css({
+						"fontSize":"300%",
+						"line-height":"200%",
+						"text-align":"center"
+					});
+				
+				$hideTr = $tr;
+				for( var d = 0 ; d < rowSpan ; ++d ){
+					$hideTr.children("td:gt(1)").hide();
+					$hideTr = $hideTr.next();
+				}
+
 			}
 
 			//------------------------------------------------------------------
@@ -556,10 +596,12 @@
 
 				// 文字列削除
 				var html = $td_detail.html();
-				for( var i = 0 ; i < REMOVE_HTML_STRINGS_2018.length ; ++i ){
-					html = html.replace( REMOVE_HTML_STRINGS_2018[i], "" );
+				if( html ){
+					for( var i = 0 ; i < REMOVE_HTML_STRINGS_2018.length ; ++i ){
+						html = html.replace( REMOVE_HTML_STRINGS_2018[i], "" );
+					}
+					$td_detail.html( html );
 				}
-				$td_detail.html( html );
 
 				// 公募マークは不要
 				$td.find('.ses-type:contains(公募)').remove();
@@ -694,6 +736,9 @@
 
 					var $room;
 					var dispRoomName = $temp.attr('room');
+					if( rSession.event ){
+						dispRoomName = rSession.event.room_no;
+					}
 					if( dispRoomName.indexOf("不明_") != -1 ){
 						dispRoomName = "不明";
 					}

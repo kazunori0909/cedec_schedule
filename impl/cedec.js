@@ -33,7 +33,18 @@ var CEDEC = (function($){
 			},
 
 			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); }
-		}
+		},
+		events : [
+			{ 
+				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:50",	end_time:"19:25", room_no:"メインホール",
+				html:"※公式サイトに終了時間は明記されていません<br/>"
+			},
+			{
+				title:"Developer's Night", day_index:1,	start_time: "19:30",	end_time:"21:30", room_no:"501＋502",
+				html:"※CEDEC AWARDS終了後に開始<br/>※会期中、2F総合受付にてチケットを販売<br/>"
+			}
+		]
+
 	};
 
 	var PATH_CONVERT_2018 = function( $dom ){
@@ -80,9 +91,10 @@ var CEDEC = (function($){
 			"end_time"		:	function($xml){ return $xml.find(".ss_time_end").text();},
 			"main_spec"		:	function($xml){ return $xml.find(".ss_ippr_icon + img"); }
 		}
-	};
-	var PATH_CONVERT_2017 = function( $dom ){
 
+	};
+
+	var PATH_CONVERT_2017 = function( $dom ){
 		var domain = this.domain;
 		$dom.find("a").each(function(){
 			var $this = $(this);
@@ -131,7 +143,8 @@ var CEDEC = (function($){
 	}
 
 
-
+	//==========================================================================
+	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
 		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, unit_setting: UNIT_SETTING, 			convert_path:PATH_CONVERT_2018	},
@@ -146,6 +159,9 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
+//		 "2018":{ time:"2018/07/21 09:40" }
+//		,"2017":{ time:"2017/08/25 23:30" }
+//		,"2016":{ time:"2017/08/25 23:30" }
 	}
 
 	var TIME_SPAN	= 3;
@@ -273,6 +289,7 @@ var CEDEC = (function($){
 	return {
 		createSettingFromYear	:	createSettingFromYear,
 		createSessionData		:	createSessionData,
+		createEventSessionData	:	createEventSessionData,
 
 		// DOM
 		appendNaviMenuTo		:	appendNaviMenuTo,
@@ -295,7 +312,7 @@ var CEDEC = (function($){
 	function createSessionData( $xml, unit_setting ){
 		var m_unit_setting = unit_setting;
 		var m_$info = $xml;
-		var m_$infoMain = $xml.find( m_unit_setting.info_selector );
+		var m_$infoMain = $xml ? $xml.find( m_unit_setting.info_selector ) : undefined;
 		var m_cash = {};
 
 		// Session Data Object
@@ -304,6 +321,7 @@ var CEDEC = (function($){
 			getRoomNo			: function(){return getParamText("room_no");},
 			getStartTimeString 	: function(){return getParamText("start_time");},
 			getEndTimeString 	: function(){return getParamText("end_time");},
+
 			getStartTime 		: function(){
 				var s = this.getStartTimeString().split(':');
 				return parseInt(s[0]) * 60 + parseInt(s[1]);
@@ -321,7 +339,6 @@ var CEDEC = (function($){
 			},
 
 			getMainSpecObject		: function(){return getParamObject("main_spec");},
-
 		};
 
 		function getParamText( cash_name ){
@@ -335,6 +352,44 @@ var CEDEC = (function($){
 			return m_cash[cash_name];
 		}
 	};
+
+	//==========================================================================
+	//  Event Session Data
+	//==========================================================================
+	function createEventSessionData( $xml, unit_setting, rEvent ){
+
+		var session = createSessionData( $("<div>"), unit_setting );
+
+		var $main = $("<div>");
+		$main.append([
+			"<h2>" + rEvent.title + "</h2>",
+			"Room:" + rEvent.room_no + "<br/>"
+		]);
+
+		if( rEvent.html ){
+			$main.append( rEvent.html );
+		}
+
+
+		session.event				= $.extend({}, rEvent );
+
+		session.main 				= $main,
+		session.getRoomNo			= function(){return this.event.room_no;},
+		session.getStartTimeString 	= function(){return this.event.start_time; }
+		session.getEndTimeString 	= function(){return this.event.end_time; }
+
+		return session;
+	}
+
+
+	//--------------------------------------------------------------------------
+	// 時間文字列を変換する
+	// "19:30" → 19*60 + 30 = 1170
+	//--------------------------------------------------------------------------
+	function getMinutesFromTimeString( str ){
+		var s = str.split(':');
+		return parseInt(s[0]) * 60 + parseInt(s[1]);		
+	}
 
 	//==========================================================================
 	// DOM
