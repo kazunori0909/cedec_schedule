@@ -36,11 +36,11 @@ var CEDEC = (function($){
 		},
 		events : [
 			{ 
-				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:50",	end_time:"19:25", room_no:"メインホール",
+				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:50",	end_time:"19:25", room_no:"メインホール", colspan:"all",
 				html:"※公式サイトに終了時間は明記されていません<br/>"
 			},
 			{
-				title:"Developer's Night", day_index:1,	start_time: "19:30",	end_time:"21:30", room_no:"501＋502",
+				title:"Developer's Night", day_index:1,	start_time: "19:30",	end_time:"21:30", room_no:"501＋502", colspan:"all",
 				html:"※CEDEC AWARDS終了後に開始<br/>※会期中、2F総合受付にてチケットを販売<br/>"
 			}
 		]
@@ -91,7 +91,6 @@ var CEDEC = (function($){
 			"end_time"		:	function($xml){ return $xml.find(".ss_time_end").text();},
 			"main_spec"		:	function($xml){ return $xml.find(".ss_ippr_icon + img"); }
 		}
-
 	};
 
 	var PATH_CONVERT_2017 = function( $dom ){
@@ -159,7 +158,7 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-//		 "2018":{ time:"2018/07/21 09:40" }
+//		 "2018":{ time:"2018/08/08 21:40" }
 //		,"2017":{ time:"2017/08/25 23:30" }
 //		,"2016":{ time:"2017/08/25 23:30" }
 	}
@@ -356,14 +355,14 @@ var CEDEC = (function($){
 	//==========================================================================
 	//  Event Session Data
 	//==========================================================================
-	function createEventSessionData( $xml, unit_setting, rEvent ){
+	function createEventSessionData( rEvent, unit_setting ){
 
 		var session = createSessionData( $("<div>"), unit_setting );
 
 		var $main = $("<div>");
 		$main.append([
 			"<h2>" + rEvent.title + "</h2>",
-			"Room:" + rEvent.room_no + "<br/>"
+			"会場:" + rEvent.room_no + "<br/><br/>"
 		]);
 
 		if( rEvent.html ){

@@ -31,14 +31,47 @@
 
 	// 除外する文字列リスト
 	var REMOVE_HTML_STRINGS_2018 = [
-		 new RegExp('(□ 講演時間:)(.*\n*.*)(<br>)','g')
-		,new RegExp('(□ 講演形式: [基調講演|レギュラーセッション|ショートセッション])(.*\n*.*)(<br>)','g')
+		 new RegExp('(□ 講演時間:)(.*)(<br>)','g')
+		,new RegExp('(□ 講演形式: [基調講演|レギュラーセッション|ショートセッション])(.*)(<br>)','g')
 	];
 
 	// タイトル名に keywordが含まれていると class名を追加する設定
 	var ADD_CLASS_NAME_FROM_TITLE = [
 		{ keyword:"【講演キャンセル】", class_name:"session_cancel" }
 	];
+
+	// タイトル名に keywordが含まれていると class名を追加する設定
+	var CUSTOM_SETTING = {
+		"2018": { 
+			events:[
+				{ 
+					title:"ProCEDEC2018", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"ニューヨークグランドキッチン",
+					html:'<a href="https://procedec2018.peatix.com/">イベント詳細</a><br/>'
+				}
+				,{ 
+					title:"Artists Meets Technicals 2018", 	 day_index:2,	start_time: "20:00",	end_time:"22:00", room_no:"サンタモニカ・サードストリート ミートテラス",
+					html:'<a href="https://artistsmeetstechnicals.doorkeeper.jp/events/77430">イベント詳細</a><br/>'
+				}
+				,{ 
+					title:"UI CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"桜木町駅近辺",
+					html:'<a href="https://ui-cedec.connpass.com/event/96867/">イベント詳細</a><br/>'
+				}
+				,{ 
+					title:"裏 CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"のげ（ちょっと遠いので、時間厳守）",
+					html:'<a href="https://ura-cedec.com/">イベント詳細</a><br/>'
+				}
+				,{ 
+					title:"音 CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"不明",
+					html:'招待制<br/><font color="#FF4500">場所・時間ともに詳細不明</font>'
+				}
+				,{ 
+					title:"CEDECON 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"不明",
+					html:'<font color="#FF4500">場所・時間ともに詳細不明</font><br/>'
+				}
+			]
+		}
+	};
+	
 
 	//==========================================================================
 	//==========================================================================
@@ -271,11 +304,26 @@
 					var rEvent = rEvents[i];
 					if( rEvent.day_index != day_index ) continue;
 
-					var session = CEDEC.createEventSessionData( $("<div>"), m_setting.unit_setting, rEvent );
+					var session = CEDEC.createEventSessionData( rEvent, m_setting.unit_setting );
 					rEventRoom.push( session );
 				}
 			}
 
+			if( CUSTOM_SETTING[m_year] ){
+				var rCustomEvents = CUSTOM_SETTING[m_year].events;
+				if( rCustomEvents && rCustomEvents.length ){
+					for( var i = 0 ; i < rCustomEvents.length ; ++i ){
+						var rEvent = rCustomEvents[i];
+						if( rEvent.day_index != day_index ) continue;
+
+						var session = CEDEC.createEventSessionData( rEvent, m_setting.unit_setting );
+
+						session.main.find('h2').prepend("【非公式】<br/>");
+
+						findAppendToFreeSpaceRoomList().push( session );
+					}
+				}
+			}
 
 
 			return roomList;
@@ -317,6 +365,28 @@
 				}
 				return roomList[room_name];
 			}
+
+			// スケジュール情報から 追加先リストを返す
+			function findAppendToFreeSpaceRoomList(){
+
+				// ルーム表記がない場合は、空いてるリストに詰める
+				for(var name in roomList){
+					var rList = roomList[name];
+					var isOverlaped = false;
+
+					for( var l = 0 ; l < rList.length ; ++l ){
+						if( rList[l].isOverlap( session ) ){
+							isOverlaped = true;
+							break;
+						}
+					}
+					if( isOverlaped == false ){
+						room_name = name;
+						break;
+					}
+				}
+				return roomList[room_name];
+			}
 		}
 
 		//----------------------------------------------------------------------
@@ -324,6 +394,7 @@
 		//----------------------------------------------------------------------
 		function createFilter( room_list ){
 			var filterList = {};
+			var img = false;
 			for(var room_name in room_list){
 				for( var i = 0 ; i < room_list[room_name].length ; ++i ){
 					var rSession = room_list[room_name][i];
@@ -333,6 +404,7 @@
 					var spec;
 					if( $spec[0].nodeName == "IMG"){
 						spec = $spec.attr("alt");
+						img = true;
 					}else{
 						spec = $spec.text();
 					}
@@ -346,6 +418,19 @@
 			for(var filter_name in filterList){
 				$filter.append( filterList[filter_name].clone() );
 			}
+			var $sortted;
+			if( img ){
+				$sortted = $filter.children().sort(function(a,b){
+					return ($(a).attr("src") > $(b).attr("src") ? 1 : -1);
+				});
+			}else{
+				$sortted = $filter.children().sort(function(a,b){
+					return ($(a).text() > $(b).text() ? 1 : -1);
+				});
+			}
+
+			$filter.empty().append( $sortted );
+			
 			$filter.children().click(function(){
 				var $this = $(this);
 				var spec   = $this.attr('spec');
@@ -534,6 +619,12 @@
 				// IDを取得
 				var $title = $td.find('.ss_title,.btn-elinvar-detail');
 				var id = getIdFromTitleTag( $title );
+
+				// イベント時には別処理
+				if( rSession.event ){
+					id = day_index + "_event_" + rSession.event.title.split(" ").join("");
+				}
+
 				$td.attr( 'id', id );
 
 				// お気に入り登録の確認
@@ -565,22 +656,35 @@
 					$hideTr.find('[room="'+room_name +'"]').hide();
 				}
 
-				if( rSession.event == undefined )	 return;
-
 				// CEDEC AWARDS 等のイベント 
-				colspan = $tr.children("td").length;
-				$td.attr('colspan',colspan)
-					.addClass( "event")
-					.css({
-						"fontSize":"300%",
-						"line-height":"200%",
-						"text-align":"center"
-					});
-				
-				$hideTr = $tr;
-				for( var d = 0 ; d < rowSpan ; ++d ){
-					$hideTr.children("td:gt(1)").hide();
-					$hideTr = $hideTr.next();
+				if( rSession.event ){
+					colspan = 1;
+
+					var event_css = {"text-align":"center"};
+
+					if( rSession.event.colspan != undefined ){
+						switch( rSession.event.colspan ){
+						case "all":
+							colspan = $tr.children("td").length;
+
+							event_css["fontSize"]="300%";
+							event_css["line-height"]="300%";
+							break;
+						}
+					}
+
+					$td.attr('colspan',colspan)
+						.addClass( "event")
+						.css(event_css);
+					
+					$hideTr = $tr;
+					for( var d = 0 ; d < rowSpan ; ++d ){
+
+						if( colspan > 1 ){
+							$hideTr.children("td:gt(1)").hide();
+						}
+						$hideTr = $hideTr.next();
+					}
 				}
 
 			}
@@ -606,15 +710,48 @@
 				// 公募マークは不要
 				$td.find('.ses-type:contains(公募)').remove();
 
-				// プロフィールの「部署名」を削除
-				$td.find('p.prof:nth-child(2)').remove();	
+				// 役職だけではどこのかわからない為、これらのキーワードを含む場合は部署名を追加する
+				var PositionList = [
+					"部長","次長","係長","室長","チーム長","チームリーダー","リーダー"
+				];
 
-				// 
-//				$td.find('img.note_icon[src*=timeshift_ok]')
-//					.next()
-//						.remove()
-//						.end()
-//					.remove();
+				// プロフィールのカスタマイズ
+				$td.find('p.prof')
+					// 株式会社 を略
+					.filter(':nth-child(1)')
+						.each(function(){
+							var $this = $(this);
+							$this.text( $this.text().split("株式会社").join("(株)").split("有限会社").join("(有)") );
+						})
+						.end()
+					// 室長 の肩書がある場合は、部署名を先頭に追加する
+					.filter(':nth-child(3)')
+						.filter(function(){
+							var text = $(this).text();
+							for( var i = 0 ; i < PositionList.length ; ++i ){
+								if( text.indexOf( PositionList[i] ) != -1 ){
+									return true;
+								}
+							}
+							return false;
+						}).each(function(){
+								var $this = $(this);
+								$this.text( $this.prev().text() + " " + $this.text() );
+							})
+							.end()
+						.end()
+					// プロフィールの「部署名」を削除
+					.filter(':nth-child(2)')
+						.remove();
+
+				// タイムシフト有 を削除
+				if( 0 ){
+					$td.find('img.note_icon[src*=timeshift_ok]')
+						.next()
+							.remove()
+							.end()
+						.remove();
+				}
 
 				// 登壇者が複数いたら
 				var $speaker_info = $td.find('.speaker_info');
@@ -734,19 +871,21 @@
 
 					var floorMapURL = CEDEC.getFloorURL( rSession.getRoomNo() );
 
+					var room_label = "Room";
 					var $room;
 					var dispRoomName = $temp.attr('room');
 					if( rSession.event ){
 						dispRoomName = rSession.event.room_no;
+						room_label = "会場";
 					}
 					if( dispRoomName.indexOf("不明_") != -1 ){
 						dispRoomName = "不明";
 					}
 
 					if( floorMapURL !== undefined ){
-						$room = $('<p class="room">Room:<a href="' + floorMapURL + '" target="blank">' + dispRoomName + '</a></p>')
+						$room = $('<p class="room">' + room_label + ':<a href="' + floorMapURL + '" target="blank">' + dispRoomName + '</a></p>');
 					}else{
-						$room = $('<p class="room">Room:' + dispRoomName + '</p>')
+						$room = $('<p class="room">' + room_label + ':' + dispRoomName + '</p>');
 					}
 
 					$td.append([
