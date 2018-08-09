@@ -9,6 +9,11 @@
 <link rel="stylesheet" href="./main.css" />
 <script src="impl/lib/jquery-2.1.4.min.js"></script>
 <script src="impl/lib/jquery-ui-1.12.0/jquery-ui.min.js"></script>
+<script type="text/javascript">
+	$(document).on("mobileinit",function(){
+		$.event.special.tap.tapholdThreshold=200;
+	});
+</script>
 <script src="impl/lib/jquery.mobile/jquery.mobile-1.4.5.min.js"></script>
 <script src="impl/lib/jquery.xdomainajax.js"></script>
 <script src="impl/lib/fixed_midashi.js"></script>
