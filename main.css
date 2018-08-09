@@ -84,6 +84,10 @@ div#contents
 	text-shadow: none;
 }
 
+#day_table > tbody > tr > td:not(.time), #day_table > thead > tr > th:not(.time){
+	min-width : 120px;
+}
+
 #day_favorite_table > tbody > tr > td, #day_favorite_table > thead > tr > th{
 	width : 240px;
 	border: 1px solid #b9b9b9;
