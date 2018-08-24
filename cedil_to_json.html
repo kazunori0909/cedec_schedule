@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>CEDiLのデータを取得する</title>
+<link rel="stylesheet" href="./impl/lib/jquery-ui-1.12.0/themes/smoothness/jquery-ui.min.css" />
+<link rel="stylesheet" href="./impl/lib/jquery-ui-1.12.0/themes/smoothness/theme.css" />
+<link rel="stylesheet" href="./main.css" />
+
+<script src="impl/lib/jquery-2.1.4.min.js"></script>
+<script src="impl/lib/jquery-ui-1.12.0/jquery-ui.min.js"></script>
+<script src="impl/lib/jquery.xdomainajax.js"></script>
+</head>
+
+<body>
+	<div id="contents">
+
+		<select>
+			<option>2018</option>
+			<option>2017</option>
+			<option>2016</option>
+			<option>2015</option>
+			<option>2014</option>
+			<option>2013</option>
+			<option>2012</option>
+			<option>2011</option>
+		</select>
+		<input type="button" value="JSONファイル作成" />
+	</div>
+
+<script src="impl/cedec.js"></script>
+<script src="impl/cedil.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+
+	$('input').click(function(){
+
+		var year    = $(this).prev().val();
+		var setting = CEDEC.createSettingFromYear( year );
+
+		if( setting.cedil_tag_no === undefined ){
+			alert( "CEDiLのタグIDが未登録です。" );
+			return;
+		}
+
+		CEDiL.writeJsonData( year, setting.cedil_tag_no );
+
+	});
+
+});
+</script>
+</body>
+</html>
