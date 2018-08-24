@@ -20,7 +20,7 @@ var CEDEC = (function($){
 		},
 		info_selector: "div.session-right",
 		param		:{
-			"room_no"		:	function($xml){ return "";},
+			"room_no"		:	function($xml){ return $xml.attr("room_number"); },
 			"start_time"	:	function($xml){
 				var text = $xml.find('.detail-session-meta-top').text();
 				var indexOfKara = text.indexOf(' 〜 ');
@@ -32,7 +32,9 @@ var CEDEC = (function($){
 				return text.slice( indexOfKara + 3, indexOfKara + 3 + 5 );
 			},
 
-			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); }
+			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
+			"youtube"		:	function($xml){ return $xml.attr("youtube"); },
+			"niconama"		:	function($xml){ return $xml.attr("niconama"); }
 		},
 		events : [
 			{ 
@@ -89,7 +91,9 @@ var CEDEC = (function($){
 			"room_no"		:	function($xml){ return $xml.find(".room_number").text();},
 			"start_time"	:	function($xml){ return $xml.find(".ss_time_start").text();},
 			"end_time"		:	function($xml){ return $xml.find(".ss_time_end").text();},
-			"main_spec"		:	function($xml){ return $xml.find(".ss_ippr_icon + img"); }
+			"main_spec"		:	function($xml){ return $xml.find(".ss_ippr_icon + img"); },
+			"youtube"		:	function($xml){ return ""; },
+			"niconama"		:	function($xml){ return ""; }
 		}
 	};
 
@@ -158,7 +162,7 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-//		 "2018":{ time:"2018/08/08 21:40" }
+//		 "2018":{ time:"2018/08/23 20:00", file:"custom.html" }
 //		,"2017":{ time:"2017/08/25 23:30" }
 //		,"2016":{ time:"2017/08/25 23:30" }
 	}
@@ -211,10 +215,15 @@ var CEDEC = (function($){
 	//--------------------------------------------------------------------------
 	Unit.prototype.getSchedulePagePath = function( day_index ){
 
-		if( CASH＿SETTING[ this.year ] != undefined ){
+		var cash_setting = CASH＿SETTING[ this.year ];
+		if( cash_setting != undefined ){
 			var temp = location.href.split("/");
 			temp.pop();
-			return temp.join("/") + "/web_data/" + this.year + "/" + day_index + ".html";
+			if( cash_setting.file ){
+				return temp.join("/") + "/web_data/" + this.year + "/" + cash_setting.file;
+			}else{
+				return temp.join("/") + "/web_data/" + this.year + "/" + day_index + ".html";
+			}
 		}		
 
 		if( this.format.indexOf('{day_no}') > 0 ){
@@ -338,11 +347,14 @@ var CEDEC = (function($){
 			},
 
 			getMainSpecObject		: function(){return getParamObject("main_spec");},
+			getYoutubeURL			: function(){return getParamObject("youtube");},
+			getNiconamaURL			: function(){return getParamObject("niconama");}
 		};
 
 		function getParamText( cash_name ){
 			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
 			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
+			if( m_cash[cash_name] == undefined ) m_cash[cash_name] = "";
 			return m_cash[cash_name];
 		}
 		function getParamObject( cash_name ){
@@ -357,22 +369,23 @@ var CEDEC = (function($){
 	//==========================================================================
 	function createEventSessionData( rEvent, unit_setting ){
 
-		var session = createSessionData( $("<div>"), unit_setting );
-
-		var $main = $("<div>");
-		$main.append([
-			"<h2>" + rEvent.title + "</h2>",
-			"会場:" + rEvent.room_no + "<br/><br/>"
-		]);
-
-		if( rEvent.html ){
-			$main.append( rEvent.html );
+		var contents = [];
+		contents.push( "<h2>" + rEvent.title + "</h2>" );
+		if( rEvent.hash_tag ){
+			contents.push( '#' + rEvent.hash_tag );
+			contents.push( '　' );
+			contents.push( '<a href="https://twitter.com/hashtag/' + rEvent.hash_tag + '" target="blank"><i class="fab fa-2x fa-twitter-square"></i></a>' );
+			contents.push( '<br/>' );
 		}
 
+		if( rEvent.html ){
+			contents.push( rEvent.html );
+		}
 
+		// イベント用設定
+		var session = createSessionData( $("<div>"), unit_setting );
 		session.event				= $.extend({}, rEvent );
-
-		session.main 				= $main,
+		session.main 				= $("<div>").append( contents ),
 		session.getRoomNo			= function(){return this.event.room_no;},
 		session.getStartTimeString 	= function(){return this.event.start_time; }
 		session.getEndTimeString 	= function(){return this.event.end_time; }

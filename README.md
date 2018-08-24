@@ -2,19 +2,30 @@
 CEDEC公式のスケジュールページを読み込み、部屋別のタイムスケジュールに整形して表示するページです。  
 CEDiLページからも読み込みを行い対応するリンクを追加しています。
 
+# 更新履歴
+2018/08/24 Ver.2.0 に更新
+　・2018年の新フォーマットに対応
+　・非公式イベントが追加可能に
+　・ライブ配信セッションの情報に対応
+　・CEDiLへのリンク情報をJSONに出力
+　・CEDiLへのリンク情報をJSONから取得
+
 # 設計思想
 * 毎年の対応コストを下げる
-* ファイルプロトコルでも動作
-* Webページから表を選択しコピーしてExcelに貼り付けられる
 
 # 仕組み
 * jQuery  
-Webアクセス。解析。ページ生成はｊQueryを使用。
+Webアクセス。解析。ページ生成はjQueryを使用。
 
 * クロスドメイン  
 公式サイトへjQueryプラグイン「Cross-Domain Ajax mod」を使用しアクセス。  
 YQL(Yahoo Query Language)を使用していたが、2017年 YQLの仕様変更により、HTMLが非サポートに。  
 HTML stringは対応しているので、プラグインを書き換え使用。
+2018年以降 CEDEC公式サイトにクロスドメイン対策が入った為、キャッシュ化が必要に。
+
+* CEDiLへのリンク  
+検索タグIDを元に毎回解析していたが、2018/08/24 バージョンで JSONからの読み込みに変更。
+JSONファイルを作成するには、現状 cedil_to_json.jtmlを使用する
 
 * スケジュールデータ・画像  
 ローディングアイコン等の最低限の画像しかサイトには存在せず、公式サイトの物を使用する。  
@@ -30,7 +41,8 @@ var SCHEDULE_SETTING = [
         format:'session#tab{day_no}',
         single_page:true,
         unit_setting: UNIT_SETTING,
-        convert_path:PATH_CONVERT_2018
+        convert_path:PATH_CONVERT_2018,
+        ...
     },
 	{
         year:"2017",

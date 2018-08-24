@@ -45,28 +45,40 @@
 		"2018": { 
 			events:[
 				{ 
-					title:"ProCEDEC2018", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"ニューヨークグランドキッチン",
-					html:'<a href="https://procedec2018.peatix.com/">イベント詳細</a><br/>'
+					title:"ProCEDEC2018", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"ニューヨークグランドキッチン"
+					,html:'<a href="https://procedec2018.peatix.com/">イベント詳細</a><br/>'
+					,hash_tag:"ProCEDEC"
 				}
 				,{ 
-					title:"Artists Meets Technicals 2018", 	 day_index:2,	start_time: "20:00",	end_time:"22:00", room_no:"サンタモニカ・サードストリート ミートテラス",
-					html:'<a href="https://artistsmeetstechnicals.doorkeeper.jp/events/77430">イベント詳細</a><br/>'
+					title:"Artists Meets Technicals 2018", 	 day_index:2,	start_time: "20:00",	end_time:"22:00", room_no:"サンタモニカ・サードストリート ミートテラス"
+					,html:'<a href="https://artistsmeetstechnicals.doorkeeper.jp/events/77430">イベント詳細</a><br/>'
 				}
 				,{ 
-					title:"UI CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"桜木町駅近辺",
-					html:'<a href="https://ui-cedec.connpass.com/event/96867/">イベント詳細</a><br/>'
+					title:"UI CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"HUB Colette・Mare みなとみらい店"
+					,html:'<a href="https://ui-cedec.connpass.com/event/96867/">イベント詳細</a><br/>'
+					,hash_tag:"UICEDEC"
 				}
 				,{ 
-					title:"裏 CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"のげ（ちょっと遠いので、時間厳守）",
-					html:'<a href="https://ura-cedec.com/">イベント詳細</a><br/>'
+					title:"裏 CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"のげ（ちょっと遠いので、時間厳守）"
+					,html:'<a href="https://ura-cedec.com/">イベント詳細</a><br/>'
 				}
 				,{ 
-					title:"音 CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"不明",
-					html:'招待制<br/><font color="#FF4500">場所・時間ともに詳細不明</font>'
+					title:"音 CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"不明"
+					,html:'<font color="#FF4500">招待制<br/>場所・時間ともに詳細不明</font>'
 				}
 				,{ 
-					title:"CEDECON 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"不明",
-					html:'<font color="#FF4500">場所・時間ともに詳細不明</font><br/>'
+					title:"CEDECON 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"HUB Colette・Mare みなとみらい店"
+					,html:'<a href="https://cedecon2018.peatix.com/">イベント詳細</a><br/>'
+					,hash_tag:"cedecon"
+				}
+				,{ 
+					title:"AiCEDEC2018", 	 day_index:2,	start_time: "19:45",	end_time:"21:45", room_no:"横浜モノリス"
+					,html:'<a href="https://aicedec2018.peatix.com/">イベント詳細</a><br/>'
+					,hash_tag:"AiCEDEC"
+				}
+				,{ 
+					title:"第1回 cedec女子会", 	 day_index:0,	start_time: "19:00",	end_time:"22:00", room_no:"SANTA MONICA 3rd st. MEAT TERRACE"
+					,html:'<a href="https://www.facebook.com/events/507327916393384/">イベント詳細</a><br/>'
 				}
 			]
 		}
@@ -151,7 +163,7 @@
 		$div.appendTo( $header );
 
 		if( m_setting.cash != undefined ){
-			$header.append("※" + m_setting.cash.time + "の情報です。");
+			$header.append("※セッション情報 取得日時：" + m_setting.cash.time + "　");
 		}
 	}
 
@@ -179,7 +191,8 @@
 			success	: function(index,data){
 				$('#contents_loading_icon').remove();
 				appendTable( data, index );
-				CEDiL.readData( m_setting.cedil_tag_no, appendLinkToCEDiL );
+				CEDiL.readJsonData( m_setting.year, m_setting.cedil_tag_no, appendLinkToCEDiL );
+				//CEDiL.readData( m_setting.cedil_tag_no, appendLinkToCEDiL );
 			},
 			error: function(request, textStatus, errorThrown){
 				$('#contents_loading_icon').remove();
@@ -204,7 +217,7 @@
 
 		// テーブル作成
 		var $table = createBaseTable( timeRange, roomList );
-		$table.attr({ "id": CONTENTS_TABLE_ID, "_fixedhead":"cols:1" });
+		$table.attr({ "id": CONTENTS_TABLE_ID });
 		appendSessionListTo( $table, roomList, day_index );
 		if( m_setting.convert_path ) m_setting.convert_path( $table );
 
@@ -265,7 +278,6 @@
 		}
 
 		customizeTable(day_index);
-		FixedMidashi.create();
 
 		return;
 
@@ -290,6 +302,9 @@
 					findAppendToRoomList( session ).push( session );
 				}
 			});
+
+			//keyでソートする
+			roomList = keySort(roomList);
 
 			// イベントの追加部屋は、強制的にリストの最初に追加する
 			var rEventRoom
@@ -386,6 +401,36 @@
 					}
 				}
 				return roomList[room_name];
+			}
+
+			function keySort(hash){
+				var keys = [];
+				var newHash = {};
+				var main_hall = false;
+				for (var k in hash){
+					if( k == "メインホール" ){
+						main_hall = true;
+						continue;
+					}
+					keys.push(k);
+				}
+				keys.sort(function(a,b){
+					var room_no_A = parseInt(a.replace("R","").split("+")[0]);
+					var room_no_B = parseInt(b.replace("R","").split("+")[0]);
+
+					if( room_no_A < room_no_B ) return -1;
+					if( room_no_A > room_no_B ) return 1;
+					return 0;
+				});
+				if( main_hall ){
+					keys.unshift("メインホール");
+				}
+				
+				for(var i = 0; i < keys.length; i++){
+					var room_no = keys[i];
+					newHash[room_no] = hash[room_no];
+				}
+				return newHash;	
 			}
 		}
 
@@ -592,6 +637,26 @@
 					}
 				}
 
+				
+
+				var room_label = "Room";
+				var $room;
+				var dispRoomName = room_name;
+				if( rSession.event ){
+					dispRoomName = rSession.event.room_no;
+					room_label = "会場";
+				}
+				if( dispRoomName.indexOf("不明_") != -1 ){
+					dispRoomName = "不明";
+				}
+
+				var floorMapURL = CEDEC.getFloorURL( dispRoomName );
+				if( floorMapURL !== undefined ){
+					$room = $('<p class="room">' + room_label + ':<a href="' + floorMapURL + '" target="blank">' + dispRoomName + '</a></p>');
+				}else{
+					$room = $('<p class="room">' + room_label + ':' + dispRoomName + '</p>');
+				}
+
 				// 一度空にしておく
 				// セッションキャンセル時対応。後優先
 				$td.empty()
@@ -614,7 +679,21 @@
 							m_favoriteList[id] = { session:rSession, dom:$this };
 						}
 					})
-					.append( rSession.main );
+					.append([
+						$room,
+						"<hr/>",
+						rSession.main
+					]);
+
+				// ライブ配信設定
+				var youtube = rSession.getYoutubeURL();
+				if( youtube ){
+					$td.append( '<a href="' + youtube + '" title="ライブ配信 Youtube" target="blank"><img src="./image/youtube_icon.png" alt="Youtube" style="margin:8px;"/></a>' );
+				}
+				var niconama = rSession.getNiconamaURL();
+				if( niconama ){
+					$td.append( '<a href="' + niconama + '" title="ライブ配信 ニコニコ生放送" target="blank"><img src="./image/niconico_icon.png" alt="ニコ生" style="margin:8px;"/></a>' );
+				}
 
 				// IDを取得
 				var $title = $td.find('.ss_title,.btn-elinvar-detail');
@@ -869,28 +948,7 @@
 					var $temp = rInfo.dom.clone();
 					$temp.children().show();
 
-					var floorMapURL = CEDEC.getFloorURL( rSession.getRoomNo() );
-
-					var room_label = "Room";
-					var $room;
-					var dispRoomName = $temp.attr('room');
-					if( rSession.event ){
-						dispRoomName = rSession.event.room_no;
-						room_label = "会場";
-					}
-					if( dispRoomName.indexOf("不明_") != -1 ){
-						dispRoomName = "不明";
-					}
-
-					if( floorMapURL !== undefined ){
-						$room = $('<p class="room">' + room_label + ':<a href="' + floorMapURL + '" target="blank">' + dispRoomName + '</a></p>');
-					}else{
-						$room = $('<p class="room">' + room_label + ':' + dispRoomName + '</p>');
-					}
-
 					$td.append([
-							$room,
-							"<hr/>",
 							$temp.html()
 						])
 						.attr({
@@ -1110,7 +1168,7 @@
 	//--------------------------------------------------------------------------
 	//
 	//--------------------------------------------------------------------------
-	function appendLinkToCEDiL( list ){
+	function appendLinkToCEDiL( list, update_date ){
 //		var debugList = [];
 //		for( var i = 0 ; i < list.length ; ++i ){
 //			debugList.push( list[i].title );
@@ -1132,6 +1190,16 @@
 				}
 			});
 
+		if( update_date ){
+			var date  = new Date(update_date);
+			var date_string = date.getFullYear() + "/";
+			date_string += ("0" + (date.getMonth() + 1)).slice(-2) + "/";
+			date_string += ("0" + date.getDate()).slice(-2) + "/";
+			date_string += " ";
+			date_string += ("0" + date.getHours()).slice(-2) + ":";
+			date_string += ("0" + date.getMinutes()).slice(-2);
+			$(CONTENTS_HEADER_SELECTOR).append("※CEDiL情報 取得日時：" + date_string );
+		}
 
 	}
 
