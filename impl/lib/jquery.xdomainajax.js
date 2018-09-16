@@ -17,7 +17,7 @@ jQuery.ajax = (function(_ajax){
     var protocol = location.protocol,
         hostname = location.hostname,
         exRegex = RegExp(protocol + '//' + hostname),
-        YQL = 'https' + (/^https/.test(protocol)?'s':'') + '://query.yahooapis.com/v1/public/yql?callback=?',
+        YQL = 'http' + (/^https/.test(protocol)?'s':'') + '://query.yahooapis.com/v1/public/yql?callback=?',
         query = 'select * from htmlstring where url="{URL}" and xpath="*"';
 
     function isExternal(url) {
@@ -61,10 +61,10 @@ jQuery.ajax = (function(_ajax){
                             responseText: (data.results[0] || '')
 								.replace(/<result>/, "")
 								.replace(/<\/result>/, "")
-								.replace(/&amp;/g, '&')
-								.replace(/&lt;/g, '<')
-								.replace(/&gt;/g, '>')
-								.replace(/&quot;/g, '"')
+								.replace(/&amp;/gi, '&')
+								.replace(/&lt;/gi, '<')
+								.replace(/&gt;/gi, '>')
+								.replace(/&quot;/gi, '"')
 								.replace(/&#13;/g, '\r')
                                 // YQL screws with <script>s
                                 // Get rid of them
