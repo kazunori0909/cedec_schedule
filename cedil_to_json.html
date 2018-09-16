@@ -14,18 +14,11 @@
 
 <body>
 	<div id="contents">
-
-		<select>
-			<option>2018</option>
-			<option>2017</option>
-			<option>2016</option>
-			<option>2015</option>
-			<option>2014</option>
-			<option>2013</option>
-			<option>2012</option>
-			<option>2011</option>
+		<select id="select_year">
 		</select>
 		<input type="button" value="JSONファイル作成" />
+
+		<div id="log"></div>
 	</div>
 
 <script src="impl/cedec.js"></script>
@@ -33,6 +26,19 @@
 
 <script type="text/javascript">
 $(document).ready(function(){
+
+	// select文作成
+	var year_options    = [];
+	var now      = new Date();
+	var now_year = now.getFullYear();
+
+	// 適当に5年前くらいまでしか作成出来ないように
+	for( var i = 0 ; i < 3  ; ++i ){
+		year_options.push( '<option>' + (now_year - i) + '</option>' );
+	}
+	$('#select_year').append( year_options );
+
+	$('#log').empty();
 
 	$('input').click(function(){
 
@@ -44,8 +50,24 @@ $(document).ready(function(){
 			return;
 		}
 
-		CEDiL.writeJsonData( year, setting.cedil_tag_no );
+		CEDiL.writeJsonData( year, setting.cedil_tag_no, success, end );
 
+
+		function success(list){
+			var $log = $('#log');
+			
+			for( var i = 0 ; i < list.length ; ++i ){
+				var s = list[i];
+				var text = '<a href="' + s.url + '">' + s.title + '</a><br/>';
+				$log.prepend( text );
+			}
+		}
+
+		function end(list){
+			var $log = $('#log');
+			$log.prepend( "<hr/>" );
+			$log.prepend( list.length + "件のデータを作成<br/>" );
+		}
 	});
 
 });
