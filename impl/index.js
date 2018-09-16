@@ -1178,15 +1178,35 @@
 		$(CONTENTS_TABLE_SELECTOR + "," + CONTENTS_FAVORITE_TABLE_SELECTOR)
 			.find('td.session').each(function(){
 				var $this = $(this);
-				if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
-				var title = $this.find('.ss_title').text()
-								.replace(/\n/g, "")
-								.replace(/ /g, "")
-								.replace(/　/g, "");
-				for( var i = 0 ; i < list.length ; ++i ){
-					if( title.indexOf( list[i].title ) == -1 ) continue;
-					$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
-					break;
+
+				if( m_year < 2018 ){
+					if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
+					var title = $this.find('.ss_title,.session-title').text()
+									.replace(/\n/g, "")
+									.replace(/ /g, "")
+									.replace(/　/g, "");
+					for( var i = 0 ; i < list.length ; ++i ){
+						if( title.indexOf( list[i].title ) == -1 ) continue;
+						$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
+						break;
+					}
+				}else{
+					var title = $this.find('.session-title').text()
+									.replace(/\n/g, "")
+									.replace(/ /g, "")
+									.replace(/　/g, "");
+					for( var i = 0 ; i < list.length ; ++i ){
+						if( title.indexOf( list[i].title ) == -1 ) continue;
+
+						// 「□ 資料公開: 予定あり」「□ 資料公開: 予定なし」を置換する
+						var $detail = $this.find(".detail-session-meta-top");
+						$detail.html( $detail.html().replace(
+											new RegExp('(□ 資料公開:)(.*)(<br>)','g'),
+											'$1<a href="' + list[i].url +'#breadcrumbs" target="blank">公開済み</a>$3'
+										)
+									);
+						break;
+					}
 				}
 			});
 
@@ -1198,7 +1218,11 @@
 			date_string += " ";
 			date_string += ("0" + date.getHours()).slice(-2) + ":";
 			date_string += ("0" + date.getMinutes()).slice(-2);
-			$(CONTENTS_HEADER_SELECTOR).append("※CEDiL情報 取得日時：" + date_string );
+			
+			var $header = $(CONTENTS_HEADER_SELECTOR);
+			if( $header.text().indexOf('※CEDiL情報') == -1 ){
+				$header.append("※CEDiL情報 " + list.length +"件 取得日時：" + date_string );
+			}
 		}
 
 	}

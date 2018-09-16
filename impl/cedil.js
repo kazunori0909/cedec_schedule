@@ -56,7 +56,10 @@ var CEDiL = (function($){
 
 		$.ajax({
 			type: 'GET',
-			url: url,
+			url: url + "?t=" + new Date().getTime(),
+		    beforeSend : function( xhr ){
+		        xhr.setRequestHeader("If-Modified-Since", "Thu, 01 Jun 1970 00:00:00 GMT");
+		    },
 			dataType: 'html',
 			success: (function(tag,success,page){
 				return function(html) {
@@ -140,7 +143,7 @@ var CEDiL = (function($){
 	//
 	//--------------------------------------------------------------------------
 	function readJsonData( year, tag, success ){
-
+		$.ajaxSetup({ cache: false });
 		$.getJSON('./web_data/' + year + "/cedil.json")
 			.done(function(year,tag,success){
 				return function(data){
@@ -158,9 +161,9 @@ var CEDiL = (function($){
 	//--------------------------------------------------------------------------
 	//
 	//--------------------------------------------------------------------------
-	function writeJsonData( year, tag, success ){
+	function writeJsonData( year, tag, success, end ){
 
-		readData( tag, undefined, undefined, function(year){
+		readData( tag, success, undefined, function(year){
 			
 			return function( list ){
 				
@@ -182,9 +185,13 @@ var CEDiL = (function($){
 				}).success(function(data, status, xhr) {
 					// 通信成功時の処理
 					console.log("success");
-					console.log("data ="+data);
+					console.log("list ="+ data.list.length );
 					console.log("status ="+status);
 					console.log("xhr ="+xhr);
+					// Write時はcashをクリアする
+					m_dataCash = {};
+					if( end ) end(data.list);
+
 				}).error(function(xhr, status, error) {
 					// 通信失敗時の処理
 					console.log("error");
@@ -192,8 +199,9 @@ var CEDiL = (function($){
 					// 通信完了時の処理
 					console.log("fin");
 				});
+
 			}
-		}(year));
+		}(year,end));
 
 
 	}

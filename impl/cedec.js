@@ -150,7 +150,7 @@ var CEDEC = (function($){
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, unit_setting: UNIT_SETTING, 			convert_path:PATH_CONVERT_2018	},
+		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, unit_setting: UNIT_SETTING, 			convert_path:PATH_CONVERT_2018, cedil_tag_no:717	},
 		{ year:"2017", first_date:"0830", domain:"http://cedec.cesa.or.jp/", format:'2017/session/schedule_{date}/',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_2017,		cedil_tag_no:713	},
 		{ year:"2016", first_date:"0824", domain:"http://cedec.cesa.or.jp/", format:'2016/session/schedule_{date}.html',	unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:712	},
 		{ year:"2015", first_date:"0826", domain:"http://cedec.cesa.or.jp/", format:'2015/session/schedule_{date}.html',	unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:709	},
