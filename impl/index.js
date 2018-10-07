@@ -98,8 +98,13 @@
 		intervalId:-1,
 	}
 
-	var m_opendDay = new Date();
+	var m_opendDay = new Date();	// 現在の日程
 
+	// 経過日数
+	// タイムシフト用アイコン等、一定日数経過後は不要になるタグを削除する為に使用
+	var m_termDate = 0;
+
+	
 	// for Debug
 	var m_debugHighlighDay = undefined;
 //	var m_opendDay	 = new Date(2017,8-1,31,11,24);
@@ -221,6 +226,10 @@
 			"id": CONTENTS_TABLE_ID
 			,"dayIndex":day_index
 		});
+
+		// 経過日数を記憶
+		m_termDate = Math.ceil((m_opendDay - m_dateList[day_index]) / 86400000);
+
 		appendSessionListTo( $table, roomList, day_index );
 		if( m_setting.convert_path ) m_setting.convert_path( $table );
 
@@ -826,9 +835,27 @@
 					.filter(':nth-child(2)')
 						.remove();
 
-				// タイムシフト有 を削除
-				if( 0 ){
-					$td.find('img.note_icon[src*=timeshift_ok]')
+				// タイムシフト有・無 を削除
+				if( m_termDate > 30 ){
+					$td.find('img.note_icon[src*=timeshift_]')
+						.next()
+							.remove()
+							.end()
+						.remove();
+				}
+				// 写真・SNSの OK/NG を削除
+				if( m_termDate > 30 ){
+					$td.find('img').filter(function(index){
+						var file_name = this.src.slice( this.src.lastIndexOf("/") + 1 );
+						switch(file_name){
+						case "photo_B.png":
+						case "photoOK_B.png":
+						case "sns_B.png":
+						case "snsOK_B.png":
+							return true;
+						}
+						return false;
+					})
 						.next()
 							.remove()
 							.end()
@@ -880,6 +907,11 @@
 
 					$style.before('<br/>');
 				});
+
+				// タイムシフト有・無 を削除
+				if( m_termDate > 30 ){
+					$td.find('span.timeshift-icon').remove();
+				}
 			}
 			
 			//------------------------------------------------------------------

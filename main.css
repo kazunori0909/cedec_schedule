@@ -85,7 +85,7 @@ div#contents
 }
 
 #day_table > tbody > tr > td:not(.time), #day_table > thead > tr > th:not(.time){
-	min-width : 120px;
+	min-width : 150px;
 }
 
 #day_favorite_table > tbody > tr > td, #day_favorite_table > thead > tr > th{
