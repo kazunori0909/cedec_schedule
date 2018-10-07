@@ -217,7 +217,10 @@
 
 		// テーブル作成
 		var $table = createBaseTable( timeRange, roomList );
-		$table.attr({ "id": CONTENTS_TABLE_ID });
+		$table.attr({
+			"id": CONTENTS_TABLE_ID
+			,"dayIndex":day_index
+		});
 		appendSessionListTo( $table, roomList, day_index );
 		if( m_setting.convert_path ) m_setting.convert_path( $table );
 
@@ -1175,6 +1178,9 @@
 //		}
 //		alert( debugList.length + "\n" + debugList.join("\r\n") );
 
+		var day_index = $(CONTENTS_TABLE_SELECTOR).attr('dayIndex');
+		var current_date = m_dateList[day_index].getDate();
+
 		$(CONTENTS_TABLE_SELECTOR + "," + CONTENTS_FAVORITE_TABLE_SELECTOR)
 			.find('td.session').each(function(){
 				var $this = $(this);
@@ -1186,6 +1192,12 @@
 									.replace(/ /g, "")
 									.replace(/　/g, "");
 					for( var i = 0 ; i < list.length ; ++i ){
+<<<<<<< HEAD
+						if( list[i].date ){
+							if( current_date != list[i].date ) continue;
+						}
+=======
+>>>>>>> 9f5fbdd273974e4c96784593dc632f375d1978fb
 						if( title.indexOf( list[i].title ) == -1 ) continue;
 						$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
 						break;
@@ -1196,6 +1208,12 @@
 									.replace(/ /g, "")
 									.replace(/　/g, "");
 					for( var i = 0 ; i < list.length ; ++i ){
+<<<<<<< HEAD
+						if( list[i].date ){
+							if( current_date != list[i].date ) continue;
+						}
+=======
+>>>>>>> 9f5fbdd273974e4c96784593dc632f375d1978fb
 						if( title.indexOf( list[i].title ) == -1 ) continue;
 
 						// 「□ 資料公開: 予定あり」「□ 資料公開: 予定なし」を置換する

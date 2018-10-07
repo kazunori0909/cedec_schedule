@@ -133,6 +133,15 @@ var CEDiL = (function($){
 			// ex) https://cedil.cesa.or.jp/cedil_sessions/view/1464
 			obj.url  = MASTER_URL + "/cedil_sessions" + $this.find("a")[0].href.split("/cedil_sessions")[1];
 
+			// タイトルの重複が存在したため、日程だけ覚えておく
+			var date = $this.parent().find('.session_date').text();
+			if( date ){
+				var date_list = date.match(/\d{1,2}日/);
+				if( date_list.length ){
+					obj.date = date_list[0].replace('日','');
+				}
+			}
+
 			list.push( obj );
 		});
 
