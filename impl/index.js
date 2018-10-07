@@ -1192,12 +1192,9 @@
 									.replace(/ /g, "")
 									.replace(/　/g, "");
 					for( var i = 0 ; i < list.length ; ++i ){
-<<<<<<< HEAD
 						if( list[i].date ){
 							if( current_date != list[i].date ) continue;
 						}
-=======
->>>>>>> 9f5fbdd273974e4c96784593dc632f375d1978fb
 						if( title.indexOf( list[i].title ) == -1 ) continue;
 						$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
 						break;
@@ -1208,12 +1205,9 @@
 									.replace(/ /g, "")
 									.replace(/　/g, "");
 					for( var i = 0 ; i < list.length ; ++i ){
-<<<<<<< HEAD
 						if( list[i].date ){
 							if( current_date != list[i].date ) continue;
 						}
-=======
->>>>>>> 9f5fbdd273974e4c96784593dc632f375d1978fb
 						if( title.indexOf( list[i].title ) == -1 ) continue;
 
 						// 「□ 資料公開: 予定あり」「□ 資料公開: 予定なし」を置換する
