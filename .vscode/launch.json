@@ -5,14 +5,10 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch local file",
-            "file": "${workspaceRoot}/index.html"
-        },
-        {
-            "type": "chrome",
-            "request": "attach",
-            "name": "Attach to Chrome",
-            "port": 9222,
-            "webRoot": "${workspaceRoot}"
+            "file": "${workspaceRoot}/index.html",
+            "runtimeArgs": [
+                "--allow-file-access-from-files"
+            ]
         }
     ]
 }
