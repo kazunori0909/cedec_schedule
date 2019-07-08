@@ -7,7 +7,9 @@
 	//==========================================================================
 	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
-	var DEFAULT_YEAR = 2018;
+	var DEFAULT_YEAR = 2019;
+
+	var FEATURE_CODE_FAVICON = false;
 
 	// DOM関連
 	var CONTENTS_BODY_SELECTOR = '#contents_body';
@@ -244,10 +246,9 @@
 
 		var $favorite = $('<img id="favorite_selector" src="./image/favorite_0.png"></img>');
 
-		var h2 = "<br/><br/><h2>" + $xml.find("h2").html() +"</h2>";
-		if( m_setting.year == "2018" ){
-			h2 = '<br/><br/><h2>Day ' + (day_index+1) + '</h2>';
-		}
+		var h2Html = $xml.find("h2").html();
+		if( h2Html == undefined ) h2Html = 'Day ' + (day_index+1);
+		var h2 = "<br/><br/><h2>" + h2Html +"</h2>";
 
 		// commit
 		$("<div></div>")
@@ -669,6 +670,28 @@
 					$room = $('<p class="room">' + room_label + ':' + dispRoomName + '</p>');
 				}
 
+
+				var $favi = "";
+				if( FEATURE_CODE_FAVICON) { 
+					$favi = $('<img class="favi" src="./image/favorite_0.png">');
+					$favi.click(function(){
+						var $this = $(this);
+						var $td = $(this).closest("td");
+						var id = $td.attr('id');
+						if( $td.hasClass('session_color_style_favorite') ){
+							$td.removeClass('session_color_style_favorite');
+							$this.attr('src','./image/favorite_0.png');
+							Cookies.remove( m_year + '_' + id );
+							m_favoriteList[id] = undefined;
+						}else{
+							$td.addClass('session_color_style_favorite');
+							$this.attr('src','./image/favorite_1.png');
+							Cookies.set( m_year + '_' + id, '1', {expires:365*10} );
+							m_favoriteList[id] = { session:rSession, dom:$td };
+						}
+					});
+				}
+
 				// 一度空にしておく
 				// セッションキャンセル時対応。後優先
 				$td.empty()
@@ -677,8 +700,10 @@
 						'rowspan':rowSpan,
 						'spec' : mainSpec
 					})
-					.addClass( "session_color_style_normal" )
-					.on("taphold dblclick",function(){
+					.addClass( "session_color_style_normal" );
+
+				if( !FEATURE_CODE_FAVICON) {
+					$td.on("taphold dblclick",function(){
 						var $this = $(this);
 						var id = $this.attr('id');
 						if( $this.hasClass('session_color_style_favorite') ){
@@ -690,8 +715,11 @@
 							Cookies.set( m_year + '_' + id, '1', {expires:365*10} );
 							m_favoriteList[id] = { session:rSession, dom:$this };
 						}
-					})
-					.append([
+					});
+				}
+
+				$td.append([
+						$favi,
 						$room,
 						"<hr/>",
 						rSession.main
@@ -720,8 +748,12 @@
 
 				// お気に入り登録の確認
 				if( Cookies.get( m_year + '_' + id ) !== undefined ){
-					$td.addClass('session_color_style_favorite');
-					m_favoriteList[id] = { session:rSession, dom:$td };
+					if(FEATURE_CODE_FAVICON){
+						$favi.click();
+					}else{
+						$td.addClass('session_color_style_favorite');
+						m_favoriteList[id] = { session:rSession, dom:$td };
+					}
 				}
 
 
@@ -834,6 +866,16 @@
 					// プロフィールの「部署名」を削除
 					.filter(':nth-child(2)')
 						.remove();
+
+				// 詳細リンクをタイトルに付け替える
+				var $detailLink = $td.find('.ses-detail-link > a');
+				if($detailLink.length) {
+					var $title = $td.find('.session-title');
+					var titleText = $title.text();
+					$title.empty();
+					$title.append('<a href="' + $detailLink.attr("href") + '">' + titleText + '</a>');
+					$detailLink.remove();
+				}
 
 				// タイムシフト有・無 を削除
 				if( m_termDate > 30 ){

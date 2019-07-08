@@ -12,9 +12,48 @@ var CEDEC = (function($){
 	// ※フォーマットが変わった際に変更が必要
 	//==========================================================================
 	//--------------------------------------------------------------------------
+	// 2019年のフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING_2019 = {
+		selector	:	function( $xml, day_index ){
+			var day = day_index + 1;
+			return $xml.find('#day'+day).nextUntil("#day"+(day+1));
+		},
+		info_selector: "div.session-right",
+		param		:{
+			"room_no"		:	function($xml){ return $xml.attr("room_number"); },
+			"start_time"	:	function($xml){
+				var text = $xml.find('.detail-session-meta-top').text();
+				var indexOfKara = text.indexOf(' 〜 ');
+				return text.slice( indexOfKara - 5, indexOfKara);
+			},
+			"end_time"		:	function($xml){
+				var text = $xml.find('.detail-session-meta-top').text();
+				var indexOfKara = text.indexOf(' 〜 ');
+				return text.slice( indexOfKara + 3, indexOfKara + 3 + 5 );
+			},
+
+			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
+			"youtube"		:	function($xml){ return $xml.attr("youtube"); },
+			"niconama"		:	function($xml){ return $xml.attr("niconama"); }
+		},
+		events : [
+			{ 
+				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:50",	end_time:"19:25", room_no:"メインホール", colspan:"all",
+				html:"※公式サイトに終了時間は明記されていません<br/>"
+			},
+			{
+				title:"Developer's Night", day_index:1,	start_time: "19:30",	end_time:"21:30", room_no:"501＋502", colspan:"all",
+				html:"※CEDEC AWARDS終了後に開始<br/>※会期中、2F総合受付にてチケットを販売<br/>"
+			}
+		]
+
+	};
+
+	//--------------------------------------------------------------------------
 	// 2018年のフォーマット
 	//--------------------------------------------------------------------------
-	var UNIT_SETTING = {
+	var UNIT_SETTING_2018 = {
 		selector	:	function( $xml, day_index ){
 			return $xml.find( "div[id*=taballday"+ (day_index+1) +"] > div.session-post" );
 		},
@@ -150,21 +189,28 @@ var CEDEC = (function($){
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, unit_setting: UNIT_SETTING, 			convert_path:PATH_CONVERT_2018, cedil_tag_no:717	},
-		{ year:"2017", first_date:"0830", domain:"http://cedec.cesa.or.jp/", format:'2017/session/schedule_{date}/',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_2017,		cedil_tag_no:713	},
-		{ year:"2016", first_date:"0824", domain:"http://cedec.cesa.or.jp/", format:'2016/session/schedule_{date}.html',	unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:712	},
-		{ year:"2015", first_date:"0826", domain:"http://cedec.cesa.or.jp/", format:'2015/session/schedule_{date}.html',	unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:709	},
-		{ year:"2014", first_date:"0902", domain:"http://cedec.cesa.or.jp/", format:'2014/session/schedule_{date}.html',	unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:9	},
-		{ year:"2013", first_date:"0821", domain:"http://cedec.cesa.or.jp/", format:'2013/schedule/day{day_no}.html',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:8	},
-		{ year:"2012", first_date:"0820", domain:"http://cedec.cesa.or.jp/", format:'2012/schedule/day{day_no}.html',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:4	},
-		{ year:"2011", first_date:"0906", domain:"http://cedec.cesa.or.jp/", format:'2011/schedule/day{day_no}.html',		unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:6	},
+		{ year:"2019", first_date:"0904", domain:"https://cedec.cesa.or.jp/2019/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2019, 		convert_path:PATH_CONVERT_2018	},
+		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, 	unit_setting: UNIT_SETTING_2018, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:717	},
+		{ year:"2017", first_date:"0830", domain:"http://cedec.cesa.or.jp/", format:'2017/session/schedule_{date}/',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_2017,		cedil_tag_no:713	},
+		{ year:"2016", first_date:"0824", domain:"http://cedec.cesa.or.jp/", format:'2016/session/schedule_{date}.html',			unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:712	},
+		{ year:"2015", first_date:"0826", domain:"http://cedec.cesa.or.jp/", format:'2015/session/schedule_{date}.html',			unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:709	},
+		{ year:"2014", first_date:"0902", domain:"http://cedec.cesa.or.jp/", format:'2014/session/schedule_{date}.html',			unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:9	},
+		{ year:"2013", first_date:"0821", domain:"http://cedec.cesa.or.jp/", format:'2013/schedule/day{day_no}.html',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:8	},
+		{ year:"2012", first_date:"0820", domain:"http://cedec.cesa.or.jp/", format:'2012/schedule/day{day_no}.html',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:4	},
+		{ year:"2011", first_date:"0906", domain:"http://cedec.cesa.or.jp/", format:'2011/schedule/day{day_no}.html',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:6	},
 	];
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-//		 "2018":{ time:"2018/08/23 20:00", file:"custom.html" }
-//		,"2017":{ time:"2017/08/25 23:30" }
-//		,"2016":{ time:"2017/08/25 23:30" }
+		"2019":{ time:"2019/07/08 22:20", file:"custom.html" }
+	   ,"2018":{ time:"2018/08/23 20:00", file:"custom.html" }
+	   ,"2017":{ time:"2017/08/25 23:30" }
+	   ,"2016":{ time:"2017/08/25 23:30" }
+	   ,"2015":{ time:"2019/01/08 00:00" }
+	   ,"2014":{ time:"2019/01/08 00:00" }
+	   ,"2013":{ time:"2019/01/08 00:00" }
+	   ,"2012":{ time:"2019/01/08 00:00" }
+	   ,"2011":{ time:"2019/01/08 00:00" }
 	}
 
 	var TIME_SPAN	= 3;

@@ -67,8 +67,14 @@ div#contents
 	background-color: #c0c0c0;
 }
 
-#favorite_selector {
+#favorite_selector, .favi {
 	cursor : pointer;
+}
+
+.favi {
+	width : 21px;	
+	height : 20px;
+	float: right;
 }
 
 /*---------------------------------------
@@ -306,4 +312,23 @@ td p{
 div.speaker_info{
 	margin-top:0.5em;
 	margin-bottom:0.5em;
+}
+
+.ses-keywordtags {
+    width: auto !important;
+}
+.btn-top-session.keywordtags-1 {
+    background-color: #52ff1f;
+}
+.btn-top-session.keywordtags-2 {
+    background-color: #ff00a7;
+}
+.btn-top-session.keywordtags-3 {
+    background-color: #2ff7ff;
+}
+.btn-top-session.keywordtags-4 {
+    background-color: #28a745;
+}
+.btn-top-session.keywordtags-5 {
+    background-color: #c30d23;
 }
