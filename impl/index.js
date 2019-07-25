@@ -867,6 +867,16 @@
 					.filter(':nth-child(2)')
 						.remove();
 
+				// プロフィール画像削除と並び替え ※2019からの対応
+				var $mediaBody = $td.find('li.media > div.media-body');
+				if($mediaBody.length) {
+					$mediaBody.parent()
+						.closest('div')
+							.append($mediaBody)
+						.children("ul")
+							.remove();
+				}
+
 				// 詳細リンクをタイトルに付け替える
 				var $detailLink = $td.find('.ses-detail-link > a');
 				if($detailLink.length) {
@@ -905,7 +915,7 @@
 				}
 
 				// 登壇者が複数いたら
-				var $speaker_info = $td.find('.speaker_info');
+				var $speaker_info = $td.find('div.speaker_info,div.media-body');
 				if( $speaker_info.length > 1){
 					// ２名以上はグループ化し非表示にしておく
 					$('<div/>')

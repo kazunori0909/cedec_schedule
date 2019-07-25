@@ -202,7 +202,7 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		"2019":{ time:"2019/07/08 22:20", file:"custom.html" }
+		"2019":{ time:"2019/07/21 12:20", file:"custom.html" }
 	   ,"2018":{ time:"2018/08/23 20:00", file:"custom.html" }
 	   ,"2017":{ time:"2017/08/25 23:30" }
 	   ,"2016":{ time:"2017/08/25 23:30" }
