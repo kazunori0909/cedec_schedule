@@ -44,7 +44,47 @@
 
 	// タイトル名に keywordが含まれていると class名を追加する設定
 	var CUSTOM_SETTING = {
-		"2018": { 
+		"2019": {
+			events:[
+				{ 
+					title:"Artists Meets Technicals 2019", 	 day_index:2,	start_time: "19:30",	end_time:"22:00", room_no:"みなとみらい BLUE LIGHT BEER GARDEN"
+					,html:'<a href="https://artistsmeetstechnicals.doorkeeper.jp/events/95034">イベント詳細</a><br/>'
+				}
+				,{ 
+					title:"ProCEDEC2019", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"ニューヨークグランドキッチン"
+					,html:'<a href="https://peatix.com/event/1160115">イベント詳細</a><br/>'
+					,hash_tag:"ProCEDEC"
+				}
+				,{ 
+					title:"UI CEDEC 2019", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"未定"
+					,html:'<a href="https://ui-cedec.connpass.com/event/143681/">イベント詳細</a><br/>'
+					,hash_tag:"UICEDEC"
+				}
+				,{ 
+					title:"裏 CEDEC 2019", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"のげ"
+					,html:'<a href="https://ura-cedec.com/">イベント詳細</a><br/><font color="#FF4500">時間詳細不明</font>'
+				}
+				,{ 
+					title:"音 CEDEC 2019", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"不明"
+					,html:'<font color="#FF4500">招待制<br/>場所・時間ともに詳細不明</font>'
+				}
+				,{ 
+					title:"CEDECON 2019", 	 day_index:2,	start_time: "19:30",	end_time:"22:00", room_no:"パセラリゾーツ 横浜関内 グレースバリ 3F"
+					,html:'<a href="https://cedecon2019.peatix.com/">イベント詳細</a><br/>'
+					,hash_tag:"cedecon"
+				}
+				,{ 
+					title:"AiCEDEC2019", 	 day_index:2,	start_time: "19:45",	end_time:"21:45", room_no:"横浜モノリス"
+					,html:'<a href="https://passmarket.yahoo.co.jp/event/show/detail/01pyh810ex3u6.html">イベント詳細</a><br/>'
+					,hash_tag:"AiCEDEC,AiCEDEC2019"
+				}
+				,{ 
+					title:"CEDEC・GDGD 2019", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"みなとみらい近辺の居酒屋"
+					,html:'<a href="https://peatix.com/event/1307117">イベント詳細</a><br/>'
+				}
+			]
+		}
+		,"2018": { 
 			events:[
 				{ 
 					title:"ProCEDEC2018", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"ニューヨークグランドキッチン"
@@ -213,7 +253,12 @@
 	// XMLからテーブルを作成し追加する
 	//--------------------------------------------------------------------------
 	function appendTable( xml, day_index ){
-		var $xml		  = $(xml);
+
+		// jQuery DOM化した際に、画像のロードが始まったため、強引に無効化
+
+		var temp = xml.replace(/https:\/\/s3-ap-northeast-1.amazonaws.com\/cedec2019web\/speaker\/[0-9]*.jpg/g, '');
+		
+		var $xml		  = $(temp);
 		var $contets_body = $(CONTENTS_BODY_SELECTOR);
 
 		// 情報取得
@@ -728,16 +773,15 @@
 				// ライブ配信設定
 				var youtube = rSession.getYoutubeURL();
 				if( youtube ){
-					$td.append( '<a href="' + youtube + '" title="ライブ配信 Youtube" target="blank"><img src="./image/youtube_icon.png" alt="Youtube" style="margin:8px;"/></a>' );
+					$td.append( '<a href="' + youtube + '" title="配信 Youtube" target="blank"><img src="./image/youtube_icon.png" alt="Youtube" style="margin:8px;"/></a>' );
 				}
 				var niconama = rSession.getNiconamaURL();
 				if( niconama ){
-					$td.append( '<a href="' + niconama + '" title="ライブ配信 ニコニコ生放送" target="blank"><img src="./image/niconico_icon.png" alt="ニコ生" style="margin:8px;"/></a>' );
+					$td.append( '<a href="' + niconama + '" title="配信 ニコニコ生放送" target="blank"><img src="./image/niconico_icon.png" alt="ニコ生" style="margin:8px;"/></a>' );
 				}
 
 				// IDを取得
-				var $title = $td.find('.ss_title,.btn-elinvar-detail');
-				var id = getIdFromTitleTag( $title );
+				var id = getIdFromTitleTag( $td.find('.ss_title,.btn-elinvar-detail') );
 
 				// イベント時には別処理
 				if( rSession.event ){
@@ -764,6 +808,7 @@
 				}
 
 				// クラス名の追加
+				var $title = $td.find('.ss_title,.session-title');
 				var titleName = $title.text();
 				for( var i = 0 ; i < ADD_CLASS_NAME_FROM_TITLE.length ; ++i ){
 					var rAddClassName = ADD_CLASS_NAME_FROM_TITLE[i];
@@ -867,6 +912,36 @@
 					.filter(':nth-child(2)')
 						.remove();
 
+				// プロフィール画像削除と並び替え ※2019からの対応
+				var $mediaBody = $td.find('li.media > div.media-body');
+				if($mediaBody.length) {
+					$mediaBody.parent()
+						.closest('div')
+							.append($mediaBody)
+						.children("ul")
+							.remove();
+				}
+
+				// タイムシフト有・無 を削除
+				if( m_termDate > 30 ){
+					$td.find('img.note_icon[src*=timeshift_]')
+						.next()
+							.remove()
+							.end()
+						.remove();
+				} else if(1) {
+					// タイムシフト配信されるアイコンのみ削除
+					var $timeshiftNG = $td.find('img.note_icon[src*=timeshift_ng]');
+					$("div.session-title",$td).after( $timeshiftNG );
+/*
+					$td.find('img.note_icon[src*=timeshift_ok]')
+						.next()
+							.remove()
+							.end()
+						.remove();
+*/
+				}
+
 				// 詳細リンクをタイトルに付け替える
 				var $detailLink = $td.find('.ses-detail-link > a');
 				if($detailLink.length) {
@@ -877,14 +952,6 @@
 					$detailLink.remove();
 				}
 
-				// タイムシフト有・無 を削除
-				if( m_termDate > 30 ){
-					$td.find('img.note_icon[src*=timeshift_]')
-						.next()
-							.remove()
-							.end()
-						.remove();
-				}
 				// 写真・SNSの OK/NG を削除
 				if( m_termDate > 30 ){
 					$td.find('img').filter(function(index){
@@ -902,10 +969,23 @@
 							.remove()
 							.end()
 						.remove();
+				} else if(1) {
+					// OKのみ削除
+					$td.find('img').filter(function(index){
+						var file_name = this.src.slice( this.src.lastIndexOf("/") + 1 );
+						switch(file_name){
+						case "photoOK_B.png":
+						case "snsOK_B.png":
+							return true;
+						}
+						return false;
+					})
+						.remove();
 				}
 
+
 				// 登壇者が複数いたら
-				var $speaker_info = $td.find('.speaker_info');
+				var $speaker_info = $td.find('div.speaker_info,div.media-body');
 				if( $speaker_info.length > 1){
 					// ２名以上はグループ化し非表示にしておく
 					$('<div/>')
@@ -927,7 +1007,7 @@
 						.attr('height','36px')
 						.end()
 					.filter('[height=96px]')
-						.attr('height','64px')
+						.attr('height','48px')
 				}
 
 			//------------------------------------------------------------------
@@ -1269,6 +1349,7 @@
 						if( list[i].date ){
 							if( current_date != list[i].date ) continue;
 						}
+						if( !list[i].title || list[i].title == "" ) continue;
 						if( title.indexOf( list[i].title ) == -1 ) continue;
 						$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
 						break;

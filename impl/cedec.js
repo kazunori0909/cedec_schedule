@@ -189,7 +189,7 @@ var CEDEC = (function($){
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2019", first_date:"0904", domain:"https://cedec.cesa.or.jp/2019/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2019, 		convert_path:PATH_CONVERT_2018	},
+		{ year:"2019", first_date:"0904", domain:"https://cedec.cesa.or.jp/2019/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2019, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:720	},
 		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, 	unit_setting: UNIT_SETTING_2018, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:717	},
 		{ year:"2017", first_date:"0830", domain:"http://cedec.cesa.or.jp/", format:'2017/session/schedule_{date}/',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_2017,		cedil_tag_no:713	},
 		{ year:"2016", first_date:"0824", domain:"http://cedec.cesa.or.jp/", format:'2016/session/schedule_{date}.html',			unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:712	},
@@ -202,7 +202,7 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		"2019":{ time:"2019/07/08 22:20", file:"custom.html" }
+		"2019":{ time:"2019/09/10 16:00", file:"custom.html" }
 	   ,"2018":{ time:"2018/08/23 20:00", file:"custom.html" }
 	   ,"2017":{ time:"2017/08/25 23:30" }
 	   ,"2016":{ time:"2017/08/25 23:30" }
@@ -387,9 +387,9 @@ var CEDEC = (function($){
 
 			// 引数のSession Data と時間が重複していないかチェック
 			isOverlap			: function( rData ){
-				if( this.getStartTime() <= rData.getStartTime() && rData.getStartTime() < this.getEndTime() )	return true;
-				if( this.getStartTime() <= rData.getEndTime() && rData.getEndTime() < this.getEndTime() )	return true;
-				return false;
+				if( this.getStartTime() >= rData.getEndTime() )	return false;
+				if( this.getEndTime() < rData.getStartTime() )	return false;
+				return true;
 			},
 
 			getMainSpecObject		: function(){return getParamObject("main_spec");},
@@ -418,10 +418,13 @@ var CEDEC = (function($){
 		var contents = [];
 		contents.push( "<h2>" + rEvent.title + "</h2>" );
 		if( rEvent.hash_tag ){
-			contents.push( '#' + rEvent.hash_tag );
-			contents.push( '　' );
-			contents.push( '<a href="https://twitter.com/hashtag/' + rEvent.hash_tag + '" target="blank"><i class="fab fa-2x fa-twitter-square"></i></a>' );
-			contents.push( '<br/>' );
+			var temp = rEvent.hash_tag.split(",");
+			for(var i=0;i<temp.length;++i) {
+				contents.push( '#' + temp[i] );
+				contents.push( '　' );
+				contents.push( '<a href="https://twitter.com/hashtag/' + temp[i] + '" target="blank"><i class="fab fa-2x fa-twitter-square"></i></a>' );
+				contents.push( '<br/>' );
+			}
 		}
 
 		if( rEvent.html ){

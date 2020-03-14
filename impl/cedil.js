@@ -152,6 +152,8 @@ var CEDiL = (function($){
 	//
 	//--------------------------------------------------------------------------
 	function readJsonData( year, tag, success ){
+		if( tag === undefined )	return;
+		
 		$.ajaxSetup({ cache: false });
 		$.getJSON('./web_data/' + year + "/cedil.json")
 			.done(function(year,tag,success){
