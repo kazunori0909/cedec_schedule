@@ -7,7 +7,7 @@
 	//==========================================================================
 	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
-	var DEFAULT_YEAR = 2019;
+	var DEFAULT_YEAR = 2020;
 
 	var FEATURE_CODE_FAVICON = false;
 
@@ -352,11 +352,11 @@
 
 				if( $table.length ){
 					$table.each(function(){
-						var session  = CEDEC.createSessionData( $(this), m_setting.unit_setting );
+						var session  = CEDEC.createSessionData( $(this), $xml, m_setting.unit_setting );
 						findAppendToRoomList( session ).push( session );
 					});
 				}else{
-					var session  = CEDEC.createSessionData( $(this), m_setting.unit_setting );
+					var session  = CEDEC.createSessionData( $(this), $xml, m_setting.unit_setting );
 					findAppendToRoomList( session ).push( session );
 				}
 			});
@@ -596,7 +596,7 @@
 			for(var room_name in room_list){
 				$tr_base.append( '<td room="' + room_name + '"></td>' );
 
-				var floorMapURL = CEDEC.getFloorURL( room_name );
+				var floorMapURL = CEDEC.getFloorURL( room_name, m_year );
 
 				if( floorMapURL !== undefined ){
 					$th.append( '<th room="' + room_name + '"><a href="' + floorMapURL +'" target="blank">'+room_name+'</a></th>' );
@@ -708,7 +708,7 @@
 					dispRoomName = "不明";
 				}
 
-				var floorMapURL = CEDEC.getFloorURL( dispRoomName );
+				var floorMapURL = CEDEC.getFloorURL( dispRoomName, m_year );
 				if( floorMapURL !== undefined ){
 					$room = $('<p class="room">' + room_label + ':<a href="' + floorMapURL + '" target="blank">' + dispRoomName + '</a></p>');
 				}else{
@@ -781,7 +781,7 @@
 				}
 
 				// IDを取得
-				var id = getIdFromTitleTag( $td.find('.ss_title,.btn-elinvar-detail') );
+				var id = getIdFromTitleTag( $td.find('.ss_title,.btn-elinvar-detail,.btn-elinvar-modal-detail') );
 
 				// イベント時には別処理
 				if( rSession.event ){
@@ -801,10 +801,13 @@
 				}
 
 
-				if( parseInt(m_setting.year) <= 2017 ){
-					customizedBefore2017($td);
-				}else{
+				var year = parseInt(m_setting.year);
+				if( year >= 2020 ){
+					customized2020($td);
+				}else if( year >= 2018 ){
 					customized2018($td);
+				}else{
+					customizedBefore2017($td);
 				}
 
 				// クラス名の追加
@@ -856,6 +859,122 @@
 				}
 
 			}
+
+			//------------------------------------------------------------------
+			// 
+			//------------------------------------------------------------------
+			function customized2020( $td ){
+
+				var $td_detail = $td.find(".detail-session-meta-top");
+
+				$td.find(".col-5.col-sm-3.col-md-2").remove();
+
+				// 文字列削除
+				var html = $td_detail.html();
+				if( html ){
+					for( var i = 0 ; i < REMOVE_HTML_STRINGS_2018.length ; ++i ){
+						html = html.replace( REMOVE_HTML_STRINGS_2018[i], "" );
+					}
+					$td_detail.html( html );
+				}
+
+				// プロフィールのカスタマイズ
+				// 株式会社 を略
+				$td.find('p.prof:nth-child(1)').each(function(){
+					var $this = $(this);
+					$this.text( $this.text().split("株式会社").join("(株)").split("有限会社").join("(有)") );
+				})
+
+				// セッション時間を削除
+				$td.find('div.session-time').remove();
+
+				// スマホ等のアイコンを削除
+				$td.find('div.ses-sessiontags').parent().remove();
+				
+
+				// 詳細リンクをタイトルに付け替える
+				var $detailLink = $td.find('.ses-detail-link > a');
+				if($detailLink.length) {
+					var $title = $td.find('.session-title');
+					var titleText = $title.text();
+					$title.empty();
+					$title.append('<a href="' + $detailLink.attr("href") + '" target="_blank">' + titleText + '</a>');
+					$detailLink.remove();
+				}
+
+				// 写真・SNSの OK/NG を削除
+				if( m_termDate > 30 ){
+					$td.find('img').filter(function(index){
+						var file_name = this.src.slice( this.src.lastIndexOf("/") + 1 );
+						switch(file_name){
+						case "photo_B.png":
+						case "photoOK_B.png":
+						case "sns_B.png":
+						case "snsOK_B.png":
+							return true;
+						}
+						return false;
+					})
+						.next()
+							.remove()
+							.end()
+						.remove();
+				} else if(1) {
+					// OKのみ削除
+					$td.find('img').filter(function(index){
+						var file_name = this.src.slice( this.src.lastIndexOf("/") + 1 );
+						switch(file_name){
+						case "photoOK_B.png":
+						case "snsOK_B.png":
+							return true;
+						}
+						return false;
+					})
+						.remove();
+				}
+
+
+				// 登壇者が複数いたら
+				var $speaker_info = $td.find('div.session-speakers li')
+				if( $speaker_info.length ){
+					$speaker_info.css({
+						"margin":"0"
+					}).parent().css({
+						'list-style-type':'none',
+						'margin':'0',
+						'padding':'0' 
+					});
+
+
+					if( $speaker_info.length > 1 ){
+						// ２名以上はグループ化し非表示にしておく
+						$('<div/>')
+							.append( $speaker_info.filter(':not(:first)') )
+							.hide()
+							.click(function(){ $(this).toggle("slow"); })
+							.insertAfter( $speaker_info[0] );
+
+						// 非表示の講演者を表示させるボタン
+						$('<div class="disp_all_speaker"/>')
+							.text('ほか'+ ($speaker_info.length - 1) +"名" )
+							.click(function(){ $(this).next().toggle("slow"); })
+							.insertAfter( $speaker_info[0] );
+					}
+				}
+
+				// 画像が大きい為リサイズ
+				$td.find('img')
+					.filter('[height=40px]')
+						.attr('height','28px')
+						.end()
+					.filter('[src*=unity]')
+						.attr('height','36px')
+						.end()
+					.filter('[src*=session_tag]')
+						.attr('height','12px')
+						.end()
+				
+				}
 
 			//------------------------------------------------------------------
 			// 
@@ -1068,7 +1187,6 @@
 				// return "0_メインホール0"
 				return day_index + "_" + room_name + i;
 			}
-
 		}
 
 		//----------------------------------------------------------------------
@@ -1339,26 +1457,32 @@
 			.find('td.session').each(function(){
 				var $this = $(this);
 
-				if( m_year < 2018 ){
-					if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
-					var title = $this.find('.ss_title,.session-title').text()
+				if( m_year >= 2020){
+					var title = $this.find('.session-title').text()
 									.replace(/\n/g, "")
 									.replace(/ /g, "")
-									.replace(/　/g, "");
+									.replace(/　/g, "")
+									.replace(/\t/g, "");
 					for( var i = 0 ; i < list.length ; ++i ){
 						if( list[i].date ){
 							if( current_date != list[i].date ) continue;
 						}
-						if( !list[i].title || list[i].title == "" ) continue;
 						if( title.indexOf( list[i].title ) == -1 ) continue;
-						$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
+
+						// 「資料公開: 予定あり」「資料公開: 予定なし」を置換する
+						$this.html( $this.html().replace(
+											new RegExp('(資料公開: )(.*)','g'),
+											'$1<a href="' + list[i].url +'#breadcrumbs" target="blank">公開済み</a>'
+										)
+									);
 						break;
 					}
-				}else{
+				}else if( m_year >= 2018) {
 					var title = $this.find('.session-title').text()
 									.replace(/\n/g, "")
 									.replace(/ /g, "")
-									.replace(/　/g, "");
+									.replace(/　/g, "")
+									.replace(/\t/g, "");
 					for( var i = 0 ; i < list.length ; ++i ){
 						if( list[i].date ){
 							if( current_date != list[i].date ) continue;
@@ -1372,6 +1496,21 @@
 											'$1<a href="' + list[i].url +'#breadcrumbs" target="blank">公開済み</a>$3'
 										)
 									);
+						break;
+					}
+				}else{
+					if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
+					var title = $this.find('.ss_title,.session-title').text()
+									.replace(/\n/g, "")
+									.replace(/ /g, "")
+									.replace(/　/g, "");
+					for( var i = 0 ; i < list.length ; ++i ){
+						if( list[i].date ){
+							if( current_date != list[i].date ) continue;
+						}
+						if( !list[i].title || list[i].title == "" ) continue;
+						if( title.indexOf( list[i].title ) == -1 ) continue;
+						$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
 						break;
 					}
 				}

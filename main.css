@@ -332,3 +332,17 @@ div.speaker_info{
 .btn-top-session.keywordtags-5 {
     background-color: #c30d23;
 }
+
+.btn-time-shift {
+    background-color: transparent;
+    border-radius: 18px;
+    text-transform: uppercase;
+    min-width: 155px !important;
+	padding: 0.3rem;
+	text-align:center;
+}
+
+.btn-outline-green {
+    color: #6aa84f !important;
+    box-shadow: 0 0 0 2px #6aa84f;
+}

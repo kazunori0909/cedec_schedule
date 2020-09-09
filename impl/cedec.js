@@ -12,6 +12,65 @@ var CEDEC = (function($){
 	// ※フォーマットが変わった際に変更が必要
 	//==========================================================================
 	//--------------------------------------------------------------------------
+	// 2020年のフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING_2020 = {
+		selector	:	function( $xml, day_index ){
+			var day = day_index + 1;
+			return $xml.find('#day'+day).find("div.hide-desktop div[data-toggle=modal]");
+		},
+		info : function($xml, $fullXml){
+
+			var dataTarget = $xml.attr('data-target');
+			var $modal = $fullXml.find(dataTarget);
+			
+			$xml.css({
+				"padding-left":"0em"
+				,"padding-right":"0em"
+			});
+
+			var contents = [
+				$xml
+				,$modal.find("div.col-12").has('img:not(".img-sponsor")')
+				,$modal.find("div.ses-detail-link")
+			];
+
+			var $timeShift = $modal.find(".btn-time-shift");
+			if( $timeShift.text().indexOf("タイムシフト配信:なし") != -1 ){
+				contents.unshift($timeShift);
+			}
+
+
+			if( $modal.find("p").text().indexOf("資料公開: 予定あり") != -1) {
+				contents.push(" 資料公開: 予定あり");
+			} else{
+				contents.push(" 資料公開: 予定なし");
+			}
+
+			return $('<div/>').append(contents);
+		},
+		param		:{
+			"room_no"		:	function($xml){ return $xml.attr("data-room").replace("第","").replace("会場",""); },
+			"start_time"	:	function($xml){
+				var text = $xml.find('.session-time').text();
+				var indexOfKara = text.indexOf('-');
+				return text.slice( indexOfKara - 5, indexOfKara);
+			},
+			"end_time"		:	function($xml){
+				var text = $xml.find('.session-time').text();
+				var indexOfKara = text.indexOf('-');
+				return text.slice( indexOfKara + 1, indexOfKara + 1 + 5 );
+			},
+
+			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
+			"youtube"		:	function($xml){ return $xml.attr("youtube"); },
+			"niconama"		:	function($xml){ return $xml.attr("niconama"); }
+		},
+		events : [
+		]
+
+	};
+	//--------------------------------------------------------------------------
 	// 2019年のフォーマット
 	//--------------------------------------------------------------------------
 	var UNIT_SETTING_2019 = {
@@ -189,6 +248,7 @@ var CEDEC = (function($){
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
+		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT_2018,	cedil_tag_no:728	},
 		{ year:"2019", first_date:"0904", domain:"https://cedec.cesa.or.jp/2019/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2019, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:720	},
 		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, 	unit_setting: UNIT_SETTING_2018, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:717	},
 		{ year:"2017", first_date:"0830", domain:"http://cedec.cesa.or.jp/", format:'2017/session/schedule_{date}/',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_2017,		cedil_tag_no:713	},
@@ -202,15 +262,16 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		"2019":{ time:"2019/09/10 16:00", file:"custom.html" }
-	   ,"2018":{ time:"2018/08/23 20:00", file:"custom.html" }
-	   ,"2017":{ time:"2017/08/25 23:30" }
-	   ,"2016":{ time:"2017/08/25 23:30" }
-	   ,"2015":{ time:"2019/01/08 00:00" }
-	   ,"2014":{ time:"2019/01/08 00:00" }
-	   ,"2013":{ time:"2019/01/08 00:00" }
-	   ,"2012":{ time:"2019/01/08 00:00" }
-	   ,"2011":{ time:"2019/01/08 00:00" }
+		"2020":{ time:"2020/08/31 23:40", file:"custom.html" }
+		,"2019":{ time:"2019/09/10 16:00", file:"custom.html" }
+		,"2018":{ time:"2018/08/23 20:00", file:"custom.html" }
+		,"2017":{ time:"2017/08/25 23:30" }
+		,"2016":{ time:"2017/08/25 23:30" }
+		,"2015":{ time:"2019/01/08 00:00" }
+		,"2014":{ time:"2019/01/08 00:00" }
+		,"2013":{ time:"2019/01/08 00:00" }
+		,"2012":{ time:"2019/01/08 00:00" }
+		,"2011":{ time:"2019/01/08 00:00" }
 	}
 
 	var TIME_SPAN	= 3;
@@ -363,11 +424,20 @@ var CEDEC = (function($){
 	//==========================================================================
 	//  Session Data
 	//==========================================================================
-	function createSessionData( $xml, unit_setting ){
+	function createSessionData( $xml, $fullXml, unit_setting ){
 		var m_unit_setting = unit_setting;
 		var m_$info = $xml;
-		var m_$infoMain = $xml ? $xml.find( m_unit_setting.info_selector ) : undefined;
+		var m_$infoMain = undefined;
 		var m_cash = {};
+
+		if ($xml){
+			if( typeof(m_unit_setting.info_selector)=="string" ) { 
+				m_$infoMain = $xml.find( m_unit_setting.info_selector );
+			} else if( typeof(m_unit_setting.info)=="function" ) { 
+				m_$infoMain = m_unit_setting.info($xml, $fullXml);
+			} 
+
+		}
 
 		// Session Data Object
 		return {
@@ -432,7 +502,7 @@ var CEDEC = (function($){
 		}
 
 		// イベント用設定
-		var session = createSessionData( $("<div>"), unit_setting );
+		var session = createSessionData( $("<div>"), $("<div>"), unit_setting );
 		session.event				= $.extend({}, rEvent );
 		session.main 				= $("<div>").append( contents ),
 		session.getRoomNo			= function(){return this.event.room_no;},
@@ -476,21 +546,25 @@ var CEDEC = (function($){
 	//--------------------------------------------------------------------------
 	// 部屋名から フロアマップのURLを取得する
 	//--------------------------------------------------------------------------
-	function getFloorURL( room_name ){
+	function getFloorURL( room_name, year ){
 
-		var floorURL = FLOOR_GUIDE_URL + "#floor";
+		if( year == "2020") {
+			return encodeURI("https://cedec.cesa.or.jp/2020/enquete/live/第" + room_name +"会場");
+		}else{
+			var floorURL = FLOOR_GUIDE_URL + "#floor";
 
-		if( room_name == "メインホール" ){
-			return floorURL + "1";
-		}
+			if( room_name == "メインホール" ){
+				return floorURL + "1";
+			}
 
-		if( room_name.indexOf("R") == 0 ){
-			return floorURL + room_name.substr(1,1);
-		}
+			if( room_name.indexOf("R") == 0 ){
+				return floorURL + room_name.substr(1,1);
+			}
 
-		var floorNo = parseInt( room_name.substr(0,1), 10 );
-		if( 1 <= floorNo && floorNo <= 6 ){
-			return floorURL + floorNo;
+			var floorNo = parseInt( room_name.substr(0,1), 10 );
+			if( 1 <= floorNo && floorNo <= 6 ){
+				return floorURL + floorNo;
+			}
 		}
 
 		return undefined;
