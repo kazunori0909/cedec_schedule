@@ -1471,8 +1471,8 @@
 
 						// 「資料公開: 予定あり」「資料公開: 予定なし」を置換する
 						$this.html( $this.html().replace(
-											new RegExp('(資料公開: )(.*)','g'),
-											'$1<a href="' + list[i].url +'#breadcrumbs" target="blank">公開済み</a>'
+											new RegExp('(資料公開: )(.*)(<\/div>)','g'),
+											'$1<a href="' + list[i].url +'#breadcrumbs" target="blank">公開済み</a>$3'
 										)
 									);
 						break;
