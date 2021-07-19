@@ -1,0 +1,4 @@
+<Files ~ "\.(html|css|xml|js)$">
+Header set Pragma no-cache
+Header set Cache-Control no-cache
+</Files>

@@ -248,6 +248,7 @@ var CEDEC = (function($){
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
+		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT_2018	},
 		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT_2018,	cedil_tag_no:728	},
 		{ year:"2019", first_date:"0904", domain:"https://cedec.cesa.or.jp/2019/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2019, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:720	},
 		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, 	unit_setting: UNIT_SETTING_2018, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:717	},
@@ -262,7 +263,8 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		"2020":{ time:"2020/08/31 23:40", file:"custom.html" }
+		"2021":{ time:"2021/07/14 08:40", file:"custom.html" }
+		,"2020":{ time:"2020/09/07 16:00", file:"custom.html" }
 		,"2019":{ time:"2019/09/10 16:00", file:"custom.html" }
 		,"2018":{ time:"2018/08/23 20:00", file:"custom.html" }
 		,"2017":{ time:"2017/08/25 23:30" }
@@ -548,9 +550,7 @@ var CEDEC = (function($){
 	//--------------------------------------------------------------------------
 	function getFloorURL( room_name, year ){
 
-		if( year == "2020") {
-			return encodeURI("https://cedec.cesa.or.jp/2020/enquete/live/第" + room_name +"会場");
-		}else{
+		if (year<="2019") {
 			var floorURL = FLOOR_GUIDE_URL + "#floor";
 
 			if( room_name == "メインホール" ){
@@ -565,6 +565,8 @@ var CEDEC = (function($){
 			if( 1 <= floorNo && floorNo <= 6 ){
 				return floorURL + floorNo;
 			}
+		} else if( year == "2020") {
+			return encodeURI("https://cedec.cesa.or.jp/2020/enquete/live/第" + room_name +"会場");
 		}
 
 		return undefined;
