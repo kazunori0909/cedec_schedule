@@ -223,6 +223,10 @@ div.nav-link.list.btn-top-session {
 .btn-top-session.ab.active {
     background-color: #910782;
 }
+.btn-top-session.ac,
+.btn-top-session.ac.active {
+    background-color: #910782;
+}
 
 .btn-top-session.key,
 .btn-top-session.key.active {

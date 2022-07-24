@@ -7,7 +7,7 @@
 	//==========================================================================
 	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
-	var DEFAULT_YEAR = 2021;
+	var DEFAULT_YEAR = 2022;
 
 	var FEATURE_CODE_FAVICON = false;
 
@@ -19,17 +19,6 @@
 
 	var CONTENTS_FAVORITE_TABLE_ID = 'day_favorite_table';
 	var CONTENTS_FAVORITE_TABLE_SELECTOR = '#'+CONTENTS_FAVORITE_TABLE_ID;
-
-	// 除外する文字列リスト
-	var REMOVE_SPECS_STRINGS_BEFORE_2017 = [
-		"基調講演"
-		,"レギュラーセッション"
-		,"ショートセッション"
-		,"［招待セッション］"
-		,"［協賛セッション］"
-		,"［セッション］"
-		,"［セッション（60分）］"
-	];
 
 	// 除外する文字列リスト
 	var REMOVE_HTML_STRINGS_2018 = [
@@ -44,86 +33,12 @@
 
 	// タイトル名に keywordが含まれていると class名を追加する設定
 	var CUSTOM_SETTING = {
-		"2019": {
+		"2021": {
 			events:[
-				{ 
-					title:"Artists Meets Technicals 2019", 	 day_index:2,	start_time: "19:30",	end_time:"22:00", room_no:"みなとみらい BLUE LIGHT BEER GARDEN"
-					,html:'<a href="https://artistsmeetstechnicals.doorkeeper.jp/events/95034">イベント詳細</a><br/>'
-				}
-				,{ 
-					title:"ProCEDEC2019", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"ニューヨークグランドキッチン"
-					,html:'<a href="https://peatix.com/event/1160115">イベント詳細</a><br/>'
-					,hash_tag:"ProCEDEC"
-				}
-				,{ 
-					title:"UI CEDEC 2019", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"未定"
-					,html:'<a href="https://ui-cedec.connpass.com/event/143681/">イベント詳細</a><br/>'
-					,hash_tag:"UICEDEC"
-				}
-				,{ 
-					title:"裏 CEDEC 2019", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"のげ"
-					,html:'<a href="https://ura-cedec.com/">イベント詳細</a><br/><font color="#FF4500">時間詳細不明</font>'
-				}
-				,{ 
-					title:"音 CEDEC 2019", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"不明"
-					,html:'<font color="#FF4500">招待制<br/>場所・時間ともに詳細不明</font>'
-				}
-				,{ 
-					title:"CEDECON 2019", 	 day_index:2,	start_time: "19:30",	end_time:"22:00", room_no:"パセラリゾーツ 横浜関内 グレースバリ 3F"
-					,html:'<a href="https://cedecon2019.peatix.com/">イベント詳細</a><br/>'
-					,hash_tag:"cedecon"
-				}
-				,{ 
-					title:"AiCEDEC2019", 	 day_index:2,	start_time: "19:45",	end_time:"21:45", room_no:"横浜モノリス"
-					,html:'<a href="https://passmarket.yahoo.co.jp/event/show/detail/01pyh810ex3u6.html">イベント詳細</a><br/>'
-					,hash_tag:"AiCEDEC,AiCEDEC2019"
-				}
-				,{ 
-					title:"CEDEC・GDGD 2019", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"みなとみらい近辺の居酒屋"
-					,html:'<a href="https://peatix.com/event/1307117">イベント詳細</a><br/>'
-				}
+				
 			]
 		}
-		,"2018": { 
-			events:[
-				{ 
-					title:"ProCEDEC2018", 	 day_index:2,	start_time: "19:30",	end_time:"22:30", room_no:"ニューヨークグランドキッチン"
-					,html:'<a href="https://procedec2018.peatix.com/">イベント詳細</a><br/>'
-					,hash_tag:"ProCEDEC"
-				}
-				,{ 
-					title:"Artists Meets Technicals 2018", 	 day_index:2,	start_time: "20:00",	end_time:"22:00", room_no:"サンタモニカ・サードストリート ミートテラス"
-					,html:'<a href="https://artistsmeetstechnicals.doorkeeper.jp/events/77430">イベント詳細</a><br/>'
-				}
-				,{ 
-					title:"UI CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"HUB Colette・Mare みなとみらい店"
-					,html:'<a href="https://ui-cedec.connpass.com/event/96867/">イベント詳細</a><br/>'
-					,hash_tag:"UICEDEC"
-				}
-				,{ 
-					title:"裏 CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"のげ（ちょっと遠いので、時間厳守）"
-					,html:'<a href="https://ura-cedec.com/">イベント詳細</a><br/>'
-				}
-				,{ 
-					title:"音 CEDEC 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"不明"
-					,html:'<font color="#FF4500">招待制<br/>場所・時間ともに詳細不明</font>'
-				}
-				,{ 
-					title:"CEDECON 2018", 	 day_index:2,	start_time: "19:30",	end_time:"21:30", room_no:"HUB Colette・Mare みなとみらい店"
-					,html:'<a href="https://cedecon2018.peatix.com/">イベント詳細</a><br/>'
-					,hash_tag:"cedecon"
-				}
-				,{ 
-					title:"AiCEDEC2018", 	 day_index:2,	start_time: "19:45",	end_time:"21:45", room_no:"横浜モノリス"
-					,html:'<a href="https://aicedec2018.peatix.com/">イベント詳細</a><br/>'
-					,hash_tag:"AiCEDEC"
-				}
-				,{ 
-					title:"第1回 cedec女子会", 	 day_index:0,	start_time: "19:00",	end_time:"22:00", room_no:"SANTA MONICA 3rd st. MEAT TERRACE"
-					,html:'<a href="https://www.facebook.com/events/507327916393384/">イベント詳細</a><br/>'
-				}
-			]
-		}
+
 	};
 	
 
@@ -802,13 +717,7 @@
 
 
 				var year = parseInt(m_setting.year);
-				if( year >= 2020 ){
-					customized2020($td);
-				}else if( year >= 2018 ){
-					customized2018($td);
-				}else{
-					customizedBefore2017($td);
-				}
+				customized2020($td);
 
 				// クラス名の追加
 				var $title = $td.find('.ss_title,.session-title');
@@ -976,185 +885,6 @@
 				
 				}
 
-			//------------------------------------------------------------------
-			// 
-			//------------------------------------------------------------------
-			function customized2018( $td ){
-
-				var $td_detail = $td.find(".detail-session-meta-top");
-
-				$td.find(".col-5.col-sm-3.col-md-2").remove();
-
-				// 文字列削除
-				var html = $td_detail.html();
-				if( html ){
-					for( var i = 0 ; i < REMOVE_HTML_STRINGS_2018.length ; ++i ){
-						html = html.replace( REMOVE_HTML_STRINGS_2018[i], "" );
-					}
-					$td_detail.html( html );
-				}
-
-				// 公募マークは不要
-				$td.find('.ses-type:contains(公募)').remove();
-
-				// 役職だけではどこのかわからない為、これらのキーワードを含む場合は部署名を追加する
-				var PositionList = [
-					"部長","次長","係長","室長","チーム長","チームリーダー","リーダー"
-				];
-
-				// プロフィールのカスタマイズ
-				$td.find('p.prof')
-					// 株式会社 を略
-					.filter(':nth-child(1)')
-						.each(function(){
-							var $this = $(this);
-							$this.text( $this.text().split("株式会社").join("(株)").split("有限会社").join("(有)") );
-						})
-						.end()
-					// 室長 の肩書がある場合は、部署名を先頭に追加する
-					.filter(':nth-child(3)')
-						.filter(function(){
-							var text = $(this).text();
-							for( var i = 0 ; i < PositionList.length ; ++i ){
-								if( text.indexOf( PositionList[i] ) != -1 ){
-									return true;
-								}
-							}
-							return false;
-						}).each(function(){
-								var $this = $(this);
-								$this.text( $this.prev().text() + " " + $this.text() );
-							})
-							.end()
-						.end()
-					// プロフィールの「部署名」を削除
-					.filter(':nth-child(2)')
-						.remove();
-
-				// プロフィール画像削除と並び替え ※2019からの対応
-				var $mediaBody = $td.find('li.media > div.media-body');
-				if($mediaBody.length) {
-					$mediaBody.parent()
-						.closest('div')
-							.append($mediaBody)
-						.children("ul")
-							.remove();
-				}
-
-				// タイムシフト有・無 を削除
-				if( m_termDate > 30 ){
-					$td.find('img.note_icon[src*=timeshift_]')
-						.next()
-							.remove()
-							.end()
-						.remove();
-				} else if(1) {
-					// タイムシフト配信されるアイコンのみ削除
-					var $timeshiftNG = $td.find('img.note_icon[src*=timeshift_ng]');
-					$("div.session-title",$td).after( $timeshiftNG );
-/*
-					$td.find('img.note_icon[src*=timeshift_ok]')
-						.next()
-							.remove()
-							.end()
-						.remove();
-*/
-				}
-
-				// 詳細リンクをタイトルに付け替える
-				var $detailLink = $td.find('.ses-detail-link > a');
-				if($detailLink.length) {
-					var $title = $td.find('.session-title');
-					var titleText = $title.text();
-					$title.empty();
-					$title.append('<a href="' + $detailLink.attr("href") + '">' + titleText + '</a>');
-					$detailLink.remove();
-				}
-
-				// 写真・SNSの OK/NG を削除
-				if( m_termDate > 30 ){
-					$td.find('img').filter(function(index){
-						var file_name = this.src.slice( this.src.lastIndexOf("/") + 1 );
-						switch(file_name){
-						case "photo_B.png":
-						case "photoOK_B.png":
-						case "sns_B.png":
-						case "snsOK_B.png":
-							return true;
-						}
-						return false;
-					})
-						.next()
-							.remove()
-							.end()
-						.remove();
-				} else if(1) {
-					// OKのみ削除
-					$td.find('img').filter(function(index){
-						var file_name = this.src.slice( this.src.lastIndexOf("/") + 1 );
-						switch(file_name){
-						case "photoOK_B.png":
-						case "snsOK_B.png":
-							return true;
-						}
-						return false;
-					})
-						.remove();
-				}
-
-
-				// 登壇者が複数いたら
-				var $speaker_info = $td.find('div.speaker_info,div.media-body');
-				if( $speaker_info.length > 1){
-					// ２名以上はグループ化し非表示にしておく
-					$('<div/>')
-						.append( $speaker_info.filter(':not(:first)') )
-						.hide()
-						.click(function(){ $(this).toggle("slow"); })
-						.insertAfter( $speaker_info[0] );
-
-					// 非表示の講演者を表示させるボタン
-					$('<div class="disp_all_speaker"/>')
-						.text('ほか'+ ($speaker_info.length - 1) +"名" )
-						.click(function(){ $(this).next().toggle("slow"); })
-						.insertAfter( $speaker_info[0] );
-				}
-
-				// 画像が大きい為リサイズ
-				$td.find('img')
-					.filter('[height=48px]')
-						.attr('height','36px')
-						.end()
-					.filter('[height=96px]')
-						.attr('height','48px')
-				}
-
-			//------------------------------------------------------------------
-			// 
-			//------------------------------------------------------------------
-			function customizedBefore2017( $td ){
-				// 不要項目の削除
-				$td.find('.ss_spec').each(function(){
-					var $this = $(this);
-					var $style = $this.find('.ss_style');
-					var text = $style.text();
-
-					for( var i = 0 ; i < REMOVE_SPECS_STRINGS_BEFORE_2017.length ; ++i){
-						if( text.indexOf( REMOVE_SPECS_STRINGS_BEFORE_2017[i] ) >= 0 ){
-							$style.remove();
-							return;
-						}
-					}
-
-					$style.before('<br/>');
-				});
-
-				// タイムシフト有・無 を削除
-				if( m_termDate > 30 ){
-					$td.find('span.timeshift-icon').remove();
-				}
-			}
-			
 			//------------------------------------------------------------------
 			// タイトルタグからIDを取得する
 			// 

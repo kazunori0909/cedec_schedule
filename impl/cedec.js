@@ -11,6 +11,35 @@ var CEDEC = (function($){
 	//
 	// ※フォーマットが変わった際に変更が必要
 	//==========================================================================
+	var PATH_CONVERT = function( $dom ){
+		var domain = this.domain;
+		var rootURL = this.rootURL;
+		var year = this.year;
+
+		// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
+		$dom.find("a").each(function(){
+			var $this = $(this);
+			var path = $this.attr("href");
+			if( path.indexOf("http") == 0 ) return;
+
+			path = domain + path.substr(0);
+			$this.attr({
+				"href"   : path,
+				"target" : "blank"
+			});
+		});
+		// イメージタグのパスをグローバルに編子
+		$dom.find("img").each(function(){
+			var $this = $(this);
+			var path = $this.attr("src");
+			if( path.indexOf("http") == 0 ) return;
+			if( path.indexOf("/") == 0 ){
+				path = domain + path;
+				$this.attr("src", path );
+			}
+		});
+	}
+
 	//--------------------------------------------------------------------------
 	// 2020年のフォーマット
 	//--------------------------------------------------------------------------
@@ -63,217 +92,37 @@ var CEDEC = (function($){
 			},
 
 			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
-			"youtube"		:	function($xml){ return $xml.attr("youtube"); },
-			"niconama"		:	function($xml){ return $xml.attr("niconama"); }
-		},
-		events : [
-		]
-
-	};
-	//--------------------------------------------------------------------------
-	// 2019年のフォーマット
-	//--------------------------------------------------------------------------
-	var UNIT_SETTING_2019 = {
-		selector	:	function( $xml, day_index ){
-			var day = day_index + 1;
-			return $xml.find('#day'+day).nextUntil("#day"+(day+1));
-		},
-		info_selector: "div.session-right",
-		param		:{
-			"room_no"		:	function($xml){ return $xml.attr("room_number"); },
-			"start_time"	:	function($xml){
-				var text = $xml.find('.detail-session-meta-top').text();
-				var indexOfKara = text.indexOf(' 〜 ');
-				return text.slice( indexOfKara - 5, indexOfKara);
-			},
-			"end_time"		:	function($xml){
-				var text = $xml.find('.detail-session-meta-top').text();
-				var indexOfKara = text.indexOf(' 〜 ');
-				return text.slice( indexOfKara + 3, indexOfKara + 3 + 5 );
-			},
-
-			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
-			"youtube"		:	function($xml){ return $xml.attr("youtube"); },
-			"niconama"		:	function($xml){ return $xml.attr("niconama"); }
-		},
-		events : [
-			{ 
-				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:50",	end_time:"19:25", room_no:"メインホール", colspan:"all",
-				html:"※公式サイトに終了時間は明記されていません<br/>"
-			},
-			{
-				title:"Developer's Night", day_index:1,	start_time: "19:30",	end_time:"21:30", room_no:"501＋502", colspan:"all",
-				html:"※CEDEC AWARDS終了後に開始<br/>※会期中、2F総合受付にてチケットを販売<br/>"
-			}
-		]
-
-	};
-
-	//--------------------------------------------------------------------------
-	// 2018年のフォーマット
-	//--------------------------------------------------------------------------
-	var UNIT_SETTING_2018 = {
-		selector	:	function( $xml, day_index ){
-			return $xml.find( "div[id*=taballday"+ (day_index+1) +"] > div.session-post" );
-		},
-		info_selector: "div.session-right",
-		param		:{
-			"room_no"		:	function($xml){ return $xml.attr("room_number"); },
-			"start_time"	:	function($xml){
-				var text = $xml.find('.detail-session-meta-top').text();
-				var indexOfKara = text.indexOf(' 〜 ');
-				return text.slice( indexOfKara - 5, indexOfKara);
-			},
-			"end_time"		:	function($xml){
-				var text = $xml.find('.detail-session-meta-top').text();
-				var indexOfKara = text.indexOf(' 〜 ');
-				return text.slice( indexOfKara + 3, indexOfKara + 3 + 5 );
-			},
-
-			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
-			"youtube"		:	function($xml){ return $xml.attr("youtube"); },
-			"niconama"		:	function($xml){ return $xml.attr("niconama"); }
-		},
-		events : [
-			{ 
-				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:50",	end_time:"19:25", room_no:"メインホール", colspan:"all",
-				html:"※公式サイトに終了時間は明記されていません<br/>"
-			},
-			{
-				title:"Developer's Night", day_index:1,	start_time: "19:30",	end_time:"21:30", room_no:"501＋502", colspan:"all",
-				html:"※CEDEC AWARDS終了後に開始<br/>※会期中、2F総合受付にてチケットを販売<br/>"
-			}
-		]
-
-	};
-
-	var PATH_CONVERT_2018 = function( $dom ){
-		var domain = this.domain;
-		var rootURL = this.rootURL;
-		var year = this.year;
-
-		// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
-		$dom.find("a").each(function(){
-			var $this = $(this);
-			var path = $this.attr("href");
-			if( path.indexOf("http") == 0 ) return;
-
-			path = domain + path.substr(0);
-			$this.attr({
-				"href"   : path,
-				"target" : "blank"
-			});
-		});
-		// イメージタグのパスをグローバルに編子
-		$dom.find("img").each(function(){
-			var $this = $(this);
-			var path = $this.attr("src");
-			if( path.indexOf("http") == 0 ) return;
-			if( path.indexOf("/") == 0 ){
-				path = domain + path;
-				$this.attr("src", path );
-			}
-		});
-	}
-
-
-	//--------------------------------------------------------------------------
-	// 2017年までのフォーマット
-	//--------------------------------------------------------------------------
-	var UNIT_SETTING_BEFORE_2017 = {
-		selector	:	function( $xml, day_index ){
-			return $xml.find( "div.schedule_timeframe_normal" );
-		},
-		info_selector: "td",
-		param		:{
-			"room_no"		:	function($xml){ return $xml.find(".room_number").text();},
-			"start_time"	:	function($xml){ return $xml.find(".ss_time_start").text();},
-			"end_time"		:	function($xml){ return $xml.find(".ss_time_end").text();},
-			"main_spec"		:	function($xml){ return $xml.find(".ss_ippr_icon + img"); },
-			"youtube"		:	function($xml){ return ""; },
-			"niconama"		:	function($xml){ return ""; }
+			"youtube"		:	function($xml){ return $xml.attr("youtube"); }
 		}
 	};
 
-	var PATH_CONVERT_2017 = function( $dom ){
-		var domain = this.domain;
-		$dom.find("a").each(function(){
-			var $this = $(this);
-			var path = $this.attr("href");
-			if( path.indexOf("http") == 0 ) return;
-			if( path.indexOf("/") == 0 ){
-				path = domain + path.substr(1)  + "#content";
-				$this.attr({
-					"href"   : path,
-					"target" : "blank"
-				});
+	//--------------------------------------------------------------------------
+	// 2021年のフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING_2021 = $.extend(true,{},UNIT_SETTING_2020);
+	
+	UNIT_SETTING_2021.events = [
+			{ 
+				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:30",	end_time:"19:00", room_no:"1", colspan:"all",
+				html:"※公式サイトに終了時間は明記されていません<br/>"
 			}
-		});	
-	}
-
-	var PATH_CONVERT_BEFORE_2016 = function( $dom ){
-		var domain = this.domain;
-		var rootURL = this.rootURL;
-		var year = this.year;
-
-		// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
-		$dom.find("a").each(function(){
-			var $this = $(this);
-			var path = $this.attr("href");
-			if( path.indexOf("http") == 0 ) return;
-			if( path.indexOf("../") == 0 ){
-				path = path = rootURL + path.replace("../", year + "/" )  + "#content";
-			}else{
-				path = domain + path.substr(1)  + "#content";
-			}
-			$this.attr({
-				"href"   : path,
-				"target" : "blank"
-			});
-		});
-		// イメージタグのパスをグローバルに編子
-		$dom.find("img").each(function(){
-			var $this = $(this);
-			var path = $this.attr("src");
-			if( path.indexOf("http") == 0 ) return;
-			if( path.indexOf("../") == 0 ){
-				path = rootURL + path.replace("../", year + "/" );
-				$this.attr("src", path );
-			}
-		});
-	}
+		]
 
 
 	//==========================================================================
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT_2018	},
-		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT_2018,	cedil_tag_no:728	},
-		{ year:"2019", first_date:"0904", domain:"https://cedec.cesa.or.jp/2019/", format:'session', 	single_page:true, 			unit_setting: UNIT_SETTING_2019, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:720	},
-		{ year:"2018", first_date:"0822", domain:"https://2018.cedec.cesa.or.jp/", format:'session#tab{day_no}', single_page:true, 	unit_setting: UNIT_SETTING_2018, 		convert_path:PATH_CONVERT_2018, cedil_tag_no:717	},
-		{ year:"2017", first_date:"0830", domain:"http://cedec.cesa.or.jp/", format:'2017/session/schedule_{date}/',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_2017,		cedil_tag_no:713	},
-		{ year:"2016", first_date:"0824", domain:"http://cedec.cesa.or.jp/", format:'2016/session/schedule_{date}.html',			unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:712	},
-		{ year:"2015", first_date:"0826", domain:"http://cedec.cesa.or.jp/", format:'2015/session/schedule_{date}.html',			unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:709	},
-		{ year:"2014", first_date:"0902", domain:"http://cedec.cesa.or.jp/", format:'2014/session/schedule_{date}.html',			unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:9	},
-		{ year:"2013", first_date:"0821", domain:"http://cedec.cesa.or.jp/", format:'2013/schedule/day{day_no}.html',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:8	},
-		{ year:"2012", first_date:"0820", domain:"http://cedec.cesa.or.jp/", format:'2012/schedule/day{day_no}.html',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:4	},
-		{ year:"2011", first_date:"0906", domain:"http://cedec.cesa.or.jp/", format:'2011/schedule/day{day_no}.html',				unit_setting: UNIT_SETTING_BEFORE_2017, convert_path:PATH_CONVERT_BEFORE_2016,	cedil_tag_no:6	},
+		{ year:"2022", first_date:"0823", domain:"https://cedec.cesa.or.jp/2022/", format:'session', 	unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT	},
+		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", format:'session', 	unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:740	},
+		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", format:'session', 	unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT,	cedil_tag_no:728	},
 	];
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		"2021":{ time:"2021/07/14 08:40", file:"custom.html" }
+		 "2022":{ time:"2022/07/14 22:20", file:"custom.html" }
+		,"2021":{ time:"2021/08/24 00:30", file:"custom.html" }
 		,"2020":{ time:"2020/09/07 16:00", file:"custom.html" }
-		,"2019":{ time:"2019/09/10 16:00", file:"custom.html" }
-		,"2018":{ time:"2018/08/23 20:00", file:"custom.html" }
-		,"2017":{ time:"2017/08/25 23:30" }
-		,"2016":{ time:"2017/08/25 23:30" }
-		,"2015":{ time:"2019/01/08 00:00" }
-		,"2014":{ time:"2019/01/08 00:00" }
-		,"2013":{ time:"2019/01/08 00:00" }
-		,"2012":{ time:"2019/01/08 00:00" }
-		,"2011":{ time:"2019/01/08 00:00" }
 	}
 
 	var TIME_SPAN	= 3;
@@ -281,7 +130,7 @@ var CEDEC = (function($){
 	var FLOOR_GUIDE_URL = "http://www.pacifico.co.jp/visitor/floorguide/conference/tabid/204/Default.aspx";
 
 
-	var m_dataCash	= [];
+	var m_dataCash	= undefined;
 
 	//==========================================================================
 	// 年単位の情報オブジェクト
@@ -320,40 +169,16 @@ var CEDEC = (function($){
 	}
 
 	//--------------------------------------------------------------------------
-	// 日付インデックスからスケジュールページへのパスを取得する
+	// スケジュールページへのパスを取得する
 	//--------------------------------------------------------------------------
-	Unit.prototype.getSchedulePagePath = function( day_index ){
+	Unit.prototype.getSchedulePagePath = function(){
 
 		var cash_setting = CASH＿SETTING[ this.year ];
-		if( cash_setting != undefined ){
-			var temp = location.href.split("/");
-			temp.pop();
-			if( cash_setting.file ){
-				return temp.join("/") + "/web_data/" + this.year + "/" + cash_setting.file;
-			}else{
-				return temp.join("/") + "/web_data/" + this.year + "/" + day_index + ".html";
-			}
-		}		
+		if( cash_setting == undefined )	return "";
 
-		if( this.format.indexOf('{day_no}') > 0 ){
-			return this.rootURL + this.format.replace('{day_no}',day_index + 1);
-		}else if( this.format.indexOf('{day_index}') > 0 ){
-			return this.rootURL + this.format.replace('{day_index}',day_index);
-		}else if( this.format.indexOf('{date}') > 0 ){
-			var month = parseInt(this.first_date.slice(0,2),10);
-			var first_day = parseInt(this.first_date.slice(2,4),10);
-			var date = new Date( this.year, month-1, first_day);
-			date.setDate( date.getDate() + day_index );
-
-			var month 		= date.getMonth() + 1;
-			var day 		= date.getDate();
-			var month_str	= month.toString().length < 2 ? "0" + month : month.toString();
-			var day_str		= day.toString().length < 2 ? "0" + day : day.toString();
-
-			return this.rootURL + this.format.replace('{date}',month_str + day_str);
-		}
-
-		return this.rootURL + this.format;
+		var temp = location.href.split("/");
+		temp.pop();
+		return temp.join("/") + "/web_data/" + this.year + "/" + cash_setting.file;
 	}
 
 	//--------------------------------------------------------------------------
@@ -361,12 +186,12 @@ var CEDEC = (function($){
 	//--------------------------------------------------------------------------
 	Unit.prototype.readSchedule = function( option ){
 	
-		if( m_dataCash[option.index] !== undefined ){
-			option.success( option.index, m_dataCash[option.index] );
+		if( m_dataCash !== undefined ){
+			option.success( option.index, m_dataCash );
 			return;
 		}
 
-		var url =  this.getSchedulePagePath(option.index);
+		var url =  this.getSchedulePagePath();
 
 		$.ajax({
 			type: 'GET',
@@ -376,19 +201,12 @@ var CEDEC = (function($){
 				return function(xml){
 					if( option.success !== undefined ){
 						if( xml.responseText !== undefined ){
-							m_dataCash[option.index] = xml.responseText;
+							m_dataCash = xml.responseText;
 						}else{
-							m_dataCash[option.index] = xml;
+							m_dataCash = xml;
 						}
 
-						// シングルページ指定があれば全日程のキャッシュを作成
-						if( rUnit.single_page ){
-							for( var i = 0 ; i < TIME_SPAN ; ++i ){
-								m_dataCash[i] = m_dataCash[option.index];
-							}
-						}
-
-						option.success( option.index, m_dataCash[option.index] );
+						option.success( option.index, m_dataCash );
 					}
 				}
 			}(option,this),
@@ -470,12 +288,14 @@ var CEDEC = (function($){
 		};
 
 		function getParamText( cash_name ){
+			if(typeof(m_unit_setting.param[cash_name])=="undefined") return undefined;
 			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
 			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
 			if( m_cash[cash_name] == undefined ) m_cash[cash_name] = "";
 			return m_cash[cash_name];
 		}
 		function getParamObject( cash_name ){
+			if(typeof(m_unit_setting.param[cash_name])=="undefined") return undefined;
 			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
 			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
 			return m_cash[cash_name];
@@ -565,8 +385,8 @@ var CEDEC = (function($){
 			if( 1 <= floorNo && floorNo <= 6 ){
 				return floorURL + floorNo;
 			}
-		} else if( year == "2020") {
-			return encodeURI("https://cedec.cesa.or.jp/2020/enquete/live/第" + room_name +"会場");
+		} else {
+			return encodeURI("https://cedec.cesa.or.jp/"+year+"/enquete/live/第" + room_name +"会場");
 		}
 
 		return undefined;
