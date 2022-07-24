@@ -113,14 +113,14 @@ var CEDEC = (function($){
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2022", first_date:"0823", domain:"https://cedec.cesa.or.jp/2022/", format:'session', 	unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT	},
-		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", format:'session', 	unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:740	},
-		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", format:'session', 	unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT,	cedil_tag_no:728	},
+		{ year:"2022", first_date:"0823", domain:"https://cedec.cesa.or.jp/2022/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT	},
+		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:740	},
+		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT,	cedil_tag_no:728	},
 	];
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		 "2022":{ time:"2022/07/14 22:20", file:"custom.html" }
+		 "2022":{ time:"2022/07/24 20:20", file:"custom.html" }
 		,"2021":{ time:"2021/08/24 00:30", file:"custom.html" }
 		,"2020":{ time:"2020/09/07 16:00", file:"custom.html" }
 	}
