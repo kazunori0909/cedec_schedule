@@ -1,8 +1,7 @@
 <?php
 
-$tag = "728";       // CEDiL検索タグ
-$year = "2020";     // JSON書き出し先
-
+$tag = "740"; //$_GET['tag'];
+$year = "2021";
 
 $result["list"] = [];
 $result["update_date"] = date("c");
