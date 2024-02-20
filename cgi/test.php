@@ -1,7 +1,7 @@
 <?php
 
-$tag = "740"; //$_GET['tag'];
-$year = "2021";
+$tag = "743"; //$_GET['tag'];
+$year = "2022";
 
 $result["list"] = [];
 $result["update_date"] = date("c");
@@ -65,10 +65,6 @@ function readPage($page) {
         readPage($next_page);
         return;
     }
-
-
-
-
 }
 
 ?>

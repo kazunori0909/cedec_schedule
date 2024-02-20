@@ -77,6 +77,15 @@ div#contents
 	float: right;
 }
 
+.media-body{
+    border-width: thin thin thin thick;
+    border-style: solid;
+    border-radius: 10px;
+    border-color: #c0c0c0;
+    padding: 4px;
+    margin-bottom: 4px;
+}
+
 /*---------------------------------------
  テーブル・お気に入りテーブル
 ---------------------------------------*/

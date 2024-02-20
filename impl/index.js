@@ -7,7 +7,7 @@
 	//==========================================================================
 	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
-	var DEFAULT_YEAR = 2022;
+	var DEFAULT_YEAR = 2023;
 
 	var FEATURE_CODE_FAVICON = false;
 
@@ -33,7 +33,7 @@
 
 	// タイトル名に keywordが含まれていると class名を追加する設定
 	var CUSTOM_SETTING = {
-		"2021": {
+		"2023": {
 			events:[
 				
 			]
@@ -262,18 +262,9 @@
 			var unique 		= 0;	// 無名ルームがあった場合の簡易カウンター
 
 			m_setting.unit_setting.selector( $xml, day_index ).each(function(){
-				if( $(this).css('display') == "none" ) return; 
-				var $table = $(this).find("table");
-
-				if( $table.length ){
-					$table.each(function(){
-						var session  = CEDEC.createSessionData( $(this), $xml, m_setting.unit_setting );
-						findAppendToRoomList( session ).push( session );
-					});
-				}else{
-					var session  = CEDEC.createSessionData( $(this), $xml, m_setting.unit_setting );
-					findAppendToRoomList( session ).push( session );
-				}
+//				if( $(this).css('display') == "none" ) return; 
+				var session  = CEDEC.createSessionData( $(this), $xml, m_setting.unit_setting );
+				findAppendToRoomList( session ).push( session );
 			});
 
 			//keyでソートする
@@ -690,10 +681,6 @@
 				if( youtube ){
 					$td.append( '<a href="' + youtube + '" title="配信 Youtube" target="blank"><img src="./image/youtube_icon.png" alt="Youtube" style="margin:8px;"/></a>' );
 				}
-				var niconama = rSession.getNiconamaURL();
-				if( niconama ){
-					$td.append( '<a href="' + niconama + '" title="配信 ニコニコ生放送" target="blank"><img src="./image/niconico_icon.png" alt="ニコ生" style="margin:8px;"/></a>' );
-				}
 
 				// IDを取得
 				var id = getIdFromTitleTag( $td.find('.ss_title,.btn-elinvar-detail,.btn-elinvar-modal-detail') );
@@ -794,13 +781,10 @@
 					$this.text( $this.text().split("株式会社").join("(株)").split("有限会社").join("(有)") );
 				})
 
-				// セッション時間を削除
-				$td.find('div.session-time').remove();
-
-				// スマホ等のアイコンを削除
-				$td.find('div.ses-sessiontags').parent().remove();
+				$td.find('div.session-time').remove();									// セッション時間を削除
+				$td.find('div.ses-sessiontags').parent().remove();						// スマホ等のアイコンを削除
+				$td.find('div.session-meta').children(":contains(公開中)").remove();	// 公開中の文字列削除
 				
-
 				// 詳細リンクをタイトルに付け替える
 				var $detailLink = $td.find('.ses-detail-link > a');
 				if($detailLink.length) {

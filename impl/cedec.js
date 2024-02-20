@@ -48,6 +48,22 @@ var CEDEC = (function($){
 			var day = day_index + 1;
 			return $xml.find('#day'+day).find("div.hide-desktop div[data-toggle=modal]");
 		},
+		param		:{
+			"room_no"		:	function($xml){ return $xml.attr("data-room").replace("第","").replace("会場",""); },
+			"start_time"	:	function($xml){
+				var text = $xml.find('.session-time').text();
+				var indexOfKara = text.indexOf('-');
+				return text.slice( indexOfKara - 5, indexOfKara);
+			},
+			"end_time"		:	function($xml){
+				var text = $xml.find('.session-time').text();
+				var indexOfKara = text.indexOf('-');
+				return text.slice( indexOfKara + 1, indexOfKara + 1 + 5 );
+			},
+
+			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
+			"youtube"		:	function($xml){ return $xml.attr("youtube"); }
+		},
 		info : function($xml, $fullXml){
 
 			var dataTarget = $xml.attr('data-target');
@@ -72,14 +88,38 @@ var CEDEC = (function($){
 
 			if( $modal.find("p").text().indexOf("資料公開: 予定あり") != -1) {
 				contents.push(" 資料公開: 予定あり");
-			} else{
+			} else if( $modal.find("p").text().indexOf("資料公開: 予定なし") != -1) {
 				contents.push(" 資料公開: 予定なし");
+			} else {
+				contents.push(" 資料公開: 不明");
 			}
 
 			return $('<div/>').append(contents);
+		}
+	};
+
+	//--------------------------------------------------------------------------
+	// 2021年のフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING_2021 = $.extend(true,{},UNIT_SETTING_2020);
+	UNIT_SETTING_2021.events = [
+			{ 
+				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:30",	end_time:"19:00", room_no:"1", colspan:"all",
+				html:"※公式サイトに終了時間は明記されていません<br/>"
+//				,youtube:"https://youtu.be/c8mW57QwefM"
+			}
+		]
+
+	//--------------------------------------------------------------------------
+	// 2022年のフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING_2023 = {
+		selector	:	function( $xml, day_index ){
+			var day = day_index + 1;
+			return $xml.find('#day'+day).find('td.td-content');
 		},
 		param		:{
-			"room_no"		:	function($xml){ return $xml.attr("data-room").replace("第","").replace("会場",""); },
+			"room_no"		:	function($xml){ return $xml.find('div.session-post').attr("data-room").replace("第","").replace("会場",""); },
 			"start_time"	:	function($xml){
 				var text = $xml.find('.session-time').text();
 				var indexOfKara = text.indexOf('-');
@@ -93,34 +133,64 @@ var CEDEC = (function($){
 
 			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
 			"youtube"		:	function($xml){ return $xml.attr("youtube"); }
-		}
-	};
+		},
+		info : function( $xml, $fullXml ){
+			var $modal = $xml.find('[id^="exampleModal-"]');
+			
+			$xml.css({
+				"padding-left":"0em"
+				,"padding-right":"0em"
+			});
 
-	//--------------------------------------------------------------------------
-	// 2021年のフォーマット
-	//--------------------------------------------------------------------------
-	var UNIT_SETTING_2021 = $.extend(true,{},UNIT_SETTING_2020);
-	
-	UNIT_SETTING_2021.events = [
-			{ 
-				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:30",	end_time:"19:00", room_no:"1", colspan:"all",
-				html:"※公式サイトに終了時間は明記されていません<br/>"
+			// タイムシフト
+			var canTimeshiftDelivery = true
+			var $timeShift = $modal.find(".btn-time-shift");
+			if( $timeShift.text().indexOf("タイムシフト配信:なし") != -1 ){
+				canTimeshiftDelivery = false
 			}
-		]
+
+			var contents = [
+				$xml
+					.find("div.modal-header").remove().end()
+					.find("div.container")
+						.find("div.img-difficulty").closest("div.row").remove().end().end()
+						.find('div:contains("講演形式")').closest("div.row").remove().end().end()
+						.find("ul.list-unstyled").remove().end()
+						.end()
+				,$modal.find("div.ses-detail-link")
+			];
+
+			if( canTimeshiftDelivery == false ){
+				contents.unshift($timeShift);
+			}
+
+			if( $modal.find("p").text().indexOf("資料公開: 予定あり") != -1) {
+				contents.push(" 資料公開: 予定あり");
+			} else if( $modal.find("p").text().indexOf("資料公開: 予定なし") != -1) {
+				contents.push(" 資料公開: 予定なし");
+			} else {
+				contents.push(" 資料公開: 不明");
+			}
+
+			return $('<div/>').append(contents);
+		}
+	}
 
 
 	//==========================================================================
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2022", first_date:"0823", domain:"https://cedec.cesa.or.jp/2022/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT	},
+		{ year:"2023", first_date:"0823", domain:"https://cedec.cesa.or.jp/2023/", unit_setting: UNIT_SETTING_2023, 		convert_path:PATH_CONVERT	},
+		{ year:"2022", first_date:"0823", domain:"https://cedec.cesa.or.jp/2022/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:743	},
 		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:740	},
 		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT,	cedil_tag_no:728	},
 	];
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		 "2022":{ time:"2022/07/24 20:20", file:"custom.html" }
+		 "2023":{ time:"2023/08/15 21:00", file:"custom.html" }
+		,"2022":{ time:"2022/08/28 16:00", file:"custom.html" }
 		,"2021":{ time:"2021/08/24 00:30", file:"custom.html" }
 		,"2020":{ time:"2020/09/07 16:00", file:"custom.html" }
 	}
@@ -331,6 +401,8 @@ var CEDEC = (function($){
 		session.getStartTimeString 	= function(){return this.event.start_time; }
 		session.getEndTimeString 	= function(){return this.event.end_time; }
 
+		session.getYoutubeURL		= function(){return this.event.youtube;}
+
 		return session;
 	}
 
@@ -370,6 +442,9 @@ var CEDEC = (function($){
 	//--------------------------------------------------------------------------
 	function getFloorURL( room_name, year ){
 
+		if (room_name=="不明") 		return undefined;
+		if (room_name=="オンライン") return undefined;
+
 		if (year<="2019") {
 			var floorURL = FLOOR_GUIDE_URL + "#floor";
 
@@ -385,8 +460,10 @@ var CEDEC = (function($){
 			if( 1 <= floorNo && floorNo <= 6 ){
 				return floorURL + floorNo;
 			}
-		} else {
+		} else if( year<="2021" ){
 			return encodeURI("https://cedec.cesa.or.jp/"+year+"/enquete/live/第" + room_name +"会場");
+		} else if( year<="2022" ){
+			return encodeURI("https://cedec.cesa.or.jp/"+year+"/session/live/VNE" +  ( '00' + room_name ).slice( -2 ));
 		}
 
 		return undefined;
