@@ -22,6 +22,11 @@ var CEDEC = (function($){
 			var path = $this.attr("href");
 			if( path.indexOf("http") == 0 ) return;
 
+			
+			if( path.indexOf(year) >= 0 ) {
+				path = path.replace(year+"/","");
+			}
+
 			path = domain + path.substr(0);
 			$this.attr({
 				"href"   : path,
@@ -52,13 +57,13 @@ var CEDEC = (function($){
 			"room_no"		:	function($xml){ return $xml.attr("data-room").replace("第","").replace("会場",""); },
 			"start_time"	:	function($xml){
 				var text = $xml.find('.session-time').text();
-				var indexOfKara = text.indexOf('-');
-				return text.slice( indexOfKara - 5, indexOfKara);
+				var indexOfHyphen = text.indexOf('-');
+				return text.slice( indexOfHyphen - 5, indexOfHyphen);
 			},
 			"end_time"		:	function($xml){
 				var text = $xml.find('.session-time').text();
-				var indexOfKara = text.indexOf('-');
-				return text.slice( indexOfKara + 1, indexOfKara + 1 + 5 );
+				var indexOfHyphen = text.indexOf('-');
+				return text.slice( indexOfHyphen + 1, indexOfHyphen + 1 + 5 );
 			},
 
 			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
@@ -111,7 +116,7 @@ var CEDEC = (function($){
 		]
 
 	//--------------------------------------------------------------------------
-	// 2022年のフォーマット
+	// 2023年のフォーマット
 	//--------------------------------------------------------------------------
 	var UNIT_SETTING_2023 = {
 		selector	:	function( $xml, day_index ){
@@ -122,13 +127,13 @@ var CEDEC = (function($){
 			"room_no"		:	function($xml){ return $xml.find('div.session-post').attr("data-room").replace("第","").replace("会場",""); },
 			"start_time"	:	function($xml){
 				var text = $xml.find('.session-time').text();
-				var indexOfKara = text.indexOf('-');
-				return text.slice( indexOfKara - 5, indexOfKara);
+				var indexOfHyphen = text.indexOf('-');
+				return text.slice( indexOfHyphen - 5, indexOfHyphen);
 			},
 			"end_time"		:	function($xml){
 				var text = $xml.find('.session-time').text();
-				var indexOfKara = text.indexOf('-');
-				return text.slice( indexOfKara + 1, indexOfKara + 1 + 5 );
+				var indexOfHyphen = text.indexOf('-');
+				return text.slice( indexOfHyphen + 1, indexOfHyphen + 1 + 5 );
 			},
 
 			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
@@ -176,12 +181,145 @@ var CEDEC = (function($){
 		}
 	}
 
+	//--------------------------------------------------------------------------
+	// 2024年のフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING_2024 = {
+		selector	:	function( $xml, day_index ){
+			var day = day_index + 1;
+			var id = 'Day' + day + 'Area';	// id=Day1Area*
+			return $xml.find('div[id^="' + id + '"]').find('.c-timetable__item');
+		},
+		param :{
+			// <div class="timetable-time">
+			//   <time class="time-field">11:10-12:10</time>
+			// </div>
+			"start_time"	:	function($xml){
+				var timeSpan = $xml.find('div.timetable-time > time').text();
+				return ( timeSpan != "") ? timeSpan.split('-')[0] : "";
+			},
+			"end_time"		:	function($xml){
+				var timeSpan = $xml.find('div.timetable-time > time').text();
+				return ( timeSpan != "") ? timeSpan.split('-')[1] : "";
+			},
+
+			// <div class="timetable-category">
+			//   <span class="-va">VA</span>
+			//   <span class="-eng">ENG</span>
+			// </div>
+			"main_spec"		:	function($xml){ return $xml.find("div.timetable-category > span:first"); },
+			"youtube"		:	function($xml){ return $xml.attr("youtube"); }
+		},
+		info : function( $xml, $fullXml ){
+			
+			$xml.css({
+				"padding-left":"0em"
+				,"padding-right":"0em"
+			});
+
+			// タイムシフト
+//			var canTimeshiftDelivery = true
+//			var $timeShift = $modal.find(".btn-time-shift");
+//			if( $timeShift.text().indexOf("タイムシフト配信:なし") != -1 ){
+//				canTimeshiftDelivery = false
+//			}
+
+			var contents = [
+				$xml
+					.find('div.timetable-time > span').remove().end()
+					.find('div.button').remove().end()
+			];
+
+//			if( canTimeshiftDelivery == false ){
+//				contents.unshift($timeShift);
+//			}
+
+			contents.push(" 資料公開: 不明");
+
+			return $('<div/>').append(contents);
+		},
+		events : [
+			{ 
+				title:"Developers' Night", 	 day_index:1,	start_time: "19:30",	end_time:"21:30", room_no:"多目的ホール",
+				html:'※会場で先着500名の限定販売<br/><a href="https://cedec.cesa.or.jp/2024/event/developer/" target="blank">詳細</a>'
+			}
+		]
+	}
+
+	//--------------------------------------------------------------------------
+	// 2025年のフォーマット
+	//--------------------------------------------------------------------------
+	var UNIT_SETTING_2025 = {
+		selector	:	function( $xml, day_index ){
+			var dayString = parseInt("22") + day_index;
+			var id = 't202507' + String(dayString);	// <div id="t202507220920" class="c-timetable__list__group">
+			
+			// a class="c-timetable__list__session
+			return $xml.find('div[id^="' + id + '"]').find('a.c-timetable__list__session');
+		},
+		param :{
+			// <div class="timetable-time">
+			//   <time class="time-field">11:10-12:10</time>
+			// </div>
+			"start_time"	:	function($xml){
+				var timeString = $xml.parent().parent().attr('id');
+				return timeString.slice(-4,2) + ":" + timeString.slice(-2,2);
+			},
+			"end_time"		:	function($xml){
+				var timeSpan = $xml.find('div.timetable-time > time').text();
+				return ( timeSpan != "") ? timeSpan.split('-')[1] : "";
+			},
+
+			// <div class="timetable-category">
+			//   <span class="-va">VA</span>
+			//   <span class="-eng">ENG</span>
+			// </div>
+			"main_spec"		:	function($xml){ return $xml.find("div.timetable-category > span:first"); },
+			"youtube"		:	function($xml){ return $xml.attr("youtube"); }
+		},
+		info : function( $xml, $fullXml ){
+			
+			$xml.css({
+				"padding-left":"0em"
+				,"padding-right":"0em"
+			});
+
+			// タイムシフト
+//			var canTimeshiftDelivery = true
+//			var $timeShift = $modal.find(".btn-time-shift");
+//			if( $timeShift.text().indexOf("タイムシフト配信:なし") != -1 ){
+//				canTimeshiftDelivery = false
+//			}
+
+			var contents = [
+				$xml
+					.find('div.timetable-time > span').remove().end()
+					.find('div.button').remove().end()
+			];
+
+//			if( canTimeshiftDelivery == false ){
+//				contents.unshift($timeShift);
+//			}
+
+			contents.push(" 資料公開: 不明");
+
+			return $('<div/>').append(contents);
+		},
+		events : [
+			{ 
+				title:"Developers' Night", 	 day_index:1,	start_time: "19:30",	end_time:"21:30", room_no:"多目的ホール",
+				html:'※会場で先着500名の限定販売<br/><a href="https://cedec.cesa.or.jp/2024/event/developer/" target="blank">詳細</a>'
+			}
+		]
+	}
 
 	//==========================================================================
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2023", first_date:"0823", domain:"https://cedec.cesa.or.jp/2023/", unit_setting: UNIT_SETTING_2023, 		convert_path:PATH_CONVERT	},
+		{ year:"2025", first_date:"0722", domain:"https://cedec.cesa.or.jp/2025/", unit_setting: UNIT_SETTING_2025, 		convert_path:PATH_CONVERT	},
+		{ year:"2024", first_date:"0821", domain:"https://cedec.cesa.or.jp/2024/", unit_setting: UNIT_SETTING_2024, 		convert_path:PATH_CONVERT,	cedil_tag_no:752	},
+		{ year:"2023", first_date:"0823", domain:"https://cedec.cesa.or.jp/2023/", unit_setting: UNIT_SETTING_2023, 		convert_path:PATH_CONVERT,	cedil_tag_no:748	},
 		{ year:"2022", first_date:"0823", domain:"https://cedec.cesa.or.jp/2022/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:743	},
 		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:740	},
 		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT,	cedil_tag_no:728	},
@@ -189,7 +327,9 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		 "2023":{ time:"2023/08/15 21:00", file:"custom.html" }
+		 "2025":{ time:"2025/07/02 23:00", file:"custom.html" }
+		,"2024":{ time:"2024/08/19 23:00", file:"custom.html" }
+		,"2023":{ time:"2023/08/23 01:23", file:"custom.html" }
 		,"2022":{ time:"2022/08/28 16:00", file:"custom.html" }
 		,"2021":{ time:"2021/08/24 00:30", file:"custom.html" }
 		,"2020":{ time:"2020/09/07 16:00", file:"custom.html" }
@@ -320,10 +460,13 @@ var CEDEC = (function($){
 		var m_$infoMain = undefined;
 		var m_cash = {};
 
-		if ($xml){
-			if( typeof(m_unit_setting.info_selector)=="string" ) { 
-				m_$infoMain = $xml.find( m_unit_setting.info_selector );
-			} else if( typeof(m_unit_setting.info)=="function" ) { 
+		if( $xml ){
+			var $roomDom = $xml.closest('div[id^="Day"]').children("div:first");
+			if( $roomDom.length > 0) {
+				m_cash["room_no"] = $roomDom.text().replace("第","").replace("会場","");
+			}
+
+			if( typeof(m_unit_setting.info)=="function" ) { 
 				m_$infoMain = m_unit_setting.info($xml, $fullXml);
 			} 
 
@@ -348,7 +491,7 @@ var CEDEC = (function($){
 			// 引数のSession Data と時間が重複していないかチェック
 			isOverlap			: function( rData ){
 				if( this.getStartTime() >= rData.getEndTime() )	return false;
-				if( this.getEndTime() < rData.getStartTime() )	return false;
+				if( this.getEndTime() <= rData.getStartTime() )	return false;
 				return true;
 			},
 
@@ -358,15 +501,15 @@ var CEDEC = (function($){
 		};
 
 		function getParamText( cash_name ){
-			if(typeof(m_unit_setting.param[cash_name])=="undefined") return undefined;
 			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
+			if(typeof(m_unit_setting.param[cash_name])=="undefined") return undefined;
 			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
 			if( m_cash[cash_name] == undefined ) m_cash[cash_name] = "";
 			return m_cash[cash_name];
 		}
 		function getParamObject( cash_name ){
-			if(typeof(m_unit_setting.param[cash_name])=="undefined") return undefined;
 			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
+			if(typeof(m_unit_setting.param[cash_name])=="undefined") return undefined;
 			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
 			return m_cash[cash_name];
 		}
@@ -384,7 +527,7 @@ var CEDEC = (function($){
 			for(var i=0;i<temp.length;++i) {
 				contents.push( '#' + temp[i] );
 				contents.push( '　' );
-				contents.push( '<a href="https://twitter.com/hashtag/' + temp[i] + '" target="blank"><i class="fab fa-2x fa-twitter-square"></i></a>' );
+				contents.push( '<a href="https://x.com/hashtag/' + temp[i] + '" target="blank"><i class="fab fa-2x fa-twitter-square"></i></a>' );
 				contents.push( '<br/>' );
 			}
 		}

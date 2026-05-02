@@ -7,7 +7,7 @@
 	//==========================================================================
 	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
-	var DEFAULT_YEAR = 2023;
+	var DEFAULT_YEAR = 2025;
 
 	var FEATURE_CODE_FAVICON = false;
 
@@ -30,17 +30,6 @@
 	var ADD_CLASS_NAME_FROM_TITLE = [
 		{ keyword:"【講演キャンセル】", class_name:"session_cancel" }
 	];
-
-	// タイトル名に keywordが含まれていると class名を追加する設定
-	var CUSTOM_SETTING = {
-		"2023": {
-			events:[
-				
-			]
-		}
-
-	};
-	
 
 	//==========================================================================
 	//==========================================================================
@@ -261,14 +250,22 @@
 			var roomList 	= {};	//
 			var unique 		= 0;	// 無名ルームがあった場合の簡易カウンター
 
-			m_setting.unit_setting.selector( $xml, day_index ).each(function(){
-//				if( $(this).css('display') == "none" ) return; 
-				var session  = CEDEC.createSessionData( $(this), $xml, m_setting.unit_setting );
-				findAppendToRoomList( session ).push( session );
-			});
+
+			if(m_year <= 2024){
+				m_setting.unit_setting.selector( $xml, day_index ).each(function(){
+//					if( $(this).css('display') == "none" ) return; 
+					var session  = CEDEC.createSessionData( $(this), $xml, m_setting.unit_setting );
+					findAppendToRoomList( session ).push( session );
+				});
+			} else {
+
+				
+			}
 
 			//keyでソートする
 			roomList = keySort(roomList);
+
+
 
 			// イベントの追加部屋は、強制的にリストの最初に追加する
 			var rEventRoom
@@ -423,7 +420,7 @@
 				}
 			}
 
-			var $filter = $('<div class="spec_filter"></div>');
+			var $filter = $('<div class="spec_filter timetable-category"></div>');
 			for(var filter_name in filterList){
 				$filter.append( filterList[filter_name].clone() );
 			}
@@ -676,12 +673,6 @@
 						rSession.main
 					]);
 
-				// ライブ配信設定
-				var youtube = rSession.getYoutubeURL();
-				if( youtube ){
-					$td.append( '<a href="' + youtube + '" title="配信 Youtube" target="blank"><img src="./image/youtube_icon.png" alt="Youtube" style="margin:8px;"/></a>' );
-				}
-
 				// IDを取得
 				var id = getIdFromTitleTag( $td.find('.ss_title,.btn-elinvar-detail,.btn-elinvar-modal-detail') );
 
@@ -704,8 +695,19 @@
 
 
 				var year = parseInt(m_setting.year);
-				customized2020($td);
 
+				if( year < 2024) {
+					customized2020($td);
+				} else {
+					customized2024($td);
+				}
+
+				// ライブ配信設定
+				var youtube = rSession.getYoutubeURL();
+				if( youtube ){
+					$td.append( '<a href="' + youtube + '" title="配信 Youtube" target="blank"><img src="./image/youtube_icon.png" alt="Youtube" style="margin:8px;"/></a>' );
+				}
+				
 				// クラス名の追加
 				var $title = $td.find('.ss_title,.session-title');
 				var titleName = $title.text();
@@ -759,6 +761,84 @@
 			//------------------------------------------------------------------
 			// 
 			//------------------------------------------------------------------
+			function customized2024( $div ){
+
+				var $td_detail = $div.find(".detail-session-meta-top");
+
+				$div.find(".col-5.col-sm-3.col-md-2").remove();
+
+				// 文字列削除
+				var html = $div.html();
+				if( html ){
+					for( var i = 0 ; i < REMOVE_HTML_STRINGS_2018.length ; ++i ){
+						html = html.replace( REMOVE_HTML_STRINGS_2018[i], "" );
+					}
+					$td_detail.html( html );
+				}
+
+				// プロフィールのカスタマイズ
+				// 株式会社 を略
+				$div.find('div.speakers-item > span.speakers-company').each(function(){
+					var $this = $(this);
+					$this.text( $this.text().split("株式会社").join("(株)").split("有限会社").join("(有)").split("合同会社").join("(同)") );
+				})
+
+				$div.find('div.timetable-time').remove();									// セッション時間を削除
+				
+				$timetableItem= $div.find('.c-timetable__item');
+
+				// 詳細リンクをタイトルに付け替える
+				var $detailLink = $timetableItem.children('a');
+				if($detailLink.length) {
+					var href = $detailLink.attr("href");
+					$div.append($detailLink.children());
+					$detailLink.remove();
+
+					var $title = $div.find('.timetable-title');
+					var titleText = $title.text();
+					$title.after('<a class="session-title" href="' + href + '" target="_blank">' + titleText + '</a>');
+					$title.remove();
+				}
+
+				// 写真・SNSの OK/NG を削除
+				if( m_termDate > 30 ){
+
+				} else if(1) {
+					
+					var enablePhoto = $timetableItem.attr("data-photo");
+					var enableSns = $timetableItem.attr("data-sns");
+					if (enablePhoto=="false"){
+						$('<div class="session__camera"/>').appendTo($div);
+					}
+					if (enableSns=="false"){
+						$('<div class="session__sns"/>').appendTo($div);
+					}
+				}
+				
+				// 登壇者が複数いたら
+				var $speaker_info = $div.find('div.timetable-speakers div.speakers-item')
+				if( $speaker_info.length ){
+					if( $speaker_info.length > 1 ){
+						// ２名以上はグループ化し非表示にしておく
+						$('<div/>')
+							.append( $speaker_info.filter(':not(:first)') )
+							.hide()
+							.click(function(){ $(this).toggle("slow"); })
+							.insertAfter( $speaker_info[0] );
+
+						// 非表示の講演者を表示させるボタン
+						$('<div class="disp_all_speaker"/>')
+							.text('ほか'+ ($speaker_info.length - 1) +"名" )
+							.click(function(){ $(this).next().toggle("slow"); })
+							.insertAfter( $speaker_info[0] );
+					}
+				}
+		
+			}
+
+			//------------------------------------------------------------------
+			// 
+			//------------------------------------------------------------------
 			function customized2020( $td ){
 
 				var $td_detail = $td.find(".detail-session-meta-top");
@@ -778,7 +858,7 @@
 				// 株式会社 を略
 				$td.find('p.prof:nth-child(1)').each(function(){
 					var $this = $(this);
-					$this.text( $this.text().split("株式会社").join("(株)").split("有限会社").join("(有)") );
+					$this.text( $this.text().split("株式会社").join("(株)").split("有限会社").join("(有)").split("合同会社").join("(同)") );
 				})
 
 				$td.find('div.session-time').remove();									// セッション時間を削除
@@ -867,7 +947,7 @@
 						.attr('height','12px')
 						.end()
 				
-				}
+			}
 
 			//------------------------------------------------------------------
 			// タイトルタグからIDを取得する
@@ -1168,7 +1248,7 @@
 		var current_date = m_dateList[day_index].getDate();
 
 		$(CONTENTS_TABLE_SELECTOR + "," + CONTENTS_FAVORITE_TABLE_SELECTOR)
-			.find('td.session').each(function(){
+			.find('.session').each(function(){
 				var $this = $(this);
 
 				if( m_year >= 2020){

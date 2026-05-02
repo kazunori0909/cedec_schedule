@@ -359,3 +359,88 @@ div.speaker_info{
     color: #6aa84f !important;
     box-shadow: 0 0 0 2px #6aa84f;
 }
+
+
+
+
+/* ================================== */
+/* 2024 */
+/* ================================== */
+.timetable-category>span {
+    display: inline-block;
+    padding: 3px 5px;
+    color: #fff;
+    font-size: 12px;
+    line-height: 14px
+}
+
+.timetable-category>span+span {
+    margin-left: 10px
+}
+
+.timetable-category>span.-va {
+    background-color: #dbc25a
+}
+
+.timetable-category>span.-eng {
+    background-color: #ea966f;
+}
+
+.timetable-category>span.-prd {
+    background-color: #5f77dd
+}
+
+.timetable-category>span.-bp {
+    background-color: #4fbae8
+}
+
+.timetable-category>span.-snd {
+    background-color: #7fc172
+}
+
+.timetable-category>span.-gd {
+    background-color: #5cccbb
+}
+
+.timetable-category>span.-ac {
+    background-color: #b677d3
+}
+
+.timetable-category>span.-int {
+    background-color: #dd84bf
+}
+
+.timetable-category >span.hide{
+	background-color: #c0c0c0;
+}
+
+.timetable-category>span.-prerecording,
+.timetable-category>span.-remote,
+.timetable-category>span.-nostreaming,
+.timetable-category>span.-kityo {
+    color: #343434;
+    background-color: #fff;
+    border: solid 1px #bcbcbc;
+    border-radius: 2px
+}
+
+div .speakers-item .speakers-company {
+    display: block;
+    font-size: 10px;
+}
+
+.session__camera {
+    width: 32px;
+    height: 32px;
+    margin-right: 5px;
+    float: left;
+    background-image: url("./image/no-camera.png")
+}
+
+.session__sns {
+    width: 32px;
+    height: 32px;
+    margin-right: 5px;
+    float: left;
+    background-image: url("./image/no-sns.png")
+}
