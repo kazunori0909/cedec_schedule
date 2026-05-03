@@ -23,7 +23,7 @@ $year_configs = array(
     '2022' => array('first_date' => '0823', 'domain' => 'https://cedec.cesa.or.jp/2022/', 'format' => 'format_2020'),
     '2023' => array('first_date' => '0823', 'domain' => 'https://cedec.cesa.or.jp/2023/', 'format' => 'format_2023'),
     '2024' => array('first_date' => '0821', 'domain' => 'https://cedec.cesa.or.jp/2024/', 'format' => 'format_2024'),
-    '2025' => array('first_date' => '0722', 'domain' => 'https://cedec.cesa.or.jp/2025/', 'format' => 'format_2025'),
+    '2025' => array('first_date' => '0722', 'domain' => 'https://cedec.cesa.or.jp/2025/', 'format' => 'format_2025', 'split_files' => true),
 );
 
 if (!empty($argv[1])) {
@@ -47,29 +47,46 @@ function process_year($base_dir, $year, $config)
     $input_path  = "{$base_dir}/web_data_original/{$year}/custom.html";
     $output_path = "{$base_dir}/web_data/{$year}/schedule.json";
 
-    if (!file_exists($input_path)) {
-        echo "[SKIP] {$year}: {$input_path} が見つかりません\n";
-        return;
-    }
-
     echo "[INFO] {$year} 処理開始 (format={$config['format']})\n";
     flush();
 
-    $html = file_get_contents($input_path);
-
-    $dom = new DOMDocument();
-    libxml_use_internal_errors(true);
-    // UTF-8 を正しく扱うために XML 宣言を先頭に付加
-    $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
-    libxml_clear_errors();
-    $xp = new DOMXPath($dom);
-
     $sessions = array();
-    switch ($config['format']) {
-        case 'format_2020': $sessions = parse_format_2020($xp); break;
-        case 'format_2023': $sessions = parse_format_2023($xp); break;
-        case 'format_2024': $sessions = parse_format_2024($xp); break;
-        case 'format_2025': $sessions = parse_format_2025($xp); break;
+
+    if (!empty($config['split_files'])) {
+        // day1.html / day2.html / day3.html を個別に読み込む
+        for ($day = 1; $day <= 3; $day++) {
+            $day_path = "{$base_dir}/web_data_original/{$year}/day{$day}.html";
+            if (!file_exists($day_path)) {
+                echo "[SKIP] {$year} Day{$day}: {$day_path} が見つかりません\n";
+                continue;
+            }
+            $html = file_get_contents($day_path);
+            $dom  = new DOMDocument();
+            libxml_use_internal_errors(true);
+            $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
+            libxml_clear_errors();
+            $xp       = new DOMXPath($dom);
+            $sessions = array_merge($sessions,
+                call_user_func("parse_{$config['format']}", $xp, $day));
+            unset($dom, $xp);
+        }
+    } else {
+        if (!file_exists($input_path)) {
+            echo "[SKIP] {$year}: {$input_path} が見つかりません\n";
+            return;
+        }
+        $html = file_get_contents($input_path);
+        $dom  = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
+        libxml_clear_errors();
+        $xp = new DOMXPath($dom);
+        switch ($config['format']) {
+            case 'format_2020': $sessions = parse_format_2020($xp); break;
+            case 'format_2023': $sessions = parse_format_2023($xp); break;
+            case 'format_2024': $sessions = parse_format_2024($xp); break;
+        }
+        unset($dom, $xp);
     }
 
     $json_content = generate_json($year, $config, $sessions);
@@ -80,8 +97,6 @@ function process_year($base_dir, $year, $config)
     }
     file_put_contents($output_path, $json_content);
     echo "[OK]   {$output_path} に " . count($sessions) . " 件を出力\n";
-
-    unset($dom, $xp);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -319,13 +334,17 @@ function parse_format_2024(DOMXPath $xp)
 //         .c-timetable__list__session__title
 //         .c-timetable__list__session__speakers li > span + small
 // ════════════════════════════════════════════════════════════
-function parse_format_2025(DOMXPath $xp)
+/** $day が指定された場合はそのファイルが単一日のHTMLとみなし Day{N} ラッパーなしで解析する */
+function parse_format_2025(DOMXPath $xp, $day = null)
 {
-    $sessions = array();
+    $sessions  = array();
+    $day_range = ($day !== null) ? array((int)$day) : array(1, 2, 3);
 
-    for ($day = 1; $day <= 3; $day++) {
-        $groups = xp_nodes($xp,
-            "//*[@id='Day{$day}']//*[" . cls('c-timetable__list__group') . "]");
+    foreach ($day_range as $d) {
+        $query  = ($day !== null)
+            ? "//*[" . cls('c-timetable__list__group') . "]"
+            : "//*[@id='Day{$d}']//*[" . cls('c-timetable__list__group') . "]";
+        $groups = xp_nodes($xp, $query);
         foreach ($groups as $group) {
             $group_id = get_attr($group, 'id');
             $time_str = substr($group_id, -4);
@@ -379,7 +398,7 @@ function parse_format_2025(DOMXPath $xp)
                 preg_match('/\/([^\/]+)\/?$/', rtrim($detail_url, '/'), $id_m);
                 $session_id = isset($id_m[1]) ? $id_m[1] : '';
 
-                $sessions[] = build_session($session_id, $day, $room_no, $start, $end,
+                $sessions[] = build_session($session_id, $d, $room_no, $start, $end,
                                             $spec, $category, '', $title, $speakers, $detail_url);
             }
         }
