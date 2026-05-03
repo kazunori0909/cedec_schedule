@@ -7,7 +7,7 @@
 	//==========================================================================
 	var WEEK_DAY_SHORT_STRING = [ "日", "月", "火", "水", "木", "金", "土", "日" ];
 	var MIN_MINUTES	= 5;
-	var DEFAULT_YEAR = 2023;
+	var DEFAULT_YEAR = 2025;
 
 	var FEATURE_CODE_FAVICON = false;
 
@@ -20,27 +20,10 @@
 	var CONTENTS_FAVORITE_TABLE_ID = 'day_favorite_table';
 	var CONTENTS_FAVORITE_TABLE_SELECTOR = '#'+CONTENTS_FAVORITE_TABLE_ID;
 
-	// 除外する文字列リスト
-	var REMOVE_HTML_STRINGS_2018 = [
-		 new RegExp('(□ 講演時間:)(.*)(<br>)','g')
-		,new RegExp('(□ 講演形式: [基調講演|レギュラーセッション|ショートセッション])(.*)(<br>)','g')
-	];
-
 	// タイトル名に keywordが含まれていると class名を追加する設定
 	var ADD_CLASS_NAME_FROM_TITLE = [
 		{ keyword:"【講演キャンセル】", class_name:"session_cancel" }
 	];
-
-	// タイトル名に keywordが含まれていると class名を追加する設定
-	var CUSTOM_SETTING = {
-		"2023": {
-			events:[
-				
-			]
-		}
-
-	};
-	
 
 	//==========================================================================
 	//==========================================================================
@@ -57,11 +40,6 @@
 
 	var m_opendDay = new Date();	// 現在の日程
 
-	// 経過日数
-	// タイムシフト用アイコン等、一定日数経過後は不要になるタグを削除する為に使用
-	var m_termDate = 0;
-
-	
 	// for Debug
 	var m_debugHighlighDay = undefined;
 //	var m_opendDay	 = new Date(2017,8-1,31,11,24);
@@ -165,19 +143,14 @@
 	}
 
 	//--------------------------------------------------------------------------
-	// XMLからテーブルを作成し追加する
+	// JSONデータからテーブルを作成し追加する
 	//--------------------------------------------------------------------------
-	function appendTable( xml, day_index ){
+	function appendTable( data, day_index ){
 
-		// jQuery DOM化した際に、画像のロードが始まったため、強引に無効化
-
-		var temp = xml.replace(/https:\/\/s3-ap-northeast-1.amazonaws.com\/cedec2019web\/speaker\/[0-9]*.jpg/g, '');
-		
-		var $xml		  = $(temp);
 		var $contets_body = $(CONTENTS_BODY_SELECTOR);
 
 		// 情報取得
-		var roomList = createRoomSessionList( $xml, day_index );	// 部屋毎のデータを取得
+		var roomList = createRoomSessionList( data, day_index );	// 部屋毎のデータを取得
 		var timeRange = getMinMaxTime( roomList );		// 開催時間の取得
 
 		m_favoriteList = {};
@@ -189,11 +162,7 @@
 			,"dayIndex":day_index
 		});
 
-		// 経過日数を記憶
-		m_termDate = Math.ceil((m_opendDay - m_dateList[day_index]) / 86400000);
-
 		appendSessionListTo( $table, roomList, day_index );
-		if( m_setting.convert_path ) m_setting.convert_path( $table );
 
 		// 非表示のタグを削除。
 		// ※行列のインデックスがずれる為、最後にまとめて削除。
@@ -201,14 +170,11 @@
 
 		// フィルター作成
 		var $filter = createFilter( roomList );
-		if( m_setting.convert_path ) m_setting.convert_path( $filter );
 		commitFilterInfoTo( $table );
 
 		var $favorite = $('<img id="favorite_selector" src="./image/favorite_0.png"></img>');
 
-		var h2Html = $xml.find("h2").html();
-		if( h2Html == undefined ) h2Html = 'Day ' + (day_index+1);
-		var h2 = "<br/><br/><h2>" + h2Html +"</h2>";
+		var h2 = "<br/><br/><h2>Day " + (day_index+1) + "</h2>";
 
 		// commit
 		$("<div></div>")
@@ -219,12 +185,6 @@
 				,$table
 			])
 			.appendTo( $contets_body );
-
-		$contets_body.find("h2 > img").each(function(){
-			var $this = $(this);
-			var image_path = m_setting.rootURL + "images" + $this.attr("src").split("../images")[1];
-			$this.attr("src", image_path );
-		});
 
 		$favorite.click(function(){
 			var $this = $(this);
@@ -257,33 +217,34 @@
 		//----------------------------------------------------------------------
 		// 部屋毎のセッションのデータ連想配列データ
 		//----------------------------------------------------------------------
-		function createRoomSessionList( $xml, day_index ){
+		function createRoomSessionList( data, day_index ){
 			var roomList 	= {};	//
 			var unique 		= 0;	// 無名ルームがあった場合の簡易カウンター
 
-			m_setting.unit_setting.selector( $xml, day_index ).each(function(){
-//				if( $(this).css('display') == "none" ) return; 
-				var session  = CEDEC.createSessionData( $(this), $xml, m_setting.unit_setting );
-				findAppendToRoomList( session ).push( session );
+			var dayStr = String(day_index + 1);
+			$.each( data.sessions, function( i, session ){
+				if( session.day !== dayStr ) return;
+				var sessionObj = CEDEC.createSessionData( session, m_setting.domain );
+				findAppendToRoomList( sessionObj ).push( sessionObj );
 			});
 
 			//keyでソートする
 			roomList = keySort(roomList);
 
 			// イベントの追加部屋は、強制的にリストの最初に追加する
-			var rEventRoom
-			for( r in roomList ){
+			var rEventRoom;
+			for( var r in roomList ){
 				rEventRoom = roomList[r];
 				break;
 			}
 
-			var rEvents = m_setting.unit_setting.events;
+			var rEvents = m_setting.events;
 			if( rEvents && rEvents.length ){
 				for( var i = 0 ; i < rEvents.length ; ++i ){
 					var rEvent = rEvents[i];
 					if( rEvent.day_index != day_index ) continue;
 
-					var session = CEDEC.createEventSessionData( rEvent, m_setting.unit_setting );
+					var session = CEDEC.createEventSessionData( rEvent );
 					rEventRoom.push( session );
 				}
 			}
@@ -295,15 +256,12 @@
 						var rEvent = rCustomEvents[i];
 						if( rEvent.day_index != day_index ) continue;
 
-						var session = CEDEC.createEventSessionData( rEvent, m_setting.unit_setting );
-
+						var session = CEDEC.createEventSessionData( rEvent );
 						session.main.find('h2').prepend("【非公式】<br/>");
-
 						findAppendToFreeSpaceRoomList().push( session );
 					}
 				}
 			}
-
 
 			return roomList;
 
@@ -423,7 +381,7 @@
 				}
 			}
 
-			var $filter = $('<div class="spec_filter"></div>');
+			var $filter = $('<div class="spec_filter timetable-category"></div>');
 			for(var filter_name in filterList){
 				$filter.append( filterList[filter_name].clone() );
 			}
@@ -676,14 +634,8 @@
 						rSession.main
 					]);
 
-				// ライブ配信設定
-				var youtube = rSession.getYoutubeURL();
-				if( youtube ){
-					$td.append( '<a href="' + youtube + '" title="配信 Youtube" target="blank"><img src="./image/youtube_icon.png" alt="Youtube" style="margin:8px;"/></a>' );
-				}
-
 				// IDを取得
-				var id = getIdFromTitleTag( $td.find('.ss_title,.btn-elinvar-detail,.btn-elinvar-modal-detail') );
+				var id = getIdFromTitleTag( $td.find('.session-title') );
 
 				// イベント時には別処理
 				if( rSession.event ){
@@ -702,12 +654,14 @@
 					}
 				}
 
-
-				var year = parseInt(m_setting.year);
-				customized2020($td);
-
+				// ライブ配信設定
+				var youtube = rSession.getYoutubeURL();
+				if( youtube ){
+					$td.append( '<a href="' + youtube + '" title="配信 Youtube" target="blank"><img src="./image/youtube_icon.png" alt="Youtube" style="margin:8px;"/></a>' );
+				}
+				
 				// クラス名の追加
-				var $title = $td.find('.ss_title,.session-title');
+				var $title = $td.find('.session-title');
 				var titleName = $title.text();
 				for( var i = 0 ; i < ADD_CLASS_NAME_FROM_TITLE.length ; ++i ){
 					var rAddClassName = ADD_CLASS_NAME_FROM_TITLE[i];
@@ -755,119 +709,6 @@
 				}
 
 			}
-
-			//------------------------------------------------------------------
-			// 
-			//------------------------------------------------------------------
-			function customized2020( $td ){
-
-				var $td_detail = $td.find(".detail-session-meta-top");
-
-				$td.find(".col-5.col-sm-3.col-md-2").remove();
-
-				// 文字列削除
-				var html = $td_detail.html();
-				if( html ){
-					for( var i = 0 ; i < REMOVE_HTML_STRINGS_2018.length ; ++i ){
-						html = html.replace( REMOVE_HTML_STRINGS_2018[i], "" );
-					}
-					$td_detail.html( html );
-				}
-
-				// プロフィールのカスタマイズ
-				// 株式会社 を略
-				$td.find('p.prof:nth-child(1)').each(function(){
-					var $this = $(this);
-					$this.text( $this.text().split("株式会社").join("(株)").split("有限会社").join("(有)") );
-				})
-
-				$td.find('div.session-time').remove();									// セッション時間を削除
-				$td.find('div.ses-sessiontags').parent().remove();						// スマホ等のアイコンを削除
-				$td.find('div.session-meta').children(":contains(公開中)").remove();	// 公開中の文字列削除
-				
-				// 詳細リンクをタイトルに付け替える
-				var $detailLink = $td.find('.ses-detail-link > a');
-				if($detailLink.length) {
-					var $title = $td.find('.session-title');
-					var titleText = $title.text();
-					$title.empty();
-					$title.append('<a href="' + $detailLink.attr("href") + '" target="_blank">' + titleText + '</a>');
-					$detailLink.remove();
-				}
-
-				// 写真・SNSの OK/NG を削除
-				if( m_termDate > 30 ){
-					$td.find('img').filter(function(index){
-						var file_name = this.src.slice( this.src.lastIndexOf("/") + 1 );
-						switch(file_name){
-						case "photo_B.png":
-						case "photoOK_B.png":
-						case "sns_B.png":
-						case "snsOK_B.png":
-							return true;
-						}
-						return false;
-					})
-						.next()
-							.remove()
-							.end()
-						.remove();
-				} else if(1) {
-					// OKのみ削除
-					$td.find('img').filter(function(index){
-						var file_name = this.src.slice( this.src.lastIndexOf("/") + 1 );
-						switch(file_name){
-						case "photoOK_B.png":
-						case "snsOK_B.png":
-							return true;
-						}
-						return false;
-					})
-						.remove();
-				}
-
-
-				// 登壇者が複数いたら
-				var $speaker_info = $td.find('div.session-speakers li')
-				if( $speaker_info.length ){
-					$speaker_info.css({
-						"margin":"0"
-					}).parent().css({
-						'list-style-type':'none',
-						'margin':'0',
-						'padding':'0' 
-					});
-
-
-					if( $speaker_info.length > 1 ){
-						// ２名以上はグループ化し非表示にしておく
-						$('<div/>')
-							.append( $speaker_info.filter(':not(:first)') )
-							.hide()
-							.click(function(){ $(this).toggle("slow"); })
-							.insertAfter( $speaker_info[0] );
-
-						// 非表示の講演者を表示させるボタン
-						$('<div class="disp_all_speaker"/>')
-							.text('ほか'+ ($speaker_info.length - 1) +"名" )
-							.click(function(){ $(this).next().toggle("slow"); })
-							.insertAfter( $speaker_info[0] );
-					}
-				}
-
-				// 画像が大きい為リサイズ
-				$td.find('img')
-					.filter('[height=40px]')
-						.attr('height','28px')
-						.end()
-					.filter('[src*=unity]')
-						.attr('height','36px')
-						.end()
-					.filter('[src*=session_tag]')
-						.attr('height','12px')
-						.end()
-				
-				}
 
 			//------------------------------------------------------------------
 			// タイトルタグからIDを取得する
@@ -1168,7 +1009,7 @@
 		var current_date = m_dateList[day_index].getDate();
 
 		$(CONTENTS_TABLE_SELECTOR + "," + CONTENTS_FAVORITE_TABLE_SELECTOR)
-			.find('td.session').each(function(){
+			.find('.session').each(function(){
 				var $this = $(this);
 
 				if( m_year >= 2020){

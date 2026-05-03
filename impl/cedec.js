@@ -11,188 +11,46 @@ var CEDEC = (function($){
 	//
 	// ※フォーマットが変わった際に変更が必要
 	//==========================================================================
-	var PATH_CONVERT = function( $dom ){
-		var domain = this.domain;
-		var rootURL = this.rootURL;
-		var year = this.year;
-
-		// 相対パスのURLを変更。 さらにスライドが面倒なので #content に飛ばしてみる
-		$dom.find("a").each(function(){
-			var $this = $(this);
-			var path = $this.attr("href");
-			if( path.indexOf("http") == 0 ) return;
-
-			path = domain + path.substr(0);
-			$this.attr({
-				"href"   : path,
-				"target" : "blank"
-			});
-		});
-		// イメージタグのパスをグローバルに編子
-		$dom.find("img").each(function(){
-			var $this = $(this);
-			var path = $this.attr("src");
-			if( path.indexOf("http") == 0 ) return;
-			if( path.indexOf("/") == 0 ){
-				path = domain + path;
-				$this.attr("src", path );
-			}
-		});
-	}
-
-	//--------------------------------------------------------------------------
-	// 2020年のフォーマット
-	//--------------------------------------------------------------------------
-	var UNIT_SETTING_2020 = {
-		selector	:	function( $xml, day_index ){
-			var day = day_index + 1;
-			return $xml.find('#day'+day).find("div.hide-desktop div[data-toggle=modal]");
-		},
-		param		:{
-			"room_no"		:	function($xml){ return $xml.attr("data-room").replace("第","").replace("会場",""); },
-			"start_time"	:	function($xml){
-				var text = $xml.find('.session-time').text();
-				var indexOfKara = text.indexOf('-');
-				return text.slice( indexOfKara - 5, indexOfKara);
-			},
-			"end_time"		:	function($xml){
-				var text = $xml.find('.session-time').text();
-				var indexOfKara = text.indexOf('-');
-				return text.slice( indexOfKara + 1, indexOfKara + 1 + 5 );
-			},
-
-			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
-			"youtube"		:	function($xml){ return $xml.attr("youtube"); }
-		},
-		info : function($xml, $fullXml){
-
-			var dataTarget = $xml.attr('data-target');
-			var $modal = $fullXml.find(dataTarget);
-			
-			$xml.css({
-				"padding-left":"0em"
-				,"padding-right":"0em"
-			});
-
-			var contents = [
-				$xml
-				,$modal.find("div.col-12").has('img:not(".img-sponsor")')
-				,$modal.find("div.ses-detail-link")
-			];
-
-			var $timeShift = $modal.find(".btn-time-shift");
-			if( $timeShift.text().indexOf("タイムシフト配信:なし") != -1 ){
-				contents.unshift($timeShift);
-			}
-
-
-			if( $modal.find("p").text().indexOf("資料公開: 予定あり") != -1) {
-				contents.push(" 資料公開: 予定あり");
-			} else if( $modal.find("p").text().indexOf("資料公開: 予定なし") != -1) {
-				contents.push(" 資料公開: 予定なし");
-			} else {
-				contents.push(" 資料公開: 不明");
-			}
-
-			return $('<div/>').append(contents);
-		}
-	};
-
-	//--------------------------------------------------------------------------
-	// 2021年のフォーマット
-	//--------------------------------------------------------------------------
-	var UNIT_SETTING_2021 = $.extend(true,{},UNIT_SETTING_2020);
-	UNIT_SETTING_2021.events = [
-			{ 
-				title:"CEDEC AWARDS", 	 day_index:1,	start_time: "17:30",	end_time:"19:00", room_no:"1", colspan:"all",
-				html:"※公式サイトに終了時間は明記されていません<br/>"
-//				,youtube:"https://youtu.be/c8mW57QwefM"
-			}
-		]
-
-	//--------------------------------------------------------------------------
-	// 2022年のフォーマット
-	//--------------------------------------------------------------------------
-	var UNIT_SETTING_2023 = {
-		selector	:	function( $xml, day_index ){
-			var day = day_index + 1;
-			return $xml.find('#day'+day).find('td.td-content');
-		},
-		param		:{
-			"room_no"		:	function($xml){ return $xml.find('div.session-post').attr("data-room").replace("第","").replace("会場",""); },
-			"start_time"	:	function($xml){
-				var text = $xml.find('.session-time').text();
-				var indexOfKara = text.indexOf('-');
-				return text.slice( indexOfKara - 5, indexOfKara);
-			},
-			"end_time"		:	function($xml){
-				var text = $xml.find('.session-time').text();
-				var indexOfKara = text.indexOf('-');
-				return text.slice( indexOfKara + 1, indexOfKara + 1 + 5 );
-			},
-
-			"main_spec"		:	function($xml){ return $xml.find("div.btn-top-session:not(.ses-type,.ses-difficulty):first"); },
-			"youtube"		:	function($xml){ return $xml.attr("youtube"); }
-		},
-		info : function( $xml, $fullXml ){
-			var $modal = $xml.find('[id^="exampleModal-"]');
-			
-			$xml.css({
-				"padding-left":"0em"
-				,"padding-right":"0em"
-			});
-
-			// タイムシフト
-			var canTimeshiftDelivery = true
-			var $timeShift = $modal.find(".btn-time-shift");
-			if( $timeShift.text().indexOf("タイムシフト配信:なし") != -1 ){
-				canTimeshiftDelivery = false
-			}
-
-			var contents = [
-				$xml
-					.find("div.modal-header").remove().end()
-					.find("div.container")
-						.find("div.img-difficulty").closest("div.row").remove().end().end()
-						.find('div:contains("講演形式")').closest("div.row").remove().end().end()
-						.find("ul.list-unstyled").remove().end()
-						.end()
-				,$modal.find("div.ses-detail-link")
-			];
-
-			if( canTimeshiftDelivery == false ){
-				contents.unshift($timeShift);
-			}
-
-			if( $modal.find("p").text().indexOf("資料公開: 予定あり") != -1) {
-				contents.push(" 資料公開: 予定あり");
-			} else if( $modal.find("p").text().indexOf("資料公開: 予定なし") != -1) {
-				contents.push(" 資料公開: 予定なし");
-			} else {
-				contents.push(" 資料公開: 不明");
-			}
-
-			return $('<div/>').append(contents);
-		}
-	}
-
-
 	//==========================================================================
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2023", first_date:"0823", domain:"https://cedec.cesa.or.jp/2023/", unit_setting: UNIT_SETTING_2023, 		convert_path:PATH_CONVERT	},
-		{ year:"2022", first_date:"0823", domain:"https://cedec.cesa.or.jp/2022/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:743	},
-		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", unit_setting: UNIT_SETTING_2021, 		convert_path:PATH_CONVERT,	cedil_tag_no:740	},
-		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", unit_setting: UNIT_SETTING_2020, 		convert_path:PATH_CONVERT,	cedil_tag_no:728	},
+		{ year:"2025", first_date:"0722", domain:"https://cedec.cesa.or.jp/2025/", cedil_tag_no:756,
+		  events:[
+			{ title:"Developers' Night", day_index:1, start_time:"19:30", end_time:"21:30", room_no:"多目的ホール",
+			  html:'※会場で先着500名の限定販売<br/><a href="https://cedec.cesa.or.jp/2025/event/developer/" target="blank">詳細</a>' }
+		  ]
+		},
+		{ year:"2024", first_date:"0821", domain:"https://cedec.cesa.or.jp/2024/", cedil_tag_no:752,
+		  events:[
+			{ title:"Developers' Night", day_index:1, start_time:"19:30", end_time:"21:30", room_no:"多目的ホール",
+			  html:'※会場で先着500名の限定販売<br/><a href="https://cedec.cesa.or.jp/2024/event/developer/" target="blank">詳細</a>' }
+		  ]
+		},
+		{ year:"2023", first_date:"0823", domain:"https://cedec.cesa.or.jp/2023/", cedil_tag_no:748 },
+		{ year:"2022", first_date:"0823", domain:"https://cedec.cesa.or.jp/2022/", cedil_tag_no:743,
+		  events:[
+			{ title:"CEDEC AWARDS", day_index:1, start_time:"17:30", end_time:"19:00", room_no:"1", colspan:"all",
+			  html:"※公式サイトに終了時間は明記されていません<br/>" }
+		  ]
+		},
+		{ year:"2021", first_date:"0824", domain:"https://cedec.cesa.or.jp/2021/", cedil_tag_no:740,
+		  events:[
+			{ title:"CEDEC AWARDS", day_index:1, start_time:"17:30", end_time:"19:00", room_no:"1", colspan:"all",
+			  html:"※公式サイトに終了時間は明記されていません<br/>" }
+		  ]
+		},
+		{ year:"2020", first_date:"0902", domain:"https://cedec.cesa.or.jp/2020/", cedil_tag_no:728 },
 	];
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		 "2023":{ time:"2023/08/15 21:00", file:"custom.html" }
-		,"2022":{ time:"2022/08/28 16:00", file:"custom.html" }
-		,"2021":{ time:"2021/08/24 00:30", file:"custom.html" }
-		,"2020":{ time:"2020/09/07 16:00", file:"custom.html" }
+		 "2025":{ time:"2025/07/02 23:00" }
+		,"2024":{ time:"2024/08/19 23:00" }
+		,"2023":{ time:"2023/08/23 01:23" }
+		,"2022":{ time:"2022/08/28 16:00" }
+		,"2021":{ time:"2021/08/24 00:30" }
+		,"2020":{ time:"2020/09/07 16:00" }
 	}
 
 	var TIME_SPAN	= 3;
@@ -201,6 +59,12 @@ var CEDEC = (function($){
 
 
 	var m_dataCash	= undefined;
+
+	// 分野コード → CSS クラス名マッピング
+	var SPEC_CLASS = {
+		'ENG': '-eng', 'VA': '-va', 'PRD': '-prd',
+		'BP' : '-bp',  'SND': '-snd', 'GD': '-gd', 'AC': '-ac'
+	};
 
 	//==========================================================================
 	// 年単位の情報オブジェクト
@@ -242,44 +106,35 @@ var CEDEC = (function($){
 	// スケジュールページへのパスを取得する
 	//--------------------------------------------------------------------------
 	Unit.prototype.getSchedulePagePath = function(){
-
-		var cash_setting = CASH＿SETTING[ this.year ];
-		if( cash_setting == undefined )	return "";
-
 		var temp = location.href.split("/");
 		temp.pop();
-		return temp.join("/") + "/web_data/" + this.year + "/" + cash_setting.file;
+		return temp.join("/") + "/web_data/" + this.year + "/schedule.json";
 	}
 
 	//--------------------------------------------------------------------------
-	// スケジュールページを読み込む
+	// スケジュールデータ(JSON)を読み込む
 	//--------------------------------------------------------------------------
 	Unit.prototype.readSchedule = function( option ){
-	
+
 		if( m_dataCash !== undefined ){
 			option.success( option.index, m_dataCash );
 			return;
 		}
 
-		var url =  this.getSchedulePagePath();
+		var url = this.getSchedulePagePath();
 
 		$.ajax({
 			type: 'GET',
 			url: url,
-			dataType: 'html',
-			success: function(option,rUnit) {
-				return function(xml){
+			dataType: 'json',
+			success: function(option) {
+				return function(data){
 					if( option.success !== undefined ){
-						if( xml.responseText !== undefined ){
-							m_dataCash = xml.responseText;
-						}else{
-							m_dataCash = xml;
-						}
-
+						m_dataCash = data;
 						option.success( option.index, m_dataCash );
 					}
 				}
-			}(option,this),
+			}(option),
 			error:function( request, textStatus, errorThrown ) {
 				if( option.error !== undefined ){
 					option.error( request, textStatus, errorThrown);
@@ -312,70 +167,97 @@ var CEDEC = (function($){
 	}
 
 	//==========================================================================
-	//  Session Data
+	//  Session Data (JSONオブジェクトから生成)
 	//==========================================================================
-	function createSessionData( $xml, $fullXml, unit_setting ){
-		var m_unit_setting = unit_setting;
-		var m_$info = $xml;
-		var m_$infoMain = undefined;
-		var m_cash = {};
+	function createSessionData( session, domain ){
+		var m_$main = buildSessionDom( session, domain );
 
-		if ($xml){
-			if( typeof(m_unit_setting.info_selector)=="string" ) { 
-				m_$infoMain = $xml.find( m_unit_setting.info_selector );
-			} else if( typeof(m_unit_setting.info)=="function" ) { 
-				m_$infoMain = m_unit_setting.info($xml, $fullXml);
-			} 
-
-		}
-
-		// Session Data Object
 		return {
-			main 				: m_$infoMain,
-			getRoomNo			: function(){return getParamText("room_no");},
-			getStartTimeString 	: function(){return getParamText("start_time");},
-			getEndTimeString 	: function(){return getParamText("end_time");},
+			main				: m_$main,
+			getRoomNo			: function(){ return session.room; },
+			getStartTimeString	: function(){ return session.start; },
+			getEndTimeString	: function(){ return session.end; },
 
-			getStartTime 		: function(){
-				var s = this.getStartTimeString().split(':');
+			getStartTime		: function(){
+				var s = session.start.split(':');
 				return parseInt(s[0]) * 60 + parseInt(s[1]);
 			},
-			getEndTime 			: function(){
-				var s = this.getEndTimeString().split(':');
+			getEndTime			: function(){
+				var s = session.end.split(':');
 				return parseInt(s[0]) * 60 + parseInt(s[1]);
 			},
 
-			// 引数のSession Data と時間が重複していないかチェック
 			isOverlap			: function( rData ){
 				if( this.getStartTime() >= rData.getEndTime() )	return false;
-				if( this.getEndTime() < rData.getStartTime() )	return false;
+				if( this.getEndTime() <= rData.getStartTime() )	return false;
 				return true;
 			},
 
-			getMainSpecObject		: function(){return getParamObject("main_spec");},
-			getYoutubeURL			: function(){return getParamObject("youtube");},
-			getNiconamaURL			: function(){return getParamObject("niconama");}
+			getMainSpecObject	: function(){ return m_$main.find('.timetable-category > span:first'); },
+			getYoutubeURL		: function(){ return undefined; },
+			getNiconamaURL		: function(){ return undefined; }
 		};
+	}
 
-		function getParamText( cash_name ){
-			if(typeof(m_unit_setting.param[cash_name])=="undefined") return undefined;
-			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
-			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
-			if( m_cash[cash_name] == undefined ) m_cash[cash_name] = "";
-			return m_cash[cash_name];
+	//--------------------------------------------------------------------------
+	// JSONセッションからDOM要素を構築する
+	//--------------------------------------------------------------------------
+	function buildSessionDom( session, domain ) {
+		var $div = $('<div/>');
+
+		// 分野（フィルター用）
+		if( session.spec ){
+			var $span = $('<span/>').text( session.spec );
+			if( SPEC_CLASS[session.spec] ) $span.addClass( SPEC_CLASS[session.spec] );
+			$('<div class="timetable-category"/>').append( $span ).appendTo( $div );
 		}
-		function getParamObject( cash_name ){
-			if(typeof(m_unit_setting.param[cash_name])=="undefined") return undefined;
-			if( m_cash[cash_name] !== undefined )	return m_cash[cash_name];
-			m_cash[cash_name] = m_unit_setting.param[cash_name]( m_$info );
-			return m_cash[cash_name];
+
+		// タイトル（詳細リンク付き）
+		var detailUrl = session.detail_url || '';
+		if( detailUrl && detailUrl.indexOf('http') !== 0 ){
+			var base = domain.replace(/\/[0-9]{4}\/$/, '');
+			detailUrl = base + (detailUrl.indexOf('/') === 0 ? detailUrl : '/' + detailUrl);
 		}
-	};
+
+		if( detailUrl ){
+			$('<a class="session-title" target="_blank"/>').attr('href', detailUrl).text( session.title ).appendTo( $div );
+		} else {
+			$('<span class="session-title"/>').text( session.title ).appendTo( $div );
+		}
+
+		// 登壇者
+		var $speakers = $('<div class="timetable-speakers"/>').appendTo( $div );
+		$.each( session.speakers || [], function( i, sp ){
+			$('<div class="speakers-item"/>')
+				.append( $('<span class="speakers-name"/>').text( sp.name ) )
+				.append( $('<span class="speakers-company"/>').text( sp.company ) )
+				.appendTo( $speakers );
+		});
+
+		// 登壇者が複数の場合は2人目以降を折りたたむ
+		var $speakerItems = $speakers.children('.speakers-item');
+		if( $speakerItems.length > 1 ){
+			$('<div class="disp_all_speaker"/>')
+				.text( 'ほか' + ($speakerItems.length - 1) + '名' )
+				.click(function(){ $(this).next().toggle('slow'); })
+				.insertAfter( $speakerItems.eq(0) );
+			$('<div/>')
+				.append( $speakerItems.filter(':not(:first)') )
+				.hide()
+				.click(function(){ $(this).toggle('slow'); })
+				.insertAfter( $speakers.children('.disp_all_speaker') );
+		}
+
+		// 資料公開（CEDiLリンク置換のターゲット）
+		$div.append(' 資料公開: 不明');
+
+		return $div;
+	}
 
 	//==========================================================================
 	//  Event Session Data
 	//==========================================================================
-	function createEventSessionData( rEvent, unit_setting ){
+	function createEventSessionData( rEvent ){
 
 		var contents = [];
 		contents.push( "<h2>" + rEvent.title + "</h2>" );
@@ -384,7 +266,7 @@ var CEDEC = (function($){
 			for(var i=0;i<temp.length;++i) {
 				contents.push( '#' + temp[i] );
 				contents.push( '　' );
-				contents.push( '<a href="https://twitter.com/hashtag/' + temp[i] + '" target="blank"><i class="fab fa-2x fa-twitter-square"></i></a>' );
+				contents.push( '<a href="https://x.com/hashtag/' + temp[i] + '" target="blank"><i class="fab fa-2x fa-twitter-square"></i></a>' );
 				contents.push( '<br/>' );
 			}
 		}
@@ -393,17 +275,29 @@ var CEDEC = (function($){
 			contents.push( rEvent.html );
 		}
 
-		// イベント用設定
-		var session = createSessionData( $("<div>"), $("<div>"), unit_setting );
-		session.event				= $.extend({}, rEvent );
-		session.main 				= $("<div>").append( contents ),
-		session.getRoomNo			= function(){return this.event.room_no;},
-		session.getStartTimeString 	= function(){return this.event.start_time; }
-		session.getEndTimeString 	= function(){return this.event.end_time; }
-
-		session.getYoutubeURL		= function(){return this.event.youtube;}
-
-		return session;
+		return {
+			event				: $.extend({}, rEvent),
+			main				: $("<div>").append( contents ),
+			getRoomNo			: function(){ return this.event.room_no; },
+			getStartTimeString	: function(){ return this.event.start_time; },
+			getEndTimeString	: function(){ return this.event.end_time; },
+			getStartTime		: function(){
+				var s = this.event.start_time.split(':');
+				return parseInt(s[0]) * 60 + parseInt(s[1]);
+			},
+			getEndTime			: function(){
+				var s = this.event.end_time.split(':');
+				return parseInt(s[0]) * 60 + parseInt(s[1]);
+			},
+			isOverlap			: function( rData ){
+				if( this.getStartTime() >= rData.getEndTime() )	return false;
+				if( this.getEndTime() <= rData.getStartTime() )	return false;
+				return true;
+			},
+			getMainSpecObject	: function(){ return $(); },
+			getYoutubeURL		: function(){ return this.event.youtube; },
+			getNiconamaURL		: function(){ return undefined; }
+		};
 	}
 
 
