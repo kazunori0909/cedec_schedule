@@ -391,6 +391,10 @@ div.speaker_info{
     font-size: 0.7em;
 }
 
+.timetable-category>span.-key {
+    background-color: #c30d23
+}
+
 .timetable-category>span.-va {
     background-color: #dbc25a
 }
