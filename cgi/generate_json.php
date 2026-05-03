@@ -193,8 +193,10 @@ function parse_format_2020(DOMXPath $xp)
             if (empty($speakers)) $speakers = extract_speakers_legacy($xp, $modal);
             $detail_url = extract_detail_url_legacy($xp, $modal);
 
+            $cancelled = extract_cancelled($title);
+
             $sessions[] = build_session($session_id, $day, $room_no, $start, $end,
-                                        $category, $sub_category, $data_filter, $title, $speakers, $detail_url);
+                                        $category, $sub_category, $data_filter, $title, $speakers, $detail_url, $cancelled);
         }
     }
     return $sessions;
@@ -250,8 +252,10 @@ function parse_format_2023(DOMXPath $xp)
             $speakers   = extract_speakers_legacy($xp, $sp);
             $detail_url = $modal ? extract_detail_url_legacy($xp, $modal) : '';
 
+            $cancelled = extract_cancelled($title);
+
             $sessions[] = build_session($session_id, $day, $room_no, $start, $end,
-                                        $category, $sub_category, $data_filter, $title, $speakers, $detail_url);
+                                        $category, $sub_category, $data_filter, $title, $speakers, $detail_url, $cancelled);
         }
     }
     return $sessions;
@@ -403,8 +407,15 @@ function parse_format_2025(DOMXPath $xp, $day = null)
                 preg_match('/\/([^\/]+)\/?$/', rtrim($detail_url, '/'), $id_m);
                 $session_id = isset($id_m[1]) ? $id_m[1] : '';
 
+                $cancelled = xp_first($xp,
+                    ".//*[" . cls('c-timetable__list__session__type') . " and contains(@class,'--cancel')]",
+                    $ses_el) !== null;
+                if ($cancelled) {
+                    $title = '【講演キャンセル】' . $title;
+                }
+
                 $sessions[] = build_session($session_id, $d, $room_no, $start, $end,
-                                            $category, $sub_category, '', $title, $speakers, $detail_url);
+                                            $category, $sub_category, '', $title, $speakers, $detail_url, $cancelled);
             }
         }
     }
@@ -437,6 +448,7 @@ function generate_json($year, $config, $sessions)
             'sub_category' => array_values(array_filter(array_map('trim', explode(',', $s['sub_category'])))),
             'data_filter' => $s['data_filter'],
             'title'       => $s['title'],
+            'cancelled'   => (bool)$s['cancelled'],
             'speakers'    => $s['speakers'],
             'detail_url'  => $s['detail_url'],
         );
@@ -461,6 +473,12 @@ function parse_time_range($text)
     $text = trim(preg_replace('/\s+/', ' ', $text));
     preg_match('/(\d{2}:\d{2})-(\d{2}:\d{2})/', $text, $m);
     return array(isset($m[1]) ? $m[1] : '', isset($m[2]) ? $m[2] : '');
+}
+
+/** タイトルに「【講演キャンセル】」が含まれているかを返す */
+function extract_cancelled($title)
+{
+    return strpos($title, '【講演キャンセル】') !== false;
 }
 
 /** 会社名の法人格を略称に変換 */
@@ -514,8 +532,8 @@ function build_data_filter_2024(DOMElement $item)
 
 /** セッション配列を組み立てる */
 function build_session($session_id, $day, $room_no, $start, $end,
-                       $category, $sub_category, $data_filter, $title, $speakers, $detail_url)
+                       $category, $sub_category, $data_filter, $title, $speakers, $detail_url, $cancelled = false)
 {
     return compact('session_id', 'day', 'room_no', 'start', 'end',
-                   'category', 'sub_category', 'data_filter', 'title', 'speakers', 'detail_url');
+                   'category', 'sub_category', 'data_filter', 'title', 'speakers', 'detail_url', 'cancelled');
 }
