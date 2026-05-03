@@ -67,6 +67,11 @@ div#contents
 	background-color: #c0c0c0;
 }
 
+.spec_filter > span{
+	margin:3px;
+	cursor : pointer;
+}
+
 #favorite_selector, .favi {
 	cursor : pointer;
 }
