@@ -228,13 +228,9 @@ var CEDEC = (function($){
 		// 登壇者
 		var $speakers = $('<div class="timetable-speakers"/>').appendTo( $div );
 		$.each( session.speakers || [], function( i, sp ){
-			var company = sp.company
-				.split('株式会社').join('(株)')
-				.split('有限会社').join('(有)')
-				.split('合同会社').join('(同)');
 			$('<div class="speakers-item"/>')
 				.append( $('<span class="speakers-name"/>').text( sp.name ) )
-				.append( $('<span class="speakers-company"/>').text( company ) )
+				.append( $('<span class="speakers-company"/>').text( sp.company ) )
 				.appendTo( $speakers );
 		});
 

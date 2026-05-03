@@ -289,7 +289,7 @@ function parse_format_2024(DOMXPath $xp)
                 $speakers = array();
                 foreach (xp_nodes($xp, ".//*[" . cls('speakers-item') . "]", $item) as $sp_el) {
                     $name    = xp_text($xp, ".//*[" . cls('speakers-name') . "]", $sp_el);
-                    $company = xp_text($xp, ".//*[" . cls('speakers-company') . "]", $sp_el);
+                    $company = abbreviate_company(xp_text($xp, ".//*[" . cls('speakers-company') . "]", $sp_el));
                     if ($name !== '') $speakers[] = compact('name', 'company');
                 }
 
@@ -371,7 +371,7 @@ function parse_format_2025(DOMXPath $xp)
                 foreach (xp_nodes($xp,
                     ".//*[" . cls('c-timetable__list__session__speakers') . "]//li", $ses_el) as $li) {
                     $name    = xp_text($xp, './/span', $li);
-                    $company = preg_replace('/^\s*\/\s*/', '', xp_text($xp, './/small', $li));
+                    $company = abbreviate_company(preg_replace('/^\s*\/\s*/', '', xp_text($xp, './/small', $li)));
                     if ($name !== '') $speakers[] = compact('name', 'company');
                 }
 
@@ -439,13 +439,23 @@ function parse_time_range($text)
     return array(isset($m[1]) ? $m[1] : '', isset($m[2]) ? $m[2] : '');
 }
 
+/** 会社名の法人格を略称に変換 */
+function abbreviate_company($company)
+{
+    return str_replace(
+        array('株式会社', '有限会社', '合同会社'),
+        array('(株)',     '(有)',     '(同)'),
+        $company
+    );
+}
+
 /** 2020/2021/2022/2023 の .session-speakers からスピーカー配列を返す */
 function extract_speakers_legacy(DOMXPath $xp, DOMNode $ctx)
 {
     $speakers = array();
     foreach (xp_nodes($xp, ".//*[" . cls('session-speakers') . "]//li", $ctx) as $li) {
         $name    = xp_text($xp, ".//*[" . cls('name') . "]//b", $li);
-        $company = xp_text($xp, ".//*[" . cls('prof') . "]//p", $li);
+        $company = abbreviate_company(xp_text($xp, ".//*[" . cls('prof') . "]//p", $li));
         if ($name !== '') $speakers[] = compact('name', 'company');
     }
     return $speakers;
