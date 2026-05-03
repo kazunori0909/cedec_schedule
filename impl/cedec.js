@@ -45,7 +45,7 @@ var CEDEC = (function($){
 
 	// GitHubにはアップしないが、キャッシュ用の設定
 	var CASH＿SETTING = {
-		 "2025":{ time:"2025/07/02 23:00" }
+		 "2025":{ time:"2026/05/03 22:00" }
 		,"2024":{ time:"2024/08/19 23:00" }
 		,"2023":{ time:"2023/08/23 01:23" }
 		,"2022":{ time:"2022/08/28 16:00" }
@@ -205,11 +205,19 @@ var CEDEC = (function($){
 	function buildSessionDom( session, domain ) {
 		var $div = $('<div/>');
 
-		// 分野（フィルター用）
-		if( session.spec ){
-			var $span = $('<span/>').text( session.spec );
-			if( SPEC_CLASS[session.spec] ) $span.addClass( SPEC_CLASS[session.spec] );
-			$('<div class="timetable-category"/>').append( $span ).appendTo( $div );
+		// 分野（フィルター用）＋サブカテゴリ
+		if( session.category || (session.sub_category && session.sub_category.length) ){
+			var $catDiv = $('<div class="timetable-category"/>').appendTo( $div );
+			if( session.category ){
+				var $span = $('<span/>').text( session.category );
+				if( SPEC_CLASS[session.category] ) $span.addClass( SPEC_CLASS[session.category] );
+				$catDiv.append( $span );
+			}
+			$.each( session.sub_category || [], function( i, cat ){
+				var $sub = $('<span class="sub"/>').text( cat );
+				if( SPEC_CLASS[cat] ) $sub.addClass( SPEC_CLASS[cat] );
+				$catDiv.append( $sub );
+			});
 		}
 
 		// タイトル（詳細リンク付き）

@@ -371,16 +371,24 @@ div.speaker_info{
 /* ================================== */
 /* 2024 */
 /* ================================== */
+.timetable-category {
+    font-size: 12px;
+}
+
 .timetable-category>span {
     display: inline-block;
     padding: 3px 5px;
     color: #fff;
-    font-size: 12px;
+    font-size: 1em;
     line-height: 14px
 }
 
 .timetable-category>span+span {
     margin-left: 10px
+}
+
+.timetable-category>span.sub {
+    font-size: 0.7em;
 }
 
 .timetable-category>span.-va {
@@ -413,6 +421,10 @@ div.speaker_info{
 
 .timetable-category>span.-int {
     background-color: #dd84bf
+}
+
+.timetable-category>span.-key {
+    background-color: #1f3c5a
 }
 
 .timetable-category >span.hide{
