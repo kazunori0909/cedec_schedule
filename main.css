@@ -423,6 +423,10 @@ div.speaker_info{
     background-color: #dd84bf
 }
 
+.timetable-category>span.-key {
+    background-color: #1f3c5a
+}
+
 .timetable-category >span.hide{
 	background-color: #c0c0c0;
 }
