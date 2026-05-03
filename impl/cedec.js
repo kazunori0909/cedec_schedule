@@ -15,7 +15,7 @@ var CEDEC = (function($){
 	// 年度別設定
 	//==========================================================================
 	var SCHEDULE_SETTING = [
-		{ year:"2025", first_date:"0722", domain:"https://cedec.cesa.or.jp/2025/",
+		{ year:"2025", first_date:"0722", domain:"https://cedec.cesa.or.jp/2025/", cedil_tag_no:756,
 		  events:[
 			{ title:"Developers' Night", day_index:1, start_time:"19:30", end_time:"21:30", room_no:"多目的ホール",
 			  html:'※会場で先着500名の限定販売<br/><a href="https://cedec.cesa.or.jp/2025/event/developer/" target="blank">詳細</a>' }
