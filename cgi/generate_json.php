@@ -368,11 +368,16 @@ function parse_format_2025(DOMXPath $xp, $day = null)
                 $category     = isset($cat_texts[0]) ? $cat_texts[0] : '';
                 $sub_category = implode(',', array_slice($cat_texts, 1));
 
-                // 分野なし (主催者挨拶・基調講演等): __type または __format にフォールバック
+                // 分野なし (主催者挨拶・基調講演等): __format 優先、なければ __type にフォールバック
+                // (__type は "YouTube配信あり" 等の配信インジケーターにも使われるため後回し)
+                // 汎用フォーマット名はフィルター用カテゴリとして意味がないため除外する
                 if ($category === '') {
-                    $type   = xp_text($xp, ".//*[" . cls('c-timetable__list__session__type') . "]", $ses_el);
                     $format = xp_text($xp, ".//*[" . cls('c-timetable__list__session__format') . "]", $ses_el);
-                    $category   = $type !== '' ? $type : $format;
+                    $type   = xp_text($xp, ".//*[" . cls('c-timetable__list__session__type') . "]", $ses_el);
+                    $generic_formats = ['レギュラーセッション', 'ショートセッション', 'ライトニングトーク', 'CEDEC AWARDS', '主催者挨拶'];
+                    if (!in_array($format, $generic_formats)) {
+                        $category = $format !== '' ? $format : $type;
+                    }
                 }
 
                 // 所要時間から終了時刻を計算
