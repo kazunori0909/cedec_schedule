@@ -177,15 +177,15 @@ function parse_format_2020(DOMXPath $xp)
             $data_filter = get_attr($el, 'data-filter');
 
             // session-post 内の cate-type から分野を取得 (2020 モーダルは「主分野:」テキストが混入するため $el を使用)
-            $spec     = xp_text($xp,
+            $category     = xp_text($xp,
                 ".//*[" . cls('btn-top-session') . " and " . cls('cate-type') . " and not(" . cls('ses-subcategory') . ")]",
                 $el);
-            $category = xp_text($xp,
+            $sub_category = xp_text($xp,
                 ".//*[" . cls('btn-top-session') . " and " . cls('cate-type') . " and " . cls('ses-subcategory') . "]",
                 $el);
             // 分野なし (基調講演等) は ses-type にフォールバック
-            if ($spec === '') {
-                $spec = xp_text($xp,
+            if ($category === '') {
+                $category = xp_text($xp,
                     ".//*[" . cls('btn-top-session') . " and " . cls('ses-type') . "]", $modal);
             }
 
@@ -194,7 +194,7 @@ function parse_format_2020(DOMXPath $xp)
             $detail_url = extract_detail_url_legacy($xp, $modal);
 
             $sessions[] = build_session($session_id, $day, $room_no, $start, $end,
-                                        $spec, $category, $data_filter, $title, $speakers, $detail_url);
+                                        $category, $sub_category, $data_filter, $title, $speakers, $detail_url);
         }
     }
     return $sessions;
@@ -235,15 +235,15 @@ function parse_format_2023(DOMXPath $xp)
 
             $modal    = xp_first($xp, ".//*[starts-with(@id,'exampleModal-')]", $td);
             // session-post 内の cate-type から分野を取得
-            $spec     = xp_text($xp,
+            $category     = xp_text($xp,
                 ".//*[" . cls('btn-top-session') . " and " . cls('cate-type') . " and not(" . cls('ses-subcategory') . ")]",
                 $sp);
-            $category = xp_text($xp,
+            $sub_category = xp_text($xp,
                 ".//*[" . cls('btn-top-session') . " and " . cls('cate-type') . " and " . cls('ses-subcategory') . "]",
                 $sp);
             // 分野なし (基調講演等) は ses-type にフォールバック
-            if ($spec === '') {
-                $spec = $modal ? xp_text($xp,
+            if ($category === '') {
+                $category = $modal ? xp_text($xp,
                     ".//*[" . cls('btn-top-session') . " and " . cls('ses-type') . "]", $modal) : '';
             }
 
@@ -251,7 +251,7 @@ function parse_format_2023(DOMXPath $xp)
             $detail_url = $modal ? extract_detail_url_legacy($xp, $modal) : '';
 
             $sessions[] = build_session($session_id, $day, $room_no, $start, $end,
-                                        $spec, $category, $data_filter, $title, $speakers, $detail_url);
+                                        $category, $sub_category, $data_filter, $title, $speakers, $detail_url);
         }
     }
     return $sessions;
@@ -298,7 +298,7 @@ function parse_format_2024(DOMXPath $xp)
                     $end   = isset($parts[1]) ? trim($parts[1]) : '';
                 }
 
-                $spec  = xp_text($xp, "(.//div[" . cls('timetable-category') . "]/span)[1]", $item);
+                $category  = xp_text($xp, "(.//div[" . cls('timetable-category') . "]/span)[1]", $item);
                 $title = xp_text($xp, ".//*[" . cls('timetable-title') . "]", $item);
 
                 $speakers = array();
@@ -312,7 +312,7 @@ function parse_format_2024(DOMXPath $xp)
                 $detail_url = $link ? get_attr($link, 'href') : '';
 
                 $sessions[] = build_session($session_id, $day, $room_no, $start, $end,
-                                            $spec, '', $data_filter, $title, $speakers, $detail_url);
+                                            $category, '', $data_filter, $title, $speakers, $detail_url);
             }
         }
     }
@@ -365,14 +365,14 @@ function parse_format_2025(DOMXPath $xp, $day = null)
                     $t = trim($cn->textContent);
                     if ($t !== '') $cat_texts[] = $t;
                 }
-                $spec     = isset($cat_texts[0]) ? $cat_texts[0] : '';
-                $category = implode(',', array_slice($cat_texts, 1));
+                $category     = isset($cat_texts[0]) ? $cat_texts[0] : '';
+                $sub_category = implode(',', array_slice($cat_texts, 1));
 
                 // 分野なし (主催者挨拶・基調講演等): __type または __format にフォールバック
-                if ($spec === '') {
+                if ($category === '') {
                     $type   = xp_text($xp, ".//*[" . cls('c-timetable__list__session__type') . "]", $ses_el);
                     $format = xp_text($xp, ".//*[" . cls('c-timetable__list__session__format') . "]", $ses_el);
-                    $spec   = $type !== '' ? $type : $format;
+                    $category   = $type !== '' ? $type : $format;
                 }
 
                 // 所要時間から終了時刻を計算
@@ -399,7 +399,7 @@ function parse_format_2025(DOMXPath $xp, $day = null)
                 $session_id = isset($id_m[1]) ? $id_m[1] : '';
 
                 $sessions[] = build_session($session_id, $d, $room_no, $start, $end,
-                                            $spec, $category, '', $title, $speakers, $detail_url);
+                                            $category, $sub_category, '', $title, $speakers, $detail_url);
             }
         }
     }
@@ -428,8 +428,8 @@ function generate_json($year, $config, $sessions)
             'room'        => $s['room_no'],
             'start'       => $s['start'],
             'end'         => $s['end'],
-            'spec'        => $s['spec'],
             'category'    => $s['category'],
+            'sub_category' => array_values(array_filter(array_map('trim', explode(',', $s['sub_category'])))),
             'data_filter' => $s['data_filter'],
             'title'       => $s['title'],
             'speakers'    => $s['speakers'],
@@ -509,8 +509,8 @@ function build_data_filter_2024(DOMElement $item)
 
 /** セッション配列を組み立てる */
 function build_session($session_id, $day, $room_no, $start, $end,
-                       $spec, $category, $data_filter, $title, $speakers, $detail_url)
+                       $category, $sub_category, $data_filter, $title, $speakers, $detail_url)
 {
     return compact('session_id', 'day', 'room_no', 'start', 'end',
-                   'spec', 'category', 'data_filter', 'title', 'speakers', 'detail_url');
+                   'category', 'sub_category', 'data_filter', 'title', 'speakers', 'detail_url');
 }
