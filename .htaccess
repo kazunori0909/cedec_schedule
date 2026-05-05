@@ -1,4 +1,10 @@
-<Files ~ "\.(html|css|xml|js|json)$">
-Header set Pragma no-cache
-Header set Cache-Control no-cache
+<Files ~ "\.json$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</Files>
+
+<Files ~ "\.(html|css|js)$">
+    Header set Cache-Control "no-cache"
+    Header set Pragma "no-cache"
 </Files>

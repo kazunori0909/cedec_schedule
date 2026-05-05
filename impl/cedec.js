@@ -127,6 +127,7 @@ var CEDEC = (function($){
 		$.ajax({
 			type: 'GET',
 			url: url,
+			cache: false,
 			dataType: 'json',
 			success: function(option) {
 				return function(data){
