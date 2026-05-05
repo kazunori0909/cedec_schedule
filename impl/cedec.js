@@ -178,22 +178,9 @@ var CEDEC = (function($){
 			getRoomNo			: function(){ return session.room; },
 			getStartTimeString	: function(){ return session.start; },
 			getEndTimeString	: function(){ return session.end; },
-
-			getStartTime		: function(){
-				var s = session.start.split(':');
-				return parseInt(s[0]) * 60 + parseInt(s[1]);
-			},
-			getEndTime			: function(){
-				var s = session.end.split(':');
-				return parseInt(s[0]) * 60 + parseInt(s[1]);
-			},
-
-			isOverlap			: function( rData ){
-				if( this.getStartTime() >= rData.getEndTime() )	return false;
-				if( this.getEndTime() <= rData.getStartTime() )	return false;
-				return true;
-			},
-
+			getStartTime		: function(){ return getMinutesFromTimeString( session.start ); },
+			getEndTime			: function(){ return getMinutesFromTimeString( session.end ); },
+			isOverlap			: isOverlapWith,
 			getMainSpecObject	: function(){ return m_$main.find('.timetable-category > span:first'); },
 			getYoutubeURL		: function(){ return undefined; },
 			getNiconamaURL		: function(){ return undefined; }
@@ -290,19 +277,9 @@ var CEDEC = (function($){
 			getRoomNo			: function(){ return this.event.room_no; },
 			getStartTimeString	: function(){ return this.event.start_time; },
 			getEndTimeString	: function(){ return this.event.end_time; },
-			getStartTime		: function(){
-				var s = this.event.start_time.split(':');
-				return parseInt(s[0]) * 60 + parseInt(s[1]);
-			},
-			getEndTime			: function(){
-				var s = this.event.end_time.split(':');
-				return parseInt(s[0]) * 60 + parseInt(s[1]);
-			},
-			isOverlap			: function( rData ){
-				if( this.getStartTime() >= rData.getEndTime() )	return false;
-				if( this.getEndTime() <= rData.getStartTime() )	return false;
-				return true;
-			},
+			getStartTime		: function(){ return getMinutesFromTimeString( this.event.start_time ); },
+			getEndTime			: function(){ return getMinutesFromTimeString( this.event.end_time ); },
+			isOverlap			: isOverlapWith,
 			getMainSpecObject	: function(){ return $(); },
 			getYoutubeURL		: function(){ return this.event.youtube; },
 			getNiconamaURL		: function(){ return undefined; }
@@ -310,13 +287,16 @@ var CEDEC = (function($){
 	}
 
 
-	//--------------------------------------------------------------------------
-	// 時間文字列を変換する
 	// "19:30" → 19*60 + 30 = 1170
-	//--------------------------------------------------------------------------
 	function getMinutesFromTimeString( str ){
 		var s = str.split(':');
-		return parseInt(s[0]) * 60 + parseInt(s[1]);		
+		return parseInt(s[0]) * 60 + parseInt(s[1]);
+	}
+
+	function isOverlapWith( rData ){
+		if( this.getStartTime() >= rData.getEndTime() )	return false;
+		if( this.getEndTime() <= rData.getStartTime() )	return false;
+		return true;
 	}
 
 	//==========================================================================
