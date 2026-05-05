@@ -1,87 +1,143 @@
 # cedec_schedule
-CEDEC公式のスケジュールページを読み込み、部屋別のタイムスケジュールに整形して表示するページです。  
-CEDiLページからも読み込みを行い対応するリンクを追加しています。
 
-# 更新履歴
-2022/07/24 Ver.3.0 に更新  
-* 2011年～2019年までの設定を削除
+CEDEC非公式タイムスケジュール。CEDEC公式スケジュールページのデータを部屋別タイムテーブル形式で整形・表示します。  
+CEDiLに登録済みの資料リンクも自動付与します。
 
-2020/09/09 Ver.2.2 に更新  
-* 2020年のフォーマットに対応
+## 機能
 
-2019/07/06 Ver.2.1 に更新  
-* 2019年年のフォーマットに対応
+- 部屋別タイムテーブル表示
+- 分野フィルター（クリックで表示/非表示切り替え）
+- お気に入り登録（Cookieで保存・タップ長押しまたは星アイコンで操作）
+- 現在時刻の自動ハイライト（開催期間中は1分ごとに更新）
+- CEDiL資料リンクの自動付与
+- 非公式イベントの追加表示（`custom.js` で設定）
 
-2018/08/24 Ver.2.0 に更新
-* 2018年の新フォーマットに対応
-* 非公式イベントが追加可能に
-* ライブ配信セッションの情報に対応
-* CEDiLへのリンク情報をJSONに出力
-* CEDiLへのリンク情報をJSONから取得
+## 技術構成
 
-# 設計思想
-* 毎年の対応コストを下げる
+| ライブラリ | バージョン | 用途 |
+|---|---|---|
+| jQuery | 2.1.4 | DOM操作・Ajax |
+| jQuery Mobile | 1.4.5 | メニューパネル・ボタンUI |
+| js.cookie | - | お気に入り設定の保存 |
+| FontAwesome | 5.0.6 (CDN) | Twitterアイコン |
 
-# 仕組み
-* jQuery  
-Webアクセス。解析。ページ生成はjQueryを使用。
+## ファイル構成
 
-* クロスドメイン  
-~公式サイトへjQueryプラグイン「Cross-Domain Ajax mod」を使用しアクセス。  
-YQL(Yahoo Query Language)を使用していたが、2017年 YQLの仕様変更により、HTMLが非サポートに。  
-HTML stringは対応しているので、プラグインを書き換え使用。~
-2018年以降 CEDEC公式サイトにクロスドメイン対策が入った為、キャッシュ化が必要に。
-
-* CEDiLへのリンク  
-検索タグIDを元に毎回解析していたが、2018/08/24 バージョンで JSONからの読み込みに変更。
-~JSONファイルを作成するには、現状 cedil_to_json.jtmlを使用する~
-
-* スケジュールデータ・画像  
-ローディングアイコン等の最低限の画像しかサイトには存在せず、公式サイトの物を使用する。  
-
-# 年度別対応方法
-* ページ情報の更新( impl/cedil.js )
-```javascript
-var SCHEDULE_SETTING = [
-	{ 
-        year:"2018",
-        first_date:"0822",
-        domain:"https://2018.cedec.cesa.or.jp/",
-        format:'session#tab{day_no}',
-        single_page:true,
-        unit_setting: UNIT_SETTING,
-        convert_path:PATH_CONVERT_2018,
-        ...
-    },
-	{
-        year:"2017",
-        first_date:"0830",
-        domain:"http://cedec.cesa.or.jp/",
-        format:'2017/session/schedule_{date}/',	
-        unit_setting: {
-            selector	:	function( $xml, day_index ){
-                return $xml.find( "div.schedule_timeframe_normal" );
-            },
-            info_selector: "td",
-            param		:{
-                "room_no"		:	function($xml){ return $xml.find(".room_number").text();},
-                "start_time"	:	function($xml){ return $xml.find(".ss_time_start").text();},
-                "end_time"		:	function($xml){ return $xml.find(".ss_time_end").text();},
-                "main_spec"		:	function($xml){ return $xml.find(".ss_ippr_icon + img"); }
-            }
-        },
-        convert_path:function( $dom ){
-            var domain = this.domain;
-            $dom.find("a").each(function(){
-                // 相対パスを httpからのパスに変更
-            });	
-        },
-        cedil_tag_no:713
-    },
-    ...
-];
 ```
-* デフォルトページ設定( impl/index.js )  
-```javascript
-var DEFAULT_YEAR = 2018;
+cedec_schedule/
+├── index.html                    エントリーポイント
+├── main.css                      スタイル
+├── impl/
+│   ├── cedec.js                  年度設定・セッションデータモデル
+│   ├── cedil.js                  CEDiL資料リンクの取得・付与
+│   ├── custom.js                 非公式イベント設定
+│   ├── index.js                  メインアプリケーション
+│   └── lib/                      外部ライブラリ
+├── cgi/
+│   ├── generate_json.php         スケジュールJSON生成スクリプト
+│   └── generate_cedil.php        CEDiL JSONデータ生成スクリプト
+├── web_data_original/            公式サイトから取得したHTMLキャッシュ
+│   └── {year}/
+└── web_data/                     生成済みJSONデータ
+    └── {year}/
+        ├── schedule.json
+        └── cedil.json
 ```
+
+## 年度別対応方法
+
+### 1. 公式HTMLの取得・配置
+
+CEDEC公式スケジュールページのHTMLをブラウザで保存し、以下のパスに配置する。
+
+**2025年以降（日別ファイル形式）:**
+```
+web_data_original/{year}/day1.html
+web_data_original/{year}/day2.html
+web_data_original/{year}/day3.html
+```
+
+**2020〜2024年（1ファイル形式）:**
+```
+web_data_original/{year}/custom.html
+```
+
+### 2. schedule.json の生成
+
+```bash
+# 指定年度のみ生成
+php cgi/generate_json.php {year}
+
+# 全年度を一括生成
+php cgi/generate_json.php
+```
+
+生成結果は `web_data/{year}/schedule.json` に出力される。  
+公式サイトのHTMLフォーマットが変わった場合は、`cgi/generate_json.php` の該当パーサー関数を更新する。
+
+### 3. SCHEDULE_SETTING への追加（cedec.js）
+
+[impl/cedec.js](impl/cedec.js) の `SCHEDULE_SETTING` 配列の**先頭**に新年度の設定を追加する。
+
+```javascript
+{ year:"2026", first_date:"MMDD", domain:"https://cedec.cesa.or.jp/2026/", cedil_tag_no:XXX },
+```
+
+| パラメータ | 説明 |
+|---|---|
+| `year` | 開催年度 |
+| `first_date` | 初日の日付（MMDD形式）例: `"0820"` |
+| `domain` | 公式サイトURL |
+| `cedil_tag_no` | CEDiL検索タグID（CEDiLサイトで確認） |
+| `events` | 公式付随イベント設定（任意、後述） |
+
+公式イベント（Developers' Night等）がある場合は `events` に追加する:
+
+```javascript
+{ year:"2026", first_date:"MMDD", domain:"https://cedec.cesa.or.jp/2026/", cedil_tag_no:XXX,
+  events:[
+    { title:"Developers' Night", day_index:1, start_time:"19:30", end_time:"21:30", room_no:"多目的ホール",
+      html:'<a href="..." target="blank">詳細</a>' }
+  ]
+},
+```
+
+### 4. キャッシュ設定の更新（cedec.js）
+
+[impl/cedec.js](impl/cedec.js) の `CASH_SETTING` に、`web_data_original/` の公式HTMLを取得した日時を手動で記録する。  
+UIでデータ取得日時として表示される（CEDiLのような自動取得は未対応）。
+
+```javascript
+var CASH_SETTING = {
+     "2026":{ time:"2026/xx/xx xx:xx" }  // HTMLを取得した日時を記録
+    ,"2025":{ time:"2026/05/03 22:00" }
+    // ...
+}
+```
+
+### 5. 非公式イベントの追加（custom.js、任意）
+
+[impl/custom.js](impl/custom.js) に非公式イベント（懇親会等）を追加する。
+
+```javascript
+"2026": {
+    events: [
+        {
+            title:      "イベント名",
+            room_no:    "会場名",
+            day_index:  2,            // 1〜3（CEDECの開催日）
+            start_time: "19:00",
+            end_time:   "21:00",
+            html:       '<a href="..." target="blank">詳細</a>',
+            hash_tag:   "ハッシュタグ"  // 任意: Twitterリンクが自動生成される
+        }
+    ]
+}
+```
+
+## 更新履歴
+
+- 2025年 リファクタリング（jQuery UI削除・不要CSS削除・コード整理）
+- 2022/07/24 Ver.3.0: 2011〜2019年設定を削除
+- 2020/09/09 Ver.2.2: 2020年フォーマット対応
+- 2018/08/24 Ver.2.0: 2018年新フォーマット対応・CEDiLリンクをJSONに移行
