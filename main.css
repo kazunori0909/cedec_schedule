@@ -30,41 +30,13 @@ div#contents
 .spec_filter{
 	float:left;
 	background-color: #f0f0f0;
-	border-radius: 10px; /* CSS3 */
-	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */
-
-	display: -webkit-flex;
+	border-radius: 10px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	-webkit-align-items: center;
-	-webkit-justify-content: center;
 	padding:3px;
-	
 	margin-left: 6px;
 	margin-right: 6px;
-}
-
-.spec_filter > img{
-	margin:3px;
-	padding:3px;
-	cursor : pointer;
-}
-
-.spec_filter > img.hide{
-	width:29px;
-	height:9px;
-}
-
-
-.spec_filter > div.nav-link{
-	margin:3px;
-	padding:3px;
-	cursor : pointer;
-	text-shadow: none;
-}
-.spec_filter > div.nav-link.hide{
-	background-color: #c0c0c0;
 }
 
 .spec_filter > span{
@@ -77,18 +49,9 @@ div#contents
 }
 
 .favi {
-	width : 21px;	
+	width : 21px;
 	height : 20px;
 	float: right;
-}
-
-.media-body{
-    border-width: thin thin thin thick;
-    border-style: solid;
-    border-radius: 10px;
-    border-color: #c0c0c0;
-    padding: 4px;
-    margin-bottom: 4px;
 }
 
 /*---------------------------------------
@@ -129,8 +92,7 @@ div#contents
 
 #day_table td.session{
     padding:7px;
-	border-radius: 10px; /* CSS3 */
-	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */
+	border-radius: 10px;
 }
 
 #day_table td.session_color_style_normal{
@@ -148,8 +110,7 @@ div#contents
 
 #day_favorite_table td.session{
     padding:7px;
-	border-radius: 10px; /* CSS3 */
-	-webkit-border-radius: 10px; /* Safari,Google Chrome用 */
+	border-radius: 10px;
 }
 
 #day_favorite_table td.session_color_style_favorite{
@@ -172,10 +133,6 @@ p.room{
 	font-size: 120%;
 }
 
-
-/* ================================== */
-/* 2018 */
-/* ================================== */
 .session-title{
 	font-weight:bold;
 	border-bottom:dashed 1px;
@@ -189,187 +146,13 @@ p.room{
     text-decoration: underline;
 }
 
-
-div.nav-link.list.btn-top-session {
-	font-size:100%;
-    text-align: center;
-    margin-top: 5px; /* 20 */
-    padding: 0.1em 0.3em;
-    color: #FFFFFF !important;
-    border-radius: 18px;
-    text-transform: uppercase;
-    min-width: 40px;
-    height: 20px;
-    display: inline-block;
-}
-
-.btn-top-session.en,
-.btn-top-session.en.active {
-    background-color: #f29600;
-}
-
-.btn-top-session.pd,
-.btn-top-session.pd.active {
-    background-color: #1d2087;
-}
-
-.btn-top-session.va,
-.btn-top-session.va.active {
-    background-color: #dadf00;
-}
-
-.btn-top-session.bp,
-.btn-top-session.bp.active {
-    background-color: #2ca6e0;
-}
-
-.btn-top-session.sd,
-.btn-top-session.sd.active {
-    background-color: #1eaa39;
-}
-
-.btn-top-session.gd,
-.btn-top-session.gd.active {
-    background-color: #00a199;
-}
-
-.btn-top-session.ab,
-.btn-top-session.ab.active {
-    background-color: #910782;
-}
-.btn-top-session.ac,
-.btn-top-session.ac.active {
-    background-color: #910782;
-}
-
-.btn-top-session.key,
-.btn-top-session.key.active {
-    background-color: #c30d23;
-}
-
-.btn-top-session.ses-type,
-.btn-top-session.ses-type.active {
-    background-color: #395ca9;
-}
-
-.btn-top-session.ses-format,
-.btn-top-session.ses-format.active {
-    background-color: #ff00a7;
-}
-
-.btn-top-session.ses-subcategories,
-.btn-top-session.ses-subcategories.active {
-    background-color: #52ff1f;
-}
-
-div.nav-link.list.btn-top-session.ses-difficulty,
-div.nav-link.list.btn-top-session.ses-difficulty.active {
-    width: auto;
-    min-width: 24px;
-    text-align: center;
-    margin-top: 10px;
-}
-
-.list.btn-top-session.ses-difficulty.lv0 {
-    background-color: hsl(45, 60%, 50% );
-}
-.list.btn-top-session.ses-difficulty.lv1 {
-    background-color: hsl(30, 60%, 50% );
-}
-.list.btn-top-session.ses-difficulty.lv2 {
-    background-color: hsl(15, 60%, 50% );
-}
-.list.btn-top-session.ses-difficulty.lv3 {
-    background-color: hsl(0, 60%, 50% );
-}
-
-
-.list.btn-top-session.ses-type,
-.list.btn-top-session.ses-type.active {
-    border-radius: 8px;
-    min-width: 100px;
-    width: auto;
-    font-size: 14px;
-    display: inline-block;
-
-    background-color: #395ca9;
-}
-
-.btn-top-session.ses-format,
-.btn-top-session.ses-format.active {
-    background-color: #ff00a7;
-}
-
-div.nav-link.list.btn-top-session.ses-subcategory,
-div.nav-link.list.btn-top-session.ses-subcategory.active {
-    width: 36px;
-    min-width: 36px;
-    text-align: center;
-    margin-top: 10px;
-    transform-origin: left bottom;
-    transform: scale(0.75,0.75);
-    margin-right: -16px;
-}
-
-div.nav-link.list.btn-top-session.ses-sessiontags,
-div.nav-link.list.btn-top-session.ses-sessiontags.active {
-    background-color: #B0F0F0;       /* */
-    width: auto;
-    min-width: 24px;
-    text-align: center;
-    margin-top: 10px;
-    font-size: 21px;
-    padding-top: 0px;
-}
-
 td p{
 	margin-top:0px;
 	margin-bottom:0px;
 }
 
-div.speaker_info{
-	margin-top:0.5em;
-	margin-bottom:0.5em;
-}
-
-.ses-keywordtags {
-    width: auto !important;
-}
-.btn-top-session.keywordtags-1 {
-    background-color: #52ff1f;
-}
-.btn-top-session.keywordtags-2 {
-    background-color: #ff00a7;
-}
-.btn-top-session.keywordtags-3 {
-    background-color: #2ff7ff;
-}
-.btn-top-session.keywordtags-4 {
-    background-color: #28a745;
-}
-.btn-top-session.keywordtags-5 {
-    background-color: #c30d23;
-}
-
-.btn-time-shift {
-    background-color: transparent;
-    border-radius: 18px;
-    text-transform: uppercase;
-    min-width: 155px !important;
-	padding: 0.3rem;
-	text-align:center;
-}
-
-.btn-outline-green {
-    color: #6aa84f !important;
-    box-shadow: 0 0 0 2px #6aa84f;
-}
-
-
-
-
 /* ================================== */
-/* 2024 */
+/* timetable-category */
 /* ================================== */
 .timetable-category {
     font-size: 12px;
@@ -389,10 +172,6 @@ div.speaker_info{
 
 .timetable-category>span.sub {
     font-size: 0.7em;
-}
-
-.timetable-category>span.-key {
-    background-color: #c30d23
 }
 
 .timetable-category>span.-va {
@@ -433,16 +212,6 @@ div.speaker_info{
 
 .timetable-category >span.hide{
 	background-color: #c0c0c0;
-}
-
-.timetable-category>span.-prerecording,
-.timetable-category>span.-remote,
-.timetable-category>span.-nostreaming,
-.timetable-category>span.-kityo {
-    color: #343434;
-    background-color: #fff;
-    border: solid 1px #bcbcbc;
-    border-radius: 2px
 }
 
 div .speakers-item .speakers-company {
