@@ -67,7 +67,7 @@
 
 		startupHighlightInfo();
 
-		var dayIndex = parseInt(Cookies.get( m_year + '_dayIndex' )) || 0;
+		var dayIndex = parseInt(localStorage.getItem( m_year + '_dayIndex' )) || 0;
 		if( m_highlightInfo.enabled ){
 			// 開催期間中は日付優先
 			dayIndex = m_highlightInfo.dayIndex;
@@ -94,7 +94,7 @@
 				.attr( 'data_index', i )
 				.click(function(){
 					var index = $(this).attr('data_index');
-					Cookies.set( m_year + '_dayIndex', index, {expires:365*10} )
+					localStorage.setItem( m_year + '_dayIndex', index )
 					setTimeout( appendSessionSchedule, 10, parseInt( index ) );
 				})
 				.appendTo( $div );
@@ -189,19 +189,19 @@
 		$favorite.click(function(){
 			var $this = $(this);
 
-			if( Cookies.get( m_year + '_favorite_mode' ) !== undefined ){
-				Cookies.remove( m_year + '_favorite_mode' );
+			if( localStorage.getItem( m_year + '_favorite_mode' ) !== null ){
+				localStorage.removeItem( m_year + '_favorite_mode' );
 				$this.attr("src","./image/favorite_0.png");
 				$(CONTENTS_TABLE_SELECTOR).show();
 				$(CONTENTS_FAVORITE_TABLE_SELECTOR).remove();
 			}else{
-				Cookies.set( m_year + '_favorite_mode', '1', {expires:365*10} );
+				localStorage.setItem( m_year + '_favorite_mode', '1' );
 				$this.attr("src","./image/favorite_1.png");
 				appendFavoriteTable();
 			}
 		});
 		
-		if( Cookies.get( m_year + '_favorite_mode' ) !== undefined ){
+		if( localStorage.getItem( m_year + '_favorite_mode' ) !== null ){
 			$favorite
 				.addClass("favorite_mode")
 				.attr("src","./image/favorite_1.png");
@@ -405,11 +405,11 @@
 				if( $this.hasClass('hide') ){
 					$this.removeClass('hide');
 					m_hideInfo[spec]=undefined;
-					Cookies.remove( m_year + '_hide_' + spec );
+					localStorage.removeItem( m_year + '_hide_' + spec );
 				}else{
 					$this.addClass('hide');
 					m_hideInfo[spec]=true;
-					Cookies.set( m_year + '_hide_' + spec, '1', {expires:365} );
+					localStorage.setItem( m_year + '_hide_' + spec, '1' );
 				}
 
 				commitFilterInfoTo( $(CONTENTS_TABLE_SELECTOR) );
@@ -420,7 +420,7 @@
 				var $this = $(this);
 				var spec   = $this.attr('spec');
 
-				if( Cookies.get( m_year + '_hide_' + spec ) !== undefined ){
+				if( localStorage.getItem( m_year + '_hide_' + spec ) !== null ){
 					$this.addClass('hide');
 					m_hideInfo[spec]=true;
 				}
@@ -590,12 +590,12 @@
 						if( $td.hasClass('session_color_style_favorite') ){
 							$td.removeClass('session_color_style_favorite');
 							$this.attr('src','./image/favorite_0.png');
-							Cookies.remove( m_year + '_' + id );
+							localStorage.removeItem( m_year + '_' + id );
 							m_favoriteList[id] = undefined;
 						}else{
 							$td.addClass('session_color_style_favorite');
 							$this.attr('src','./image/favorite_1.png');
-							Cookies.set( m_year + '_' + id, '1', {expires:365*10} );
+							localStorage.setItem( m_year + '_' + id, '1' );
 							m_favoriteList[id] = { session:rSession, dom:$td };
 						}
 					});
@@ -617,11 +617,11 @@
 						var id = $this.attr('id');
 						if( $this.hasClass('session_color_style_favorite') ){
 							$this.removeClass('session_color_style_favorite');
-							Cookies.remove( m_year + '_' + id );
+							localStorage.removeItem( m_year + '_' + id );
 							m_favoriteList[id] = undefined;
 						}else{
 							$this.addClass('session_color_style_favorite');
-							Cookies.set( m_year + '_' + id, '1', {expires:365*10} );
+							localStorage.setItem( m_year + '_' + id, '1' );
 							m_favoriteList[id] = { session:rSession, dom:$this };
 						}
 					});
@@ -645,7 +645,7 @@
 				$td.attr( 'id', id );
 
 				// お気に入り登録の確認
-				if( Cookies.get( m_year + '_' + id ) !== undefined ){
+				if( localStorage.getItem( m_year + '_' + id ) !== null ){
 					if(FEATURE_CODE_FAVICON){
 						$favi.click();
 					}else{
