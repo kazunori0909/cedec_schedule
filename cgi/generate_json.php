@@ -23,7 +23,7 @@ $year_configs = array(
     '2022' => array('first_date' => '0823', 'domain' => 'https://cedec.cesa.or.jp/2022/', 'format' => 'format_2020'),
     '2023' => array('first_date' => '0823', 'domain' => 'https://cedec.cesa.or.jp/2023/', 'format' => 'format_2023'),
     '2024' => array('first_date' => '0821', 'domain' => 'https://cedec.cesa.or.jp/2024/', 'format' => 'format_2024'),
-    '2025' => array('first_date' => '0722', 'domain' => 'https://cedec.cesa.or.jp/2025/', 'format' => 'format_2025', 'split_files' => true),
+    '2025' => array('first_date' => '0722', 'domain' => 'https://cedec.cesa.or.jp/2025/', 'format' => 'format_2025', 'split_files' => true, 'live' => 'https://cedec.cesa.or.jp/2025/timetable/free_lives/'),
 );
 
 if (!empty($argv[1])) {
@@ -89,7 +89,13 @@ function process_year($base_dir, $year, $config)
         unset($dom, $xp);
     }
 
-    $sessions     = postprocess_sessions($sessions);
+    $live_map = array();
+    if (!empty($config['live'])) {
+        $live_map = fetch_live_sessions($config['live'], $config['first_date']);
+        echo "[INFO] LIVE配信URL: " . count($live_map) . " 件取得\n";
+    }
+
+    $sessions     = postprocess_sessions($sessions, $live_map);
     $json_content = generate_json($year, $config, $sessions);
 
     $output_dir = dirname($output_path);
@@ -452,6 +458,7 @@ function generate_json($year, $config, $sessions)
             'cancelled'   => (bool)$s['cancelled'],
             'speakers'    => $s['speakers'],
             'detail_url'  => $s['detail_url'],
+            'live'        => $s['live'],
         );
     }
 
@@ -483,7 +490,7 @@ function extract_cancelled($title)
 }
 
 /** データ取得後・保存前に全セッションへ適用する加工処理 */
-function postprocess_sessions($sessions)
+function postprocess_sessions($sessions, $live_map = array())
 {
     foreach ($sessions as &$s) {
         $s['title'] = normalize_whitespace($s['title']);
@@ -495,9 +502,90 @@ function postprocess_sessions($sessions)
             $sp['company'] = abbreviate_company($sp['company']);
         }
         unset($sp);
+
+        $s['live'] = isset($live_map[$s['session_id']]) ? $live_map[$s['session_id']] : null;
     }
     unset($s);
     return $sessions;
+}
+
+/**
+ * LIVEページを取得し、session_id => YouTube URL のマッピングを返す
+ *
+ * ページ構造:
+ *   .p-session__time-item  日付ブロック（YouTube URL一覧）
+ *     .p-session__time-title  "7月22日（火）"
+ *     .p-session__time-body   会場名 + <a href="youtube URL">
+ *   .c-guide-card__link  セッションカード
+ *     .c-session__date    "7/22"
+ *     .c-session__venue   "第1会場"
+ */
+function fetch_live_sessions($live_url, $first_date)
+{
+    $html = @file_get_contents($live_url);
+    if ($html === false) {
+        echo "[WARN] LIVEページの取得に失敗しました: {$live_url}\n";
+        return array();
+    }
+
+    $dom = new DOMDocument();
+    libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
+    libxml_clear_errors();
+    $xp = new DOMXPath($dom);
+
+    $first_month = (int)substr($first_date, 0, 2);
+    $first_day   = (int)substr($first_date, 2, 2);
+
+    // 1. {day_index}_{room_no} => YouTube URL のマッピングを構築
+    $room_youtube = array();
+    foreach (xp_nodes($xp, "//*[" . cls('p-session__time-item') . "]") as $item) {
+        $title_text = xp_text($xp, ".//*[" . cls('p-session__time-title') . "]", $item);
+        preg_match('/(\d+)月(\d+)日/', $title_text, $dm);
+        if (!$dm) continue;
+        $day_index = day_index_from_date((int)$dm[1], (int)$dm[2], $first_month, $first_day);
+
+        foreach (xp_nodes($xp, ".//*[" . cls('p-session__time-body') . "]", $item) as $body) {
+            $room_text = xp_text($xp, './/span[1]', $body);
+            $room_no   = room_no_from_text($room_text);
+            $link      = xp_first($xp, './/a', $body);
+            $youtube   = $link ? get_attr($link, 'href') : '';
+            if ($room_no !== '' && $youtube !== '') {
+                $room_youtube["{$day_index}_{$room_no}"] = $youtube;
+            }
+        }
+    }
+
+    // 2. セッションカードから session_id => YouTube URL を解決
+    $result = array();
+    foreach (xp_nodes($xp, "//a[" . cls('c-guide-card__link') . "]") as $card) {
+        $href = get_attr($card, 'href');
+        preg_match('/\/detail\/([^\/]+)/', $href, $m);
+        if (!$m) continue;
+        $session_id = $m[1];
+
+        $date_text  = xp_text($xp, ".//*[" . cls('c-session__date') . "]", $card);
+        $venue_text = xp_text($xp, ".//*[" . cls('c-session__venue') . "]", $card);
+        preg_match('/(\d+)\/(\d+)/', $date_text, $dm);
+        if (!$dm) continue;
+        $day_index = day_index_from_date((int)$dm[1], (int)$dm[2], $first_month, $first_day);
+        $room_no   = room_no_from_text($venue_text);
+
+        $key = "{$day_index}_{$room_no}";
+        if (isset($room_youtube[$key])) {
+            $result[$session_id] = $room_youtube[$key];
+        }
+    }
+
+    return $result;
+}
+
+/** 月・日から開催初日基準の day_index (1〜3) を計算する */
+function day_index_from_date($month, $day, $first_month, $first_day)
+{
+    $ts_first = mktime(0, 0, 0, $first_month, $first_day, 2000);
+    $ts_event = mktime(0, 0, 0, $month,       $day,       2000);
+    return (int)(($ts_event - $ts_first) / 86400) + 1;
 }
 
 /** 改行・連続空白を半角スペース1つに正規化し、前後の空白を除去する */
