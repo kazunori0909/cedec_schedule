@@ -89,6 +89,7 @@ function process_year($base_dir, $year, $config)
         unset($dom, $xp);
     }
 
+    $sessions     = postprocess_sessions($sessions);
     $json_content = generate_json($year, $config, $sessions);
 
     $output_dir = dirname($output_path);
@@ -308,7 +309,7 @@ function parse_format_2024(DOMXPath $xp)
                 $speakers = array();
                 foreach (xp_nodes($xp, ".//*[" . cls('speakers-item') . "]", $item) as $sp_el) {
                     $name    = xp_text($xp, ".//*[" . cls('speakers-name') . "]", $sp_el);
-                    $company = abbreviate_company(xp_text($xp, ".//*[" . cls('speakers-company') . "]", $sp_el));
+                    $company = xp_text($xp, ".//*[" . cls('speakers-company') . "]", $sp_el);
                     if ($name !== '') $speakers[] = compact('name', 'company');
                 }
 
@@ -399,7 +400,7 @@ function parse_format_2025(DOMXPath $xp, $day = null)
                 foreach (xp_nodes($xp,
                     ".//*[" . cls('c-timetable__list__session__speakers') . "]//li", $ses_el) as $li) {
                     $name    = xp_text($xp, './/span', $li);
-                    $company = abbreviate_company(preg_replace('/^\s*\/\s*/', '', xp_text($xp, './/small', $li)));
+                    $company = preg_replace('/^\s*\/\s*/', '', xp_text($xp, './/small', $li));
                     if ($name !== '') $speakers[] = compact('name', 'company');
                 }
 
@@ -481,14 +482,38 @@ function extract_cancelled($title)
     return strpos($title, '【講演キャンセル】') !== false;
 }
 
-/** 会社名の法人格を略称に変換 */
+/** データ取得後・保存前に全セッションへ適用する加工処理 */
+function postprocess_sessions($sessions)
+{
+    foreach ($sessions as &$s) {
+        $s['title'] = normalize_whitespace($s['title']);
+        foreach ($s['speakers'] as &$sp) {
+            // 「\n     」のような、不要な文字列が混入することがあるので、削除
+            $sp['name']    = str_replace('　', ' ', $sp['name']);
+            $sp['name']    = normalize_whitespace($sp['name']);
+            // 会社名が長くなるので略語対応
+            $sp['company'] = abbreviate_company($sp['company']);
+        }
+        unset($sp);
+    }
+    unset($s);
+    return $sessions;
+}
+
+/** 改行・連続空白を半角スペース1つに正規化し、前後の空白を除去する */
+function normalize_whitespace($str)
+{
+    return trim(preg_replace('/[\r\n\t ]+/', ' ', $str));
+}
+
+/** 会社名の法人格を略称に変換（前後の半角スペースも除去） */
 function abbreviate_company($company)
 {
-    return str_replace(
-        array('株式会社', '有限会社', '合同会社'),
-        array('(株)',     '(有)',     '(同)'),
-        $company
-    );
+    $map = array('株式会社' => '(株)', '有限会社' => '(有)', '合同会社' => '(同)');
+    foreach ($map as $full => $abbr) {
+        $company = preg_replace('/\s*' . preg_quote($full, '/') . '\s*/', $abbr, $company);
+    }
+    return $company;
 }
 
 /** 2020/2021/2022/2023 の .session-speakers からスピーカー配列を返す */
@@ -497,7 +522,7 @@ function extract_speakers_legacy(DOMXPath $xp, DOMNode $ctx)
     $speakers = array();
     foreach (xp_nodes($xp, ".//*[" . cls('session-speakers') . "]//li", $ctx) as $li) {
         $name    = xp_text($xp, ".//*[" . cls('name') . "]//b", $li);
-        $company = abbreviate_company(xp_text($xp, ".//*[" . cls('prof') . "]//p", $li));
+        $company = xp_text($xp, ".//*[" . cls('prof') . "]//p", $li);
         if ($name !== '') $speakers[] = compact('name', 'company');
     }
     return $speakers;
