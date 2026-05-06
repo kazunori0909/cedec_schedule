@@ -246,7 +246,7 @@ var CEDEC = (function($){
 		}
 
 		// 資料公開（CEDiLリンク置換のターゲット）
-		$div.append(' 資料公開: 不明');
+		$('<span class="cedil-status"/>').text(' 資料公開: 不明').appendTo( $div );
 
 		return $div;
 	}
