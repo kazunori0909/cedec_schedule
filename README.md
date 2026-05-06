@@ -20,7 +20,6 @@ CEDiLに登録済みの資料リンクも自動付与します。
 |---|---|---|
 | jQuery | 2.1.4 | DOM操作・Ajax |
 | jQuery Mobile | 1.4.5 | メニューパネル・ボタンUI |
-| FontAwesome | 5.0.6 (CDN) | Twitterアイコン |
 
 ## ファイル構成
 
@@ -166,7 +165,7 @@ var CASH_SETTING = {
             start_time: "19:00",
             end_time:   "21:00",
             html:       '<a href="..." target="blank">詳細</a>',
-            hash_tag:   "ハッシュタグ"  // 任意: Twitterリンクが自動生成される
+            hash_tag:   "ハッシュタグ"  // 任意: XリンクとXアイコンが自動生成される
         }
     ]
 }

@@ -263,7 +263,7 @@ var CEDEC = (function($){
 			for(var i=0;i<temp.length;++i) {
 				contents.push( '#' + temp[i] );
 				contents.push( '　' );
-				contents.push( '<a href="https://x.com/hashtag/' + temp[i] + '" target="blank"><i class="fab fa-2x fa-twitter-square"></i></a>' );
+				contents.push( '<a href="https://x.com/hashtag/' + temp[i] + '" target="blank"><img src="image/x_icon.png" width="12" height="12" alt="X"></a>' );
 				contents.push( '<br/>' );
 			}
 		}
