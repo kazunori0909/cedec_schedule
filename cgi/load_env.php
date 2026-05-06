@@ -8,7 +8,10 @@
 function load_env($path = null)
 {
     if ($path === null) {
-        $path = realpath(__DIR__ . '/../.env');
+        // プロジェクトルート優先、なければ cgi/ 直下を参照
+        $root = __DIR__ . '/../.env';
+        $cgi  = __DIR__ . '/.env';
+        $path = file_exists($root) ? realpath($root) : (file_exists($cgi) ? $cgi : null);
     }
     if (!$path || !file_exists($path)) {
         return;
