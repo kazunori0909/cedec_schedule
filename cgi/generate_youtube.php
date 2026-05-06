@@ -72,30 +72,34 @@ do {
         preg_match('/【CEDEC(\d{4})】/', $title, $m);
         $year = isset($m[1]) ? $m[1] : null;
 
+        // 2019年以前・年度不明はスキップ
+        if ($year === null || (int)$year < 2020) continue;
+
         // プレフィックスを除いたセッションタイトル
         $session_title = trim(preg_replace('/^【CEDEC\d{4}】\s*/', '', $title));
 
-        $videos[] = array(
+        $videos[$year][] = array(
             'video_id'      => $video_id,
-            'year'          => $year,
-            'title'         => $title,
             'session_title' => $session_title,
             'url'           => 'https://www.youtube.com/watch?v=' . $video_id,
-            'published_at'  => $snippet['publishedAt'],
         );
     }
 
     $page_token = isset($data['nextPageToken']) ? $data['nextPageToken'] : null;
-    echo "[INFO] ページ {$page}: " . count($data['items']) . " 件取得 (累計: " . count($videos) . " 件)\n";
+    echo "[INFO] ページ {$page}: " . count($data['items']) . " 件取得\n";
     $page++;
 
 } while ($page_token);
 
+// 年度降順にソート
+krsort($videos);
+
+$total  = array_sum(array_map('count', $videos));
 $output = array(
     'generated' => date('c'),
-    'total'     => count($videos),
-    'videos'    => $videos,
+    'total'     => $total,
+    'videos'    => (object)$videos,
 );
 
 file_put_contents($cache_path, json_encode($output, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
-echo "[OK] {$cache_path} に " . count($videos) . " 件を保存しました\n";
+echo "[OK] {$cache_path} に {$total} 件を保存しました\n";
