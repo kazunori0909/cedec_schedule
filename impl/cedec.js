@@ -183,7 +183,7 @@ var CEDEC = (function($){
 			getEndTime			: function(){ return getMinutesFromTimeString( session.end ); },
 			isOverlap			: isOverlapWith,
 			getMainSpecObject	: function(){ return m_$main.find('.timetable-category > span:first'); },
-			getYoutubeURL		: function(){ return undefined; },
+			getYoutubeURL		: function(){ return session.live || undefined; },
 			getNiconamaURL		: function(){ return undefined; }
 		};
 	}
