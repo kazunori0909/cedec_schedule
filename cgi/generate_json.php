@@ -91,7 +91,8 @@ function process_year($base_dir, $year, $config)
 
     $live_map = array();
     if (!empty($config['live'])) {
-        $live_map = fetch_live_sessions($config['live'], $config['first_date']);
+        $live_cache = "{$base_dir}/web_data_original/{$year}/live.html";
+        $live_map   = fetch_live_sessions($config['live'], $config['first_date'], $live_cache);
         echo "[INFO] LIVE配信URL: " . count($live_map) . " 件取得\n";
     }
 
@@ -522,12 +523,20 @@ function postprocess_sessions($sessions, $live_map = array())
  *     .c-session__date    "7/22"
  *     .c-session__venue   "第1会場"
  */
-function fetch_live_sessions($live_url, $first_date)
+function fetch_live_sessions($live_url, $first_date, $cache_path)
 {
-    $html = @file_get_contents($live_url);
-    if ($html === false) {
-        echo "[WARN] LIVEページの取得に失敗しました: {$live_url}\n";
-        return array();
+    if (file_exists($cache_path)) {
+        echo "[INFO] LIVEページをキャッシュから読み込みます: {$cache_path}\n";
+        $html = file_get_contents($cache_path);
+    } else {
+        echo "[INFO] LIVEページをフェッチします: {$live_url}\n";
+        $html = @file_get_contents($live_url);
+        if ($html === false) {
+            echo "[WARN] LIVEページの取得に失敗しました: {$live_url}\n";
+            return array();
+        }
+        file_put_contents($cache_path, $html);
+        echo "[INFO] LIVEページを保存しました: {$cache_path}\n";
     }
 
     $dom = new DOMDocument();
