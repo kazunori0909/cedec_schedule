@@ -91,11 +91,15 @@ function process_year($base_dir, $year, $config)
 
     $live_map = array();
     if (!empty($config['live'])) {
-        $live_map = fetch_live_sessions($config['live'], $config['first_date']);
+        $live_cache = "{$base_dir}/web_data_original/{$year}/live.html";
+        $live_map   = fetch_live_sessions($config['live'], $config['first_date'], $live_cache);
         echo "[INFO] LIVE配信URL: " . count($live_map) . " 件取得\n";
     }
 
-    $sessions     = postprocess_sessions($sessions, $live_map);
+    $youtube_map  = build_youtube_map($base_dir, $year);
+    $event_over   = is_event_over((int)$year, $config['first_date']);
+    if ($event_over) echo "[INFO] 会期終了後モード: liveパラメータを処理します\n";
+    $sessions     = postprocess_sessions($sessions, $live_map, $youtube_map, $event_over);
     $json_content = generate_json($year, $config, $sessions);
 
     $output_dir = dirname($output_path);
@@ -458,9 +462,10 @@ function generate_json($year, $config, $sessions)
             'speakers'    => $s['speakers'],
             'detail_url'  => $s['detail_url'],
         );
-        if (!empty($sub_category))  $entry['sub_category'] = $sub_category;
-        if ($s['cancelled'])        $entry['cancelled']    = true;
-        if ($s['live'] !== null)    $entry['live']         = $s['live'];
+        if (!empty($sub_category))      $entry['sub_category'] = $sub_category;
+        if ($s['cancelled'])            $entry['cancelled']    = true;
+        if ($s['live'] !== null)        $entry['live']         = $s['live'];
+        if ($s['youtube'] !== null)     $entry['youtube']      = $s['youtube'];
         $data['sessions'][] = $entry;
     }
 
@@ -485,6 +490,15 @@ function parse_time_range($text)
     return array(isset($m[1]) ? $m[1] : '', isset($m[2]) ? $m[2] : '');
 }
 
+/** 開催最終日（初日+2日）の翌日以降であれば true を返す */
+function is_event_over($year, $first_date)
+{
+    $month    = (int)substr($first_date, 0, 2);
+    $day      = (int)substr($first_date, 2, 2);
+    $last_day = mktime(0, 0, 0, $month, $day + 2, $year); // 3日間開催
+    return time() > $last_day + 86400;
+}
+
 /** タイトルに「【講演キャンセル】」が含まれているかを返す */
 function extract_cancelled($title)
 {
@@ -492,7 +506,7 @@ function extract_cancelled($title)
 }
 
 /** データ取得後・保存前に全セッションへ適用する加工処理 */
-function postprocess_sessions($sessions, $live_map = array())
+function postprocess_sessions($sessions, $live_map = array(), $youtube_map = array(), $event_over = false)
 {
     foreach ($sessions as &$s) {
         $s['title'] = normalize_whitespace($s['title']);
@@ -505,7 +519,21 @@ function postprocess_sessions($sessions, $live_map = array())
         }
         unset($sp);
 
-        $s['live'] = isset($live_map[$s['session_id']]) ? $live_map[$s['session_id']] : null;
+        $live    = isset($live_map[$s['session_id']]) ? $live_map[$s['session_id']] : null;
+        $youtube = find_youtube_url($s['title'], $youtube_map);
+
+        if ($event_over && $live !== null) {
+            if ($youtube === null) {
+                // 基調講演・CEDEC Awards等: YouTubeチャンネルに再投稿されないため
+                // live URLをyoutubeパラメータに変換して永続化する
+                $youtube = $live;
+            }
+            // 会期後はliveパラメータを削除
+            $live = null;
+        }
+
+        $s['live']    = $live;
+        $s['youtube'] = $youtube;
     }
     unset($s);
     return $sessions;
@@ -522,12 +550,20 @@ function postprocess_sessions($sessions, $live_map = array())
  *     .c-session__date    "7/22"
  *     .c-session__venue   "第1会場"
  */
-function fetch_live_sessions($live_url, $first_date)
+function fetch_live_sessions($live_url, $first_date, $cache_path)
 {
-    $html = @file_get_contents($live_url);
-    if ($html === false) {
-        echo "[WARN] LIVEページの取得に失敗しました: {$live_url}\n";
-        return array();
+    if (file_exists($cache_path)) {
+        echo "[INFO] LIVEページをキャッシュから読み込みます: {$cache_path}\n";
+        $html = file_get_contents($cache_path);
+    } else {
+        echo "[INFO] LIVEページをフェッチします: {$live_url}\n";
+        $html = @file_get_contents($live_url);
+        if ($html === false) {
+            echo "[WARN] LIVEページの取得に失敗しました: {$live_url}\n";
+            return array();
+        }
+        file_put_contents($cache_path, $html);
+        echo "[INFO] LIVEページを保存しました: {$cache_path}\n";
     }
 
     $dom = new DOMDocument();
@@ -588,6 +624,65 @@ function day_index_from_date($month, $day, $first_month, $first_day)
     $ts_first = mktime(0, 0, 0, $first_month, $first_day, 2000);
     $ts_event = mktime(0, 0, 0, $month,       $day,       2000);
     return (int)(($ts_event - $ts_first) / 86400) + 1;
+}
+
+/**
+ * youtube_videos.json から指定年度の session_title => url マッピングを構築する。
+ * キーはタイトル正規化済み。
+ */
+function build_youtube_map($base_dir, $year)
+{
+    $cache = "{$base_dir}/web_data_original/youtube_videos.json";
+    if (!file_exists($cache)) return array();
+
+    $data   = json_decode(file_get_contents($cache), true);
+    $videos = isset($data['videos'][$year]) ? $data['videos'][$year] : array();
+
+    $map = array();
+    foreach ($videos as $v) {
+        $key = normalize_title_for_match($v['session_title']);
+        $map[$key] = $v['url'];
+    }
+    return $map;
+}
+
+/**
+ * セッションタイトルに対応する YouTube URL を返す。
+ *
+ * マッチング戦略:
+ *   1. 正規化後の完全一致
+ *   2. YouTubeタイトルが切り捨てられているケース:
+ *      スケジュールタイトルがYTタイトルで始まる（20文字以上の場合のみ）
+ */
+function find_youtube_url($session_title, $youtube_map)
+{
+    if (empty($youtube_map)) return null;
+
+    $norm = normalize_title_for_match($session_title);
+
+    // 1. 完全一致
+    if (isset($youtube_map[$norm])) return $youtube_map[$norm];
+
+    // 2. YouTubeタイトルが切り捨てられた場合（スケジュール側が長い）
+    foreach ($youtube_map as $yt_norm => $url) {
+        if (mb_strlen($yt_norm) >= 20 && mb_strpos($norm, $yt_norm) === 0) {
+            return $url;
+        }
+    }
+    return null;
+}
+
+/**
+ * タイトルをマッチング比較用に正規化する。
+ *   - 【...】ブロックをすべて除去（スポンサータグ・キャンセルタグ等）
+ *   - スラッシュ前後のスペースを統一（"A / B" → "A/B"）
+ *   - 連続空白・改行を1スペースに圧縮
+ */
+function normalize_title_for_match($title)
+{
+    $title = preg_replace('/【[^】]+】\s*/u', '', $title);
+    $title = preg_replace('/\s*\/\s*/', '/', $title);
+    return trim(preg_replace('/\s+/', ' ', $title));
 }
 
 /** 改行・連続空白を半角スペース1つに正規化し、前後の空白を除去する */
