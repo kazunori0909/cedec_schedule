@@ -183,7 +183,13 @@ var CEDEC = (function($){
 			getEndTime			: function(){ return getMinutesFromTimeString( session.end ); },
 			isOverlap			: isOverlapWith,
 			getMainSpecObject	: function(){ return m_$main.find('.timetable-category > span:first'); },
-			getYoutubeURL		: function(){ return session.live || undefined; },
+			getYoutubeURL		: function(){
+				if( session.live ) return session.live;
+				// 会期後は基調講演・CEDEC Awardsのみyoutubeリンクを表示
+				var isKeynoteOrAward = session.category === '基調講演'
+					|| ( session.title && session.title.indexOf('CEDEC AWARD') !== -1 );
+				return ( isKeynoteOrAward && session.youtube ) ? session.youtube : undefined;
+			},
 			getNiconamaURL		: function(){ return undefined; }
 		};
 	}
