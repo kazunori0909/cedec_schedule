@@ -445,23 +445,22 @@ function generate_json($year, $config, $sessions)
     foreach ($sessions as $s) {
         if ($s['title'] === '') continue;
 
+        $sub_category = array_values(array_filter(array_map('trim', explode(',', $s['sub_category']))));
         $entry = array(
-            'id'           => $s['session_id'],
-            'day'          => (string)$s['day'],
-            'room'         => $s['room_no'],
-            'start'        => $s['start'],
-            'end'          => $s['end'],
-            'category'     => $s['category'],
-            'sub_category' => array_values(array_filter(array_map('trim', explode(',', $s['sub_category'])))),
-            'data_filter'  => $s['data_filter'],
-            'title'        => $s['title'],
-            'cancelled'    => (bool)$s['cancelled'],
-            'speakers'     => $s['speakers'],
-            'detail_url'   => $s['detail_url'],
+            'id'          => $s['session_id'],
+            'day'         => (string)$s['day'],
+            'room'        => $s['room_no'],
+            'start'       => $s['start'],
+            'end'         => $s['end'],
+            'category'    => $s['category'],
+            'data_filter' => $s['data_filter'],
+            'title'       => $s['title'],
+            'speakers'    => $s['speakers'],
+            'detail_url'  => $s['detail_url'],
         );
-        if ($s['live'] !== null) {
-            $entry['live'] = $s['live'];
-        }
+        if (!empty($sub_category))  $entry['sub_category'] = $sub_category;
+        if ($s['cancelled'])        $entry['cancelled']    = true;
+        if ($s['live'] !== null)    $entry['live']         = $s['live'];
         $data['sessions'][] = $entry;
     }
 
