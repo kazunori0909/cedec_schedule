@@ -194,10 +194,12 @@ function parse_format_2020(DOMXPath $xp)
             $sub_category = xp_text($xp,
                 ".//*[" . cls('btn-top-session') . " and " . cls('cate-type') . " and " . cls('ses-subcategory') . "]",
                 $el);
-            // 分野なし (基調講演等) は ses-type にフォールバック
+            // 分野なし (基調講演等) は ses-type にフォールバック（セッション種別は除外）
+            $excluded_session_types = ['公募', '招待'];
             if ($category === '') {
-                $category = xp_text($xp,
+                $ses_type = xp_text($xp,
                     ".//*[" . cls('btn-top-session') . " and " . cls('ses-type') . "]", $modal);
+                if (!in_array($ses_type, $excluded_session_types)) $category = $ses_type;
             }
 
             $speakers   = extract_speakers_legacy($xp, $el);
@@ -254,10 +256,12 @@ function parse_format_2023(DOMXPath $xp)
             $sub_category = xp_text($xp,
                 ".//*[" . cls('btn-top-session') . " and " . cls('cate-type') . " and " . cls('ses-subcategory') . "]",
                 $sp);
-            // 分野なし (基調講演等) は ses-type にフォールバック
+            // 分野なし (基調講演等) は ses-type にフォールバック（セッション種別は除外）
+            $excluded_session_types = ['公募', '招待'];
             if ($category === '') {
-                $category = $modal ? xp_text($xp,
+                $ses_type = $modal ? xp_text($xp,
                     ".//*[" . cls('btn-top-session') . " and " . cls('ses-type') . "]", $modal) : '';
+                if (!in_array($ses_type, $excluded_session_types)) $category = $ses_type;
             }
 
             $speakers   = extract_speakers_legacy($xp, $sp);
@@ -314,6 +318,8 @@ function parse_format_2024(DOMXPath $xp)
                 }
 
                 $category  = xp_text($xp, "(.//div[" . cls('timetable-category') . "]/span)[1]", $item);
+                $exclude_categories_2024 = ['事前収録', '事前収録講演'];
+                if (in_array($category, $exclude_categories_2024)) $category = '';
                 $title = xp_text($xp, ".//*[" . cls('timetable-title') . "]", $item);
 
                 $speakers = array();
@@ -375,10 +381,11 @@ function parse_format_2025(DOMXPath $xp, $day = null)
                 // 分野リスト (ENG/VA等) を __categories__item から取得
                 $cat_nodes = xp_nodes($xp,
                     ".//*[" . cls('c-timetable__list__session__categories__item') . "]", $ses_el);
+                $exclude_categories = ['事前収録講演'];
                 $cat_texts = array();
                 foreach ($cat_nodes as $cn) {
                     $t = trim($cn->textContent);
-                    if ($t !== '') $cat_texts[] = $t;
+                    if ($t !== '' && !in_array($t, $exclude_categories)) $cat_texts[] = $t;
                 }
                 $category     = isset($cat_texts[0]) ? $cat_texts[0] : '';
                 $sub_category = implode(',', array_slice($cat_texts, 1));
@@ -389,7 +396,7 @@ function parse_format_2025(DOMXPath $xp, $day = null)
                 if ($category === '') {
                     $format = xp_text($xp, ".//*[" . cls('c-timetable__list__session__format') . "]", $ses_el);
                     $type   = xp_text($xp, ".//*[" . cls('c-timetable__list__session__type') . "]", $ses_el);
-                    $generic_formats = ['レギュラーセッション', 'ショートセッション', 'ライトニングトーク', 'CEDEC AWARDS', '主催者挨拶'];
+                    $generic_formats = ['レギュラーセッション', 'ショートセッション', 'ライトニングトーク', 'CEDEC AWARDS', '主催者挨拶', '事前収録講演'];
                     if (!in_array($format, $generic_formats)) {
                         $category = $format !== '' ? $format : $type;
                     }
