@@ -9,8 +9,6 @@
 	var MIN_MINUTES	= 5;
 	var DEFAULT_YEAR = 2025;
 
-	var FEATURE_CODE_FAVICON = false;
-
 	// DOM関連
 	var CONTENTS_BODY_SELECTOR = '#contents_body';
 	var CONTENTS_HEADER_SELECTOR = '#contents_header';
@@ -413,8 +411,6 @@
 
 				commitFilterInfoTo( $(CONTENTS_TABLE_SELECTOR) );
 
-				// crossDomain では動作せず
-				//this.src =  grayscale(this.src);
 			}).each(function(){
 				var $this = $(this);
 				var spec   = $this.attr('spec');
@@ -579,27 +575,6 @@
 				}
 
 
-				var $favi = "";
-				if( FEATURE_CODE_FAVICON) { 
-					$favi = $('<img class="favi" src="./image/favorite_0.png">');
-					$favi.click(function(){
-						var $this = $(this);
-						var $td = $(this).closest("td");
-						var id = $td.attr('id');
-						if( $td.hasClass('session_color_style_favorite') ){
-							$td.removeClass('session_color_style_favorite');
-							$this.attr('src','./image/favorite_0.png');
-							localStorage.removeItem( m_year + '_' + id );
-							m_favoriteList[id] = undefined;
-						}else{
-							$td.addClass('session_color_style_favorite');
-							$this.attr('src','./image/favorite_1.png');
-							localStorage.setItem( m_year + '_' + id, '1' );
-							m_favoriteList[id] = { session:rSession, dom:$td };
-						}
-					});
-				}
-
 				// 一度空にしておく
 				// セッションキャンセル時対応。後優先
 				$td.empty()
@@ -610,24 +585,21 @@
 					})
 					.addClass( "session_color_style_normal" );
 
-				if( !FEATURE_CODE_FAVICON) {
-					$td.on("taphold dblclick",function(){
-						var $this = $(this);
-						var id = $this.attr('id');
-						if( $this.hasClass('session_color_style_favorite') ){
-							$this.removeClass('session_color_style_favorite');
-							localStorage.removeItem( m_year + '_' + id );
-							m_favoriteList[id] = undefined;
-						}else{
-							$this.addClass('session_color_style_favorite');
-							localStorage.setItem( m_year + '_' + id, '1' );
-							m_favoriteList[id] = { session:rSession, dom:$this };
-						}
-					});
-				}
+				$td.on("taphold dblclick",function(){
+					var $this = $(this);
+					var id = $this.attr('id');
+					if( $this.hasClass('session_color_style_favorite') ){
+						$this.removeClass('session_color_style_favorite');
+						localStorage.removeItem( m_year + '_' + id );
+						m_favoriteList[id] = undefined;
+					}else{
+						$this.addClass('session_color_style_favorite');
+						localStorage.setItem( m_year + '_' + id, '1' );
+						m_favoriteList[id] = { session:rSession, dom:$this };
+					}
+				});
 
 				$td.append([
-						$favi,
 						$room,
 						"<hr/>",
 						rSession.main
@@ -645,12 +617,8 @@
 
 				// お気に入り登録の確認
 				if( localStorage.getItem( m_year + '_' + id ) !== null ){
-					if(FEATURE_CODE_FAVICON){
-						$favi.click();
-					}else{
-						$td.addClass('session_color_style_favorite');
-						m_favoriteList[id] = { session:rSession, dom:$td };
-					}
+					$td.addClass('session_color_style_favorite');
+					m_favoriteList[id] = { session:rSession, dom:$td };
 				}
 
 				// ライブ配信設定
@@ -1010,61 +978,21 @@
 		$(CONTENTS_TABLE_SELECTOR + "," + CONTENTS_FAVORITE_TABLE_SELECTOR)
 			.find('.session').each(function(){
 				var $this = $(this);
-
-				if( m_year >= 2020){
-					var title = $this.find('.session-title').text()
-									.replace(/\n/g, "")
-									.replace(/ /g, "")
-									.replace(/　/g, "")
-									.replace(/\t/g, "");
-					for( var i = 0 ; i < list.length ; ++i ){
-						if( list[i].date ){
-							if( current_date != list[i].date ) continue;
-						}
-						if( title.indexOf( list[i].title ) == -1 ) continue;
-
-						// 「資料公開: 不明」を「公開済み」リンクに置換する
-						$this.find('.cedil-status').html(
-							'資料公開: <a href="' + list[i].url + '#breadcrumbs" target="blank">公開済み</a>'
-						);
-						break;
+				var title = $this.find('.session-title').text()
+								.replace(/\n/g, "")
+								.replace(/ /g, "")
+								.replace(/　/g, "")
+								.replace(/\t/g, "");
+				for( var i = 0 ; i < list.length ; ++i ){
+					if( list[i].date ){
+						if( current_date != list[i].date ) continue;
 					}
-				}else if( m_year >= 2018) {
-					var title = $this.find('.session-title').text()
-									.replace(/\n/g, "")
-									.replace(/ /g, "")
-									.replace(/　/g, "")
-									.replace(/\t/g, "");
-					for( var i = 0 ; i < list.length ; ++i ){
-						if( list[i].date ){
-							if( current_date != list[i].date ) continue;
-						}
-						if( title.indexOf( list[i].title ) == -1 ) continue;
+					if( title.indexOf( list[i].title ) == -1 ) continue;
 
-						// 「□ 資料公開: 予定あり」「□ 資料公開: 予定なし」を置換する
-						var $detail = $this.find(".detail-session-meta-top");
-						$detail.html( $detail.html().replace(
-											new RegExp('(□ 資料公開:)(.*)(<br>)','g'),
-											'$1<a href="' + list[i].url +'#breadcrumbs" target="blank">公開済み</a>$3'
-										)
-									);
-						break;
-					}
-				}else{
-					if( $this.text().indexOf("CEDiL page") != -1 ) return;	// 多重登録防止
-					var title = $this.find('.ss_title,.session-title').text()
-									.replace(/\n/g, "")
-									.replace(/ /g, "")
-									.replace(/　/g, "");
-					for( var i = 0 ; i < list.length ; ++i ){
-						if( list[i].date ){
-							if( current_date != list[i].date ) continue;
-						}
-						if( !list[i].title || list[i].title == "" ) continue;
-						if( title.indexOf( list[i].title ) == -1 ) continue;
-						$this.append( '<p><a href="' + list[i].url +'#breadcrumbs" target="blank">CEDiL page</a></p>')
-						break;
-					}
+					$this.find('.cedil-status').html(
+						'資料公開: <a href="' + list[i].url + '#breadcrumbs" target="blank">公開済み</a>'
+					);
+					break;
 				}
 			});
 
@@ -1103,41 +1031,5 @@
 		}
 		return params;
 	}
-
-	//--------------------------------------------------------------------------
-	// test code
-	// failed: クロスドメインアクセスの画像ではエラーの為未使用。未実装。
-	//         元のカラーに戻す処理を書いてないので使用する際は要追加。
-	//--------------------------------------------------------------------------
-	function grayscale(img){
-	    var canvas = document.createElement('canvas');
-	    var ctx = canvas.getContext('2d');
-
-	    var imgObj = new Image();
-	    imgObj.src = img;
-
-	    canvas.width = imgObj.width;
-	    canvas.height = imgObj.height;
-
-	    ctx.drawImage(imgObj, 0, 0);
-
-	    var imgPixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-	    for(var y = 0; y < imgPixels.height; y++){
-	            for(var x = 0; x < imgPixels.width; x++){
-	               var i = (y * 4) * imgPixels.width + x * 4;
-	               var avg = (imgPixels.data[i] +
-	                          imgPixels.data[i + 1] +
-	                          imgPixels.data[i + 2]
-	                          ) / 3;
-	               imgPixels.data[i] = avg;
-	               imgPixels.data[i + 1] = avg;
-	               imgPixels.data[i + 2] = avg;
-	            }
-	    }
-
-        ctx.putImageData(imgPixels, 0, 0, 0, 0, imgPixels.width, imgPixels.height);
-        return canvas.toDataURL();
-    }
 
 })();
