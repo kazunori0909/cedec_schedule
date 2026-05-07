@@ -30,7 +30,7 @@
 	var m_url_params = getURL_Params();
 	var m_year       = DEFAULT_YEAR;
 
-	if( m_url_params.year !== undefined )	m_year = m_url_params.year;
+	if( m_url_params.year !== undefined && CEDEC.isValidYear( m_url_params.year ) )	m_year = m_url_params.year;
 
 	var m_highlightInfo = {
 		enabled	: false,
