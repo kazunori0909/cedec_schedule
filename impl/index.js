@@ -131,8 +131,7 @@
 			success	: function(index,data){
 				$('#contents_loading_icon').remove();
 				appendTable( data, index );
-				CEDiL.readJsonData( m_setting.year, m_setting.cedil_tag_no, appendLinkToCEDiL );
-				//CEDiL.readData( m_setting.cedil_tag_no, appendLinkToCEDiL );
+				CEDiL.readJsonData( m_setting.year, appendLinkToCEDiL );
 			},
 			error: function(request, textStatus, errorThrown){
 				$('#contents_loading_icon').remove();
