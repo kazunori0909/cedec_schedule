@@ -156,8 +156,17 @@ var CEDEC = (function($){
 		// DOM
 		appendNaviMenuTo		:	appendNaviMenuTo,
 
-		getFloorURL				:	getFloorURL
+		getFloorURL				:	getFloorURL,
+
+		isValidYear				:	isValidYear
 	};
+
+	function isValidYear( year ){
+		for( var i = 0 ; i < SCHEDULE_SETTING.length ; ++i ){
+			if( SCHEDULE_SETTING[i].year == year ) return true;
+		}
+		return false;
+	}
 
 
 
