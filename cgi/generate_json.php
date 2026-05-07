@@ -531,9 +531,13 @@ function postprocess_sessions($sessions, $live_map = array(), $youtube_map = arr
 
         if ($event_over && $live !== null) {
             if ($youtube === null) {
-                // 基調講演・CEDEC Awards等: YouTubeチャンネルに再投稿されないため
-                // live URLをyoutubeパラメータに変換して永続化する
-                $youtube = $live;
+                // 基調講演・CEDEC Awards等はYouTubeへ再投稿されないため live URL を永続化する
+                // 通常セッションはYouTube動画がない場合、live URLを破棄する
+                $is_archive_session = $s['category'] === '基調講演'
+                                   || stripos($s['title'], 'CEDEC AWARDS') !== false;
+                if ($is_archive_session) {
+                    $youtube = $live;
+                }
             }
             // 会期後はliveパラメータを削除
             $live = null;
